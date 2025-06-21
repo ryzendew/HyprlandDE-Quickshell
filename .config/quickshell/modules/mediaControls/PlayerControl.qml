@@ -145,7 +145,12 @@ Item { // Player instance
 
             Rectangle {
                 anchors.fill: parent
-                color: ColorUtils.transparentize(blendedColors.colLayer0, 0.25)
+                color: Qt.rgba(
+                    blendedColors.colLayer0.r,
+                    blendedColors.colLayer0.g,
+                    blendedColors.colLayer0.b,
+                    0.65
+                )
                 radius: root.popupRounding
             }
         }
@@ -160,7 +165,12 @@ Item { // Player instance
                 Layout.fillHeight: true
                 implicitWidth: height
                 radius: root.artRounding
-                color: blendedColors.colLayer1
+                color: Qt.rgba(
+                    blendedColors.colLayer1.r,
+                    blendedColors.colLayer1.g,
+                    blendedColors.colLayer1.b,
+                    0.85
+                )
 
                 layer.enabled: true
                 layer.effect: OpacityMask {

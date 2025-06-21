@@ -205,7 +205,7 @@ Item {
         id: mainIcon
         anchors.fill: parent
         fillMode: Image.PreserveAspectFit
-        smooth: true
+        smooth: false
         mipmap: true
         sourceSize.width: iconSize * 2
         sourceSize.height: iconSize * 2

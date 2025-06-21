@@ -13,6 +13,7 @@ import Quickshell.Hyprland
 import Quickshell.Services.UPower
 import Quickshell.Io
 import Quickshell.Services.Mpris
+import "." as BarComponents
 
 Scope {
     id: bar
@@ -21,35 +22,62 @@ Scope {
     readonly property int barCenterSideModuleWidth: Appearance.sizes.barCenterSideModuleWidth
     readonly property int osdHideMouseMoveThreshold: 20
     property bool showBarBackground: ConfigOptions.bar.showBackground
+    property bool hyprlandAvailable: true
+
+    // Helper function to safely dispatch Hyprland commands
+    function safeDispatch(command) {
+        if (!hyprlandAvailable) return;
+        
+        try {
+            Hyprland.dispatch(command);
+        } catch (e) {
+            console.warn("Hyprland dispatch failed in Bar.qml:", command, e);
+            if (command.includes("setvar") && command.includes("decoration:blur")) {
+                hyprlandAvailable = false;
+                console.warn("Hyprland blur features disabled in Bar.qml due to errors");
+            }
+        }
+    }
 
     // Watch for changes in blur settings
     Connections {
         target: AppearanceSettingsState
         function onBarBlurAmountChanged() {
             if (AppearanceSettingsState.blurEnabled) {
-                Hyprland.dispatch(`setvar decoration:blur:size ${AppearanceSettingsState.barBlurAmount}`)
+                safeDispatch(`setvar decoration:blur:size ${AppearanceSettingsState.barBlurAmount}`)
             }
-            Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            safeDispatch("exec killall -SIGUSR2 quickshell")
         }
         function onBarBlurPassesChanged() {
             if (AppearanceSettingsState.blurEnabled) {
-                Hyprland.dispatch(`setvar decoration:blur:passes ${AppearanceSettingsState.barBlurPasses}`)
+                safeDispatch(`setvar decoration:blur:passes ${AppearanceSettingsState.barBlurPasses}`)
             }
-            Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            safeDispatch("exec killall -SIGUSR2 quickshell")
         }
         function onBarXrayChanged() {
             AppearanceSettingsState.updateBarBlurSettings()
-            Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            safeDispatch("exec killall -SIGUSR2 quickshell")
         }
         function onBlurEnabledChanged() {
             AppearanceSettingsState.updateBarBlurSettings()
-            Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            safeDispatch("exec killall -SIGUSR2 quickshell")
         }
     }
 
     // Initial blur setup
     Component.onCompleted: {
-        AppearanceSettingsState.updateBarBlurSettings()
+        // Check if Hyprland is available
+        try {
+            Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
+            console.log("Hyprland integration available in Bar.qml");
+        } catch (e) {
+            console.warn("Hyprland integration not available in Bar.qml:", e);
+            hyprlandAvailable = false;
+        }
+        
+        if (hyprlandAvailable) {
+            AppearanceSettingsState.updateBarBlurSettings()
+        }
     }
 
     component VerticalBarSeparator: Rectangle {
@@ -151,7 +179,7 @@ Scope {
                             const dx = mouse.x - barLeftSideMouseArea.lastScrollX;
                             const dy = mouse.y - barLeftSideMouseArea.lastScrollY;
                             if (Math.sqrt(dx*dx + dy*dy) > osdHideMouseMoveThreshold) {
-                                Hyprland.dispatch('global quickshell:osdBrightnessHide')
+                                safeDispatch('global quickshell:osdBrightnessHide')
                                 barLeftSideMouseArea.trackingScroll = false;
                             }
                         }
@@ -184,7 +212,7 @@ Scope {
                                     anchors.centerIn: parent
                                     width: 22
                                     height: 22
-                                    source: "logo/Arch-linux-logo.png"
+                                    source: "/home/matt/.config/quickshell/logo/Arch-linux-logo.png"
                                     fillMode: Image.PreserveAspectFit
                                 }
                                 
@@ -200,7 +228,7 @@ Scope {
                                     
                                     onPressed: (event) => {
                                         if (event.button === Qt.LeftButton) {
-                                            Hyprland.dispatch('global quickshell:sidebarLeftOpen')
+                                            safeDispatch('global quickshell:sidebarLeftOpen')
                                         }
                                     }
                                 }
@@ -237,7 +265,7 @@ Scope {
                                 acceptedButtons: Qt.RightButton
                                 onPressed: (event) => {
                                     if (event.button === Qt.RightButton) {
-                                        Hyprland.dispatch('global quickshell:overviewToggle')
+                                        safeDispatch('global quickshell:overviewToggle')
                                     }
                                 }
                             }
@@ -289,7 +317,7 @@ Scope {
                                 }
 
                                 onPressed: {
-                                    Hyprland.dispatch('global quickshell:sidebarRightToggle')
+                                    safeDispatch('global quickshell:sidebarRightToggle')
                                 }
 
                                 RowLayout {
@@ -354,7 +382,7 @@ Scope {
 
                             Item {
                                 width: 100 // Reserve more space for weather
-                                Weather {
+                                BarComponents.Weather {
                                     anchors.centerIn: parent
                                     weatherLocation: "Halifax, Nova Scotia, Canada"
                                 }

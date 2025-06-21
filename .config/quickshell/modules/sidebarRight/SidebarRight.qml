@@ -116,10 +116,12 @@ Scope {
                         Layout.margins: 10
                         Layout.topMargin: 5
                         Layout.bottomMargin: 0
+                        Layout.alignment: Qt.AlignVCenter
 
                         Item {
                             implicitWidth: distroIcon.width
                             implicitHeight: distroIcon.height
+                            Layout.alignment: Qt.AlignVCenter
                             CustomIcon {
                                 id: distroIcon
                                 width: 25
@@ -138,10 +140,27 @@ Scope {
                             color: Appearance.colors.colOnLayer0
                             text: StringUtils.format(qsTr("Uptime: {0}"), DateTime.uptime)
                             textFormat: Text.MarkdownText
+                            Layout.alignment: Qt.AlignVCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        StyledText {
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: Appearance.colors.colOnLayer0
+                            text: DateTime.time
+                            Layout.leftMargin: 10
+                            Layout.rightMargin: 0
+                            Layout.topMargin: 2
+                            Layout.bottomMargin: 2
+                            horizontalAlignment: Text.AlignRight
+                            verticalAlignment: Text.AlignVCenter
+                            Layout.alignment: Qt.AlignVCenter
+                            elide: Text.ElideRight
                         }
 
                         Item {
                             Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
                         }
 
                         QuickToggleButton {
@@ -153,6 +172,7 @@ Scope {
                             StyledToolTip {
                                 content: qsTr("Reload Quickshell")
                             }
+                            Layout.alignment: Qt.AlignVCenter
                         }
                         QuickToggleButton {
                             toggled: false
@@ -163,6 +183,7 @@ Scope {
                             StyledToolTip {
                                 content: qsTr("Session")
                             }
+                            Layout.alignment: Qt.AlignVCenter
                         }
                     }
 

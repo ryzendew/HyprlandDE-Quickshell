@@ -8,11 +8,45 @@ QtObject {
 
     // General blur enable/disable
     property bool blurEnabled: true
+    property bool hyprlandAvailable: true
 
     // Bar settings
     property int barBlurAmount: 8
     property int barBlurPasses: 4
     property bool barXray: false
+
+    // Control Panel settings
+    property real controlPanelTransparency: 0.65
+    property int controlPanelBlurAmount: 8
+    property int controlPanelBlurPasses: 4
+    property bool controlPanelXray: false
+    
+    // Control Panel property change handlers
+    onControlPanelTransparencyChanged: {
+        safeDispatch("exec killall -SIGUSR2 quickshell")
+    }
+    onControlPanelBlurAmountChanged: {
+        if (blurEnabled) {
+            safeDispatch("setvar decoration:blur:enabled 1")
+            safeDispatch("setvar decoration:blur:size " + controlPanelBlurAmount)
+            safeDispatch("layerrule blur,^(quickshell:controlpanel:blur)$")
+        }
+        safeDispatch("exec killall -SIGUSR2 quickshell")
+    }
+    onControlPanelBlurPassesChanged: {
+        if (blurEnabled) {
+            safeDispatch("setvar decoration:blur:passes " + controlPanelBlurPasses)
+        }
+        safeDispatch("exec killall -SIGUSR2 quickshell")
+    }
+    onControlPanelXrayChanged: {
+        if (controlPanelXray) {
+            safeDispatch("layerrule xray on,^(quickshell:controlpanel:blur)$")
+        } else {
+            safeDispatch("layerrule xray off,^(quickshell:controlpanel:blur)$")
+        }
+        safeDispatch("exec killall -SIGUSR2 quickshell")
+    }
 
     // Dock settings
     property real dockTransparency: 0.65
@@ -30,134 +64,178 @@ QtObject {
     property int weatherBlurPasses: 4
     property bool weatherXray: false
 
+    // Helper function to safely dispatch Hyprland commands
+    function safeDispatch(command) {
+        if (!hyprlandAvailable) return;
+        
+        try {
+            Hyprland.dispatch(command);
+        } catch (e) {
+            console.warn("Hyprland dispatch failed:", command, e);
+            // If we get too many errors, assume Hyprland is not available
+            if (command.includes("setvar") && command.includes("decoration:blur")) {
+                hyprlandAvailable = false;
+                console.warn("Hyprland blur features disabled due to errors");
+            }
+        }
+    }
+
     // Save settings when they change
-    onBarBlurAmountChanged: Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
-    onBarBlurPassesChanged: Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
-    onBarXrayChanged: Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+    onBarBlurAmountChanged: safeDispatch("exec killall -SIGUSR2 quickshell")
+    onBarBlurPassesChanged: safeDispatch("exec killall -SIGUSR2 quickshell")
+    onBarXrayChanged: safeDispatch("exec killall -SIGUSR2 quickshell")
     
     onDockTransparencyChanged: {
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
     onDockBlurAmountChanged: {
         if (blurEnabled) {
-            Hyprland.dispatch("setvar decoration:blur:enabled 1")
-            Hyprland.dispatch("setvar decoration:blur:size " + dockBlurAmount)
-            Hyprland.dispatch("layerrule blur,^(quickshell:dock:blur)$")
+            safeDispatch("setvar decoration:blur:enabled 1")
+            safeDispatch("setvar decoration:blur:size " + dockBlurAmount)
+            safeDispatch("layerrule blur,^(quickshell:dock:blur)$")
         }
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
     onDockBlurPassesChanged: {
         if (blurEnabled) {
-            Hyprland.dispatch("setvar decoration:blur:passes " + dockBlurPasses)
+            safeDispatch("setvar decoration:blur:passes " + dockBlurPasses)
         }
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
     onDockXrayChanged: {
         if (dockXray) {
-            Hyprland.dispatch("layerrule xray on,^(quickshell:dock:blur)$")
+            safeDispatch("layerrule xray on,^(quickshell:dock:blur)$")
         } else {
-            Hyprland.dispatch("layerrule xray off,^(quickshell:dock:blur)$")
+            safeDispatch("layerrule xray off,^(quickshell:dock:blur)$")
         }
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
 
     onSidebarTransparencyChanged: {
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
     onSidebarXrayChanged: {
         if (sidebarXray) {
-            Hyprland.dispatch("layerrule xray on,^(quickshell:sidebarLeft)$")
-            Hyprland.dispatch("layerrule xray on,^(quickshell:sidebarRight)$")
+            safeDispatch("layerrule xray on,^(quickshell:sidebarLeft)$")
+            safeDispatch("layerrule xray on,^(quickshell:sidebarRight)$")
         } else {
-            Hyprland.dispatch("layerrule xray off,^(quickshell:sidebarLeft)$")
-            Hyprland.dispatch("layerrule xray off,^(quickshell:sidebarRight)$")
+            safeDispatch("layerrule xray off,^(quickshell:sidebarLeft)$")
+            safeDispatch("layerrule xray off,^(quickshell:sidebarRight)$")
         }
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
 
     onWeatherTransparencyChanged: {
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
     onWeatherBlurAmountChanged: {
         if (blurEnabled) {
-            Hyprland.dispatch("setvar decoration:blur:enabled 1")
-            Hyprland.dispatch("setvar decoration:blur:size " + weatherBlurAmount)
-            Hyprland.dispatch("layerrule blur,^(quickshell:weather:blur)$")
+            safeDispatch("setvar decoration:blur:enabled 1")
+            safeDispatch("setvar decoration:blur:size " + weatherBlurAmount)
+            safeDispatch("layerrule blur,^(quickshell:weather:blur)$")
         }
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
     onWeatherBlurPassesChanged: {
         if (blurEnabled) {
-            Hyprland.dispatch("setvar decoration:blur:passes " + weatherBlurPasses)
+            safeDispatch("setvar decoration:blur:passes " + weatherBlurPasses)
         }
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
     onWeatherXrayChanged: {
         if (weatherXray) {
-            Hyprland.dispatch("layerrule xray on,^(quickshell:weather:blur)$")
+            safeDispatch("layerrule xray on,^(quickshell:weather:blur)$")
         } else {
-            Hyprland.dispatch("layerrule xray off,^(quickshell:weather:blur)$")
+            safeDispatch("layerrule xray off,^(quickshell:weather:blur)$")
         }
-        Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+        safeDispatch("exec killall -SIGUSR2 quickshell")
     }
 
     function updateDockBlurSettings() {
         if (!blurEnabled) {
-            Hyprland.dispatch("layerrule unset,^(quickshell:dock:blur)$")
+            safeDispatch("layerrule unset,^(quickshell:dock:blur)$")
             return;
         }
-        Hyprland.dispatch("setvar decoration:blur:enabled 1")
-        Hyprland.dispatch("setvar decoration:blur:size " + dockBlurAmount)
-        Hyprland.dispatch("setvar decoration:blur:passes " + dockBlurPasses)
-        Hyprland.dispatch("layerrule blur,^(quickshell:dock:blur)$")
+        safeDispatch("setvar decoration:blur:enabled 1")
+        safeDispatch("setvar decoration:blur:size " + dockBlurAmount)
+        safeDispatch("setvar decoration:blur:passes " + dockBlurPasses)
+        safeDispatch("layerrule blur,^(quickshell:dock:blur)$")
         if (dockXray) {
-            Hyprland.dispatch("layerrule xray on,^(quickshell:dock:blur)$")
+            safeDispatch("layerrule xray on,^(quickshell:dock:blur)$")
         } else {
-            Hyprland.dispatch("layerrule xray off,^(quickshell:dock:blur)$")
+            safeDispatch("layerrule xray off,^(quickshell:dock:blur)$")
         }
     }
 
     function updateWeatherBlurSettings() {
         if (!blurEnabled) {
-            Hyprland.dispatch("layerrule unset,^(quickshell:weather:blur)$")
+            safeDispatch("layerrule unset,^(quickshell:weather:blur)$")
             return;
         }
-        Hyprland.dispatch("setvar decoration:blur:enabled 1")
-        Hyprland.dispatch("setvar decoration:blur:size " + weatherBlurAmount)
-        Hyprland.dispatch("setvar decoration:blur:passes " + weatherBlurPasses)
-        Hyprland.dispatch("layerrule blur,^(quickshell:weather:blur)$")
+        safeDispatch("setvar decoration:blur:enabled 1")
+        safeDispatch("setvar decoration:blur:size " + weatherBlurAmount)
+        safeDispatch("setvar decoration:blur:passes " + weatherBlurPasses)
+        safeDispatch("layerrule blur,^(quickshell:weather:blur)$")
         if (weatherXray) {
-            Hyprland.dispatch("layerrule xray on,^(quickshell:weather:blur)$")
+            safeDispatch("layerrule xray on,^(quickshell:weather:blur)$")
         } else {
-            Hyprland.dispatch("layerrule xray off,^(quickshell:weather:blur)$")
+            safeDispatch("layerrule xray off,^(quickshell:weather:blur)$")
         }
     }
     
     function updateBarBlurSettings() {
         if (!blurEnabled) {
-            Hyprland.dispatch("layerrule unset,^(quickshell:bar:blur)$")
+            safeDispatch("layerrule unset,^(quickshell:bar:blur)$")
             return;
         }
-        Hyprland.dispatch("setvar decoration:blur:enabled 1")
-        Hyprland.dispatch("layerrule blur,^(quickshell:bar:blur)$")
+        safeDispatch("setvar decoration:blur:enabled 1")
+        safeDispatch("layerrule blur,^(quickshell:bar:blur)$")
         if (barXray) {
-            Hyprland.dispatch("layerrule xray on,^(quickshell:bar:blur)$")
+            safeDispatch("layerrule xray on,^(quickshell:bar:blur)$")
         } else {
-            Hyprland.dispatch("layerrule xray off,^(quickshell:bar:blur)$")
+            safeDispatch("layerrule xray off,^(quickshell:bar:blur)$")
+        }
+    }
+    
+    function updateControlPanelBlurSettings() {
+        if (!blurEnabled) {
+            safeDispatch("layerrule unset,^(quickshell:controlpanel:blur)$")
+            return;
+        }
+        safeDispatch("setvar decoration:blur:enabled 1")
+        safeDispatch("setvar decoration:blur:size " + controlPanelBlurAmount)
+        safeDispatch("setvar decoration:blur:passes " + controlPanelBlurPasses)
+        safeDispatch("layerrule blur,^(quickshell:controlpanel:blur)$")
+        if (controlPanelXray) {
+            safeDispatch("layerrule xray on,^(quickshell:controlpanel:blur)$")
+        } else {
+            safeDispatch("layerrule xray off,^(quickshell:controlpanel:blur)$")
         }
     }
 
     // Apply initial settings
     Component.onCompleted: {
-        updateDockBlurSettings()
-        updateWeatherBlurSettings()
-        updateBarBlurSettings()
-        if (sidebarXray) {
-            Hyprland.dispatch("layerrule xray on,^(quickshell:sidebarLeft)$")
-            Hyprland.dispatch("layerrule xray on,^(quickshell:sidebarRight)$")
-        } else {
-            Hyprland.dispatch("layerrule xray off,^(quickshell:sidebarLeft)$")
-            Hyprland.dispatch("layerrule xray off,^(quickshell:sidebarRight)$")
+        // Check if Hyprland is available by trying a simple command
+        try {
+            Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
+            console.log("Hyprland integration available");
+        } catch (e) {
+            console.warn("Hyprland integration not available:", e);
+            hyprlandAvailable = false;
+        }
+        
+        if (hyprlandAvailable) {
+            updateDockBlurSettings()
+            updateWeatherBlurSettings()
+            updateBarBlurSettings()
+            updateControlPanelBlurSettings()
+            if (sidebarXray) {
+                safeDispatch("layerrule xray on,^(quickshell:sidebarLeft)$")
+                safeDispatch("layerrule xray on,^(quickshell:sidebarRight)$")
+            } else {
+                safeDispatch("layerrule xray off,^(quickshell:sidebarLeft)$")
+                safeDispatch("layerrule xray off,^(quickshell:sidebarRight)$")
+            }
         }
     }
 } 

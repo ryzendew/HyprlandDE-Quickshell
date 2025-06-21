@@ -4,7 +4,7 @@
  */
 function findSuitableMaterialSymbol(summary = "") {
     const defaultType = 'chat';
-    if(summary.length === 0) return defaultType;
+    if(!summary || summary.length === 0) return defaultType;
 
     const keywordsToTypes = {
         'reboot': 'restart_alt',
@@ -43,15 +43,31 @@ function findSuitableMaterialSymbol(summary = "") {
  * @returns { string }
  */
 const getFriendlyNotifTimeString = (timestamp) => {
-    const messageTime = new Date(timestamp);
-    const now = new Date();
-    const oneMinuteAgo = new Date(now.getTime() - 60000);
+    // Handle null, undefined or invalid timestamps
+    if (timestamp === null || timestamp === undefined) {
+        return 'Just now';
+    }
+    
+    try {
+        const messageTime = new Date(timestamp);
+        
+        // Check if date is valid
+        if (isNaN(messageTime.getTime())) {
+            return 'Just now';
+        }
+        
+        const now = new Date();
+        const oneMinuteAgo = new Date(now.getTime() - 60000);
 
-    if (messageTime > oneMinuteAgo) 
-        return 'Now';
-    if (messageTime.toDateString() === now.toDateString())
-        return Qt.formatDateTime(messageTime, "hh:mm");
-    if (messageTime.toDateString() === new Date(now.getTime() - 86400000).toDateString()) 
-        return 'Yesterday';
-    return Qt.formatDateTime(messageTime, "MMMM dd");
+        if (messageTime > oneMinuteAgo) 
+            return 'Now';
+        if (messageTime.toDateString() === now.toDateString())
+            return Qt.formatDateTime(messageTime, "hh:mm");
+        if (messageTime.toDateString() === new Date(now.getTime() - 86400000).toDateString()) 
+            return 'Yesterday';
+        return Qt.formatDateTime(messageTime, "MMMM dd");
+    } catch (e) {
+        console.error("Error formatting notification time:", e);
+        return 'Just now';
+    }
 };

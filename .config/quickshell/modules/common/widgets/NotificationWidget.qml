@@ -16,7 +16,7 @@ import "./notification_utils.js" as NotificationUtils
 
 Item {
     id: root
-    property var notificationObject
+    property var notificationObject: ({})
     property bool popup: false
     property bool expanded: false
     property bool enableAnimation: true
@@ -46,7 +46,7 @@ Item {
 
     Component.onCompleted: {
         root.ready = true
-        if (popup) {
+        if (popup && notificationObject && notificationObject.appName) {
             console.log("Starting notification timer for:", notificationObject.appName, notificationObject.summary)
             timeoutTimer.start()
         }
@@ -54,12 +54,16 @@ Item {
 
     Timer {
         id: timeoutTimer
-        interval: notificationObject.expireTimeout ?? root.defaultTimeoutValue
+        interval: notificationObject && notificationObject.expireTimeout ? notificationObject.expireTimeout : root.defaultTimeoutValue
         repeat: false
         onTriggered: {
-            console.log("Notification timeout for:", notificationObject.appName, notificationObject.summary)
+            if (notificationObject && notificationObject.appName) {
+                console.log("Notification timeout for:", notificationObject.appName, notificationObject.summary)
+            }
             root.notificationXAnimation = Appearance.animation.elementMoveExit
-            Notifications.timeoutNotification(notificationObject.id);
+            if (notificationObject && notificationObject.id) {
+                Notifications.timeoutNotification(notificationObject.id);
+            }
         }
     }
 
@@ -200,9 +204,9 @@ Item {
             anchors.bottom: parent.bottom
             height: notificationColumnLayout.implicitHeight
 
-            color: (notificationObject.urgency == NotificationUrgency.Critical) ? 
-                ColorUtils.mix(Appearance.m3colors.m3secondaryContainer, Appearance.colors.colLayer2, 0.35) : 
-                Appearance.m3colors.m3surfaceContainer
+            color: (notificationObject && notificationObject.urgency == NotificationUrgency.Critical) ? 
+                ColorUtils.mix(Appearance.colors.colLayer2, Appearance.colors.colLayer1, 0.35) : 
+                Appearance.colors.colLayer1
             radius: Appearance.rounding.normal
 
             layer.enabled: true
@@ -308,17 +312,18 @@ Item {
                         color: Appearance.m3colors.m3secondaryContainer
                         Loader {
                             id: materialSymbolLoader
-                            active: notificationObject.appIcon == ""
+                            active: !notificationObject || !notificationObject.appIcon || notificationObject.appIcon == ""
                             anchors.fill: parent
                             sourceComponent: MaterialSymbol {
                                 text: {
                                     const defaultIcon = NotificationUtils.findSuitableMaterialSymbol("")
-                                    const guessedIcon = NotificationUtils.findSuitableMaterialSymbol(notificationObject.summary)
-                                    return (notificationObject.urgency == NotificationUrgency.Critical && guessedIcon === defaultIcon) ?
+                                    const guessedIcon = notificationObject && notificationObject.summary ? 
+                                        NotificationUtils.findSuitableMaterialSymbol(notificationObject.summary) : defaultIcon
+                                    return (notificationObject && notificationObject.urgency == NotificationUrgency.Critical && guessedIcon === defaultIcon) ?
                                         "release_alert" : guessedIcon
                                 }
                                 anchors.fill: parent
-                                color: (notificationObject.urgency == NotificationUrgency.Critical) ? 
+                                color: (notificationObject && notificationObject.urgency == NotificationUrgency.Critical) ? 
                                     ColorUtils.mix(Appearance.m3colors.m3onSecondary, Appearance.m3colors.m3onSecondaryContainer, 0.1) :
                                     Appearance.m3colors.m3onSecondaryContainer
                                 iconSize: 27
@@ -328,12 +333,14 @@ Item {
                         }
                         Loader {
                             id: appIconLoader
-                            active: notificationObject.image == "" && notificationObject.appIcon != ""
+                            active: notificationObject && notificationObject.appIcon && notificationObject.appIcon != "" && 
+                                   (!notificationObject.image || notificationObject.image == "")
                             anchors.centerIn: parent
                             sourceComponent: IconImage {
                                 implicitSize: 33
                                 asynchronous: true
                                 source: {
+                                    if (!notificationObject || !notificationObject.appIcon) return ""
                                     const iconPath = Quickshell.iconPath(notificationObject.appIcon, "image-missing")
                                     if (!iconCache[iconPath]) {
                                         iconCache[iconPath] = true
@@ -344,11 +351,11 @@ Item {
                         }
                         Loader {
                             id: notifImageLoader
-                            active: notificationObject.image != ""
+                            active: notificationObject && notificationObject.image && notificationObject.image != ""
                             anchors.fill: parent
                             sourceComponent: Item {
                                 anchors.fill: parent
-                                property string originalSource: notificationObject.image
+                                property string originalSource: notificationObject ? notificationObject.image || "" : ""
                                 property string fallbackIconSource: Quickshell.iconPath("image-missing", "dialog-error")
 
                                 Image {
@@ -397,8 +404,8 @@ Item {
                                 horizontalAlignment: Text.AlignLeft
                                 verticalAlignment: Text.AlignBottom
                                 font.pixelSize: Appearance.font.pixelSize.normal
-                                color: "#FFFFFF"
-                                text: notificationObject.summary
+                                color: Appearance.colors.colOnLayer2
+                                text: notificationObject ? notificationObject.summary || "" : ""
                                 wrapMode: expanded ? Text.Wrap : Text.NoWrap
                                 elide: Text.ElideRight
                             }
@@ -410,7 +417,8 @@ Item {
                                 lineWidth: 2
                                 value: popup ? 1 : 0
                                 size: 20
-                                animationDuration: notificationObject.expireTimeout ?? root.defaultTimeoutValue
+                                animationDuration: notificationObject && notificationObject.expireTimeout ? 
+                                    notificationObject.expireTimeout : root.defaultTimeoutValue
                                 easingType: Easing.Linear
 
                                 Component.onCompleted: {
@@ -426,13 +434,20 @@ Item {
                                 wrapMode: Text.Wrap
                                 horizontalAlignment: Text.AlignLeft
                                 font.pixelSize: Appearance.font.pixelSize.smaller
-                                color: "#FFFFFF"
-                                text: NotificationUtils.getFriendlyNotifTimeString(notificationObject.time)
+                                color: Appearance.colors.colOnLayer2
+                                text: {
+                                    if (!notificationObject || notificationObject.time === undefined || notificationObject.time === null) {
+                                        return "Just now"
+                                    }
+                                    return NotificationUtils.getFriendlyNotifTimeString(notificationObject.time)
+                                }
 
                                 Connections {
                                     target: DateTime
                                     function onTimeChanged() {
-                                        notificationTimeText.text = NotificationUtils.getFriendlyNotifTimeString(notificationObject.time)
+                                        if (notificationObject && notificationObject.time !== undefined && notificationObject.time !== null) {
+                                            notificationTimeText.text = NotificationUtils.getFriendlyNotifTimeString(notificationObject.time)
+                                        }
                                     }
                                 }
                             }
@@ -489,12 +504,18 @@ Item {
                             elide: Text.ElideRight
                             font.pixelSize: Appearance.font.pixelSize.small
                             horizontalAlignment: Text.AlignLeft
-                            color: "#FFFFFF"
+                            color: Appearance.colors.colOnLayer2
                             textFormat: expanded ? Text.RichText : Text.StyledText
-                            text: expanded 
-                                ? `<style>img{max-width:${notificationBodyText.width}px;}</style>` + 
-                                  `${notificationObject.body.replace(/\n/g, "<br/>")}` 
-                                : notificationObject.body.replace(/<img/g, "\n <img").split("\n")[0]
+                            text: {
+                                if (!notificationObject || !notificationObject.body) return ""
+                                
+                                if (expanded) {
+                                    return `<style>img{max-width:${notificationBodyText.width}px;}</style>` + 
+                                           `${notificationObject.body.replace(/\n/g, "<br/>")}` 
+                                } else {
+                                    return notificationObject.body.replace(/<img/g, "\n <img").split("\n")[0]
+                                }
+                            }
                             onLinkActivated: (link) => {
                                 Qt.openUrlExternally(link)
                                 Hyprland.dispatch("global quickshell:sidebarRightClose")
@@ -561,28 +582,32 @@ Item {
 
                 Repeater {
                         id: actionRepeater
-                        model: notificationObject.actions
+                        model: notificationObject && notificationObject.actions ? notificationObject.actions : []
                         NotificationActionButton {
                             Layout.fillWidth: true
-                            buttonText: modelData.text
-                            urgency: notificationObject.urgency
+                            buttonText: modelData ? modelData.text || "" : ""
+                            urgency: notificationObject ? notificationObject.urgency : NotificationUrgency.Normal
                             onClicked: {
-                                Notifications.attemptInvokeAction(notificationObject.id, modelData.identifier);
+                                if (notificationObject && notificationObject.id && modelData && modelData.identifier) {
+                                    Notifications.attemptInvokeAction(notificationObject.id, modelData.identifier);
+                                }
                             }
                         }
                     }
 
                     NotificationActionButton {
                         Layout.fillWidth: true
-                        urgency: notificationObject.urgency
-                        implicitWidth: (notificationObject.actions.length == 0) ? (actionsFlickable.width / 2) : 
-                            (contentItem.implicitWidth + leftPadding + rightPadding)
+                        urgency: notificationObject ? notificationObject.urgency : NotificationUrgency.Normal
+                        implicitWidth: (notificationObject && notificationObject.actions && notificationObject.actions.length == 0) ? 
+                            (actionsFlickable.width / 2) : (contentItem.implicitWidth + leftPadding + rightPadding)
 
                         onClicked: {
-                            Hyprland.dispatch(`exec wl-copy '${StringUtils.shellSingleQuoteEscape(notificationObject.body)}'`)
-                            copyIcon.text = "inventory"
-                            copyIconTimer.stop()
-                            copyIconTimer.start()
+                            if (notificationObject && notificationObject.body) {
+                                Hyprland.dispatch(`exec wl-copy '${StringUtils.shellSingleQuoteEscape(notificationObject.body)}'`)
+                                copyIcon.text = "inventory"
+                                copyIconTimer.stop()
+                                copyIconTimer.start()
+                            }
                         }
 
                         Timer {
@@ -598,7 +623,7 @@ Item {
                             id: copyIcon
                             iconSize: Appearance.font.pixelSize.large
                             horizontalAlignment: Text.AlignHCenter
-                            color: (notificationObject.urgency == NotificationUrgency.Critical) ? 
+                            color: (notificationObject && notificationObject.urgency == NotificationUrgency.Critical) ? 
                                 Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
                             text: "content_copy"
                         }
@@ -607,18 +632,20 @@ Item {
                     NotificationActionButton {
                         Layout.fillWidth: true
                         buttonText: qsTr("Close")
-                        urgency: notificationObject.urgency
-                        implicitWidth: (notificationObject.actions.length == 0) ? (actionsFlickable.width / 2) : 
-                            (contentItem.implicitWidth + leftPadding + rightPadding)
+                        urgency: notificationObject ? notificationObject.urgency : NotificationUrgency.Normal
+                        implicitWidth: (notificationObject && notificationObject.actions && notificationObject.actions.length == 0) ? 
+                            (actionsFlickable.width / 2) : (contentItem.implicitWidth + leftPadding + rightPadding)
 
                         onClicked: {
-                            Notifications.discardNotification(notificationObject.id);
+                            if (notificationObject && notificationObject.id) {
+                                Notifications.discardNotification(notificationObject.id);
+                            }
                         }
 
                         contentItem: MaterialSymbol {
                             iconSize: Appearance.font.pixelSize.large
                             horizontalAlignment: Text.AlignHCenter
-                            color: (notificationObject.urgency == NotificationUrgency.Critical) ? 
+                            color: (notificationObject && notificationObject.urgency == NotificationUrgency.Critical) ? 
                                 Appearance.m3colors.m3onSurfaceVariant : Appearance.m3colors.m3onSurface
                             text: "close"
                         }

@@ -37,6 +37,7 @@ Singleton {
     }
 
     function notifToJSON(notif) {
+        if (!notif) return null;
         return {
             "id": notif.id,
             "actions": notif.actions,
@@ -50,6 +51,7 @@ Singleton {
         }
     }
     function notifToString(notif) {
+        if (!notif) return "null";
         return JSON.stringify(notifToJSON(notif), null, 2);
     }
 
@@ -81,7 +83,8 @@ Singleton {
     }
 
     function stringifyList(list) {
-        return JSON.stringify(list.map((notif) => notifToJSON(notif)), null, 2);
+        if (!list) return "[]";
+        return JSON.stringify(list.filter(notif => notif != null).map((notif) => notifToJSON(notif)), null, 2);
     }
     
     onListChanged: {
@@ -180,8 +183,8 @@ Singleton {
     }
 
     function discardNotification(id) {
-        const index = root.list.findIndex((notif) => notif.id === id);
-        const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif.id + root.idOffset === id);
+        const index = root.list.findIndex((notif) => notif && notif.id === id);
+        const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif && notif.id + root.idOffset === id);
         if (index !== -1) {
             root.list.splice(index, 1);
             saveNotifications()
@@ -198,7 +201,7 @@ Singleton {
         triggerListChange()
         saveNotifications()
         notifServer.trackedNotifications.values.forEach((notif) => {
-            notif.dismiss()
+            if (notif) notif.dismiss()
         })
         root.discardAll();
     }
@@ -209,16 +212,18 @@ Singleton {
 
     function timeoutAll() {
         root.list.forEach((notif) => {
-            root.timeout(notif.id);
+            if (notif && notif.id) root.timeout(notif.id);
         })
     }
 
     function attemptInvokeAction(id, notifIdentifier) {
-        const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif.id + root.idOffset === id);
+        const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif && notif.id + root.idOffset === id);
         if (notifServerIndex !== -1) {
             const notifServerNotif = notifServer.trackedNotifications.values[notifServerIndex];
-            const action = notifServerNotif.actions.find((action) => action.identifier === notifIdentifier);
-            action.invoke()
+            if (notifServerNotif) {
+                const action = notifServerNotif.actions.find((action) => action && action.identifier === notifIdentifier);
+                if (action) action.invoke()
+            }
         } 
         root.discard(id);
     }
@@ -252,17 +257,26 @@ Singleton {
         path: filePath
         onLoaded: {
             try {
-            const fileContents = notifFileView.text()
+                const fileContents = notifFileView.text()
                 if (fileContents) {
-                    root.list = JSON.parse(fileContents)
-            // Find largest id
-            let maxId = 0
-            root.list.forEach((notif) => {
-                        if (notif && notif.id) {
-                maxId = Math.max(maxId, notif.id)
-                        }
-            })
-            root.idOffset = maxId
+                    // Parse the JSON and filter out any null entries
+                    let parsedList = JSON.parse(fileContents)
+                    if (Array.isArray(parsedList)) {
+                        // Filter out any null or invalid entries
+                        parsedList = parsedList.filter(item => item && typeof item === 'object' && item.id !== undefined)
+                        root.list = parsedList
+                        // Find largest id
+                        let maxId = 0
+                        root.list.forEach((notif) => {
+                            if (notif && notif.id) {
+                                maxId = Math.max(maxId, notif.id)
+                            }
+                        })
+                        root.idOffset = maxId
+                    } else {
+                        console.error("Invalid notifications format, expected array")
+                        root.list = []
+                    }
                 } else {
                     root.list = []
                 }
@@ -270,7 +284,7 @@ Singleton {
             } catch (e) {
                 console.error("Error loading notifications:", e)
                 root.list = []
-            root.initDone()
+                root.initDone()
             }
         }
         onLoadFailed: (error) => {
@@ -285,7 +299,9 @@ Singleton {
 
     function saveNotifications() {
         if (notifFileView.path) {
-            notifFileView.setText(JSON.stringify(root.list, null, 2))
+            // Filter out any null entries before saving
+            const validList = root.list.filter(notif => notif != null)
+            notifFileView.setText(JSON.stringify(validList, null, 2))
         }
     }
 }

@@ -5,19 +5,32 @@
   "appearance": {
     "fakeScreenRounding": 1
   },
+  "audio": {
+    "protection": {
+      "enable": true,
+      "maxAllowedIncrease": 10,
+      "maxAllowed": 90
+    }
+  },
   "apps": {
     "bluetooth": "better-control --bluetooth",
     "imageViewer": "loupe",
     "network": "better-control --wifi",
+    "networkEthernet": "kcmshell6 kcm_networkmanagement",
     "settings": "better-control",
     "taskManager": "gnome-usage",
     "terminal": "foot"
   },
+  "battery": {
+    "low": 20,
+    "critical": 5,
+    "suspend": 2
+  },
   "bar": {
-    "batteryLowThreshold": 20,
+    "bottom": false,
+    "borderless": false,
     "topLeftIcon": "spark",
     "showBackground": true,
-    "borderless": false,
     "resources": {
       "alwaysShowSwap": true,
       "alwaysShowCpu": false
@@ -28,11 +41,32 @@
       "showNumberDelay": 150
     }
   },
+  "dock": {
+    "height": 60,
+    "hoverRegionHeight": 3,
+    "pinnedOnStartup": false,
+    "hoverToReveal": false,
+    "pinnedApps": {
+      "0": "org.kde.dolphin",
+      "1": "kitty"
+    }
+  },
+  "language": {
+    "translator": {
+      "engine": "auto",
+      "targetLanguage": "auto",
+      "sourceLanguage": "auto"
+    }
+  },
   "networking": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
   },
   "osd": {
     "timeout": 1000
+  },
+  "osk": {
+    "layout": "qwerty_full",
+    "pinnedOnStartup": false
   },
   "overview": {
     "scale": 0.18,
@@ -49,11 +83,17 @@
     "excludedSites": {
       "0": "quora.com"
     },
+    "sloppy": false,
     "prefix": {
-      "action": "/"
+      "action": "/",
+      "clipboard": ";",
+      "emojis": ":"
     }
   },
   "sidebar": {
+    "translator": {
+      "delay": 300
+    },
     "booru": {
       "allowNsfw": false,
       "defaultProvider": "yandere",
@@ -62,6 +102,10 @@
         "username": "[unset]"
       }
     }
+  },
+  "time": {
+    "format": "hh:mm",
+    "dateFormat": "dddd, dd/MM"
   },
   "hacks": {
     "arbitraryRaceConditionDelay": 20

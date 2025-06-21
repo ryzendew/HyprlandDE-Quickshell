@@ -15,5 +15,6 @@ Item {
     ClockWidget {
         id: clockWidget
         anchors.fill: parent
+        anchors.topMargin: -3.5  // Move up by 3.5 pixels
     }
 } 

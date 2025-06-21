@@ -20,6 +20,31 @@ Rectangle {
         Qt.rgba(Appearance.colors.colLayer1Hover.r, Appearance.colors.colLayer1Hover.g, Appearance.colors.colLayer1Hover.b, 0.8) : 
         "transparent"
     
+    property bool hyprlandAvailable: true
+
+    // Helper function to safely dispatch Hyprland commands
+    function safeDispatch(command) {
+        if (!hyprlandAvailable) return;
+        
+        try {
+            Hyprland.dispatch(command);
+        } catch (e) {
+            console.warn("Hyprland dispatch failed in IndicatorsModule:", command, e);
+            hyprlandAvailable = false;
+        }
+    }
+
+    Component.onCompleted: {
+        // Check if Hyprland is available
+        try {
+            Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
+            console.log("Hyprland integration available in IndicatorsModule");
+        } catch (e) {
+            console.warn("Hyprland integration not available in IndicatorsModule:", e);
+            hyprlandAvailable = false;
+        }
+    }
+    
     // Mouse area only for the indicators section
     MouseArea {
         id: indicatorsMouseArea
@@ -29,7 +54,7 @@ Rectangle {
         
         onPressed: (event) => {
             if (event.button === Qt.LeftButton) {
-                Hyprland.dispatch('global quickshell:sidebarRightOpen')
+                safeDispatch('global quickshell:sidebarRightOpen')
             }
         }
     }

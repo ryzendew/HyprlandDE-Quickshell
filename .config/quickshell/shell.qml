@@ -6,6 +6,7 @@ import "./modules/common/"
 import "./modules/backgroundWidgets/"
 import "./modules/bar/"
 import "./modules/cheatsheet/"
+import "./modules/ControlPanel/"
 import "./modules/dock/"
 import "./modules/mediaControls/"
 import "./modules/notificationPopup/"
@@ -25,11 +26,14 @@ import Quickshell
 import "./services/"
 
 ShellRoot {
+    id: root
+    
     // Enable/disable modules here. False = not loaded at all, so rest assured
     // no unnecessary stuff will take up memory if you decide to only use, say, the overview.
     property bool enableBar: true
     property bool enableBackgroundWidgets: false
     property bool enableCheatsheet: true
+    property bool enableControlPanel: true
     property bool enableDock: true
     property bool enableMediaControls: true
     property bool enableNotificationPopup: true
@@ -53,9 +57,28 @@ ShellRoot {
         FirstRunExperience.load()
     }
 
+    // Weather service for widgets
+    property var weatherService: Weather {
+        id: weatherService
+        shell: root
+    }
+    property alias weatherData: weatherService.weatherData
+    property alias weatherLoading: weatherService.loading
+
     Loader { active: enableBar; sourceComponent: Bar {} }
     Loader { active: enableBackgroundWidgets; sourceComponent: BackgroundWidgets {} }
     Loader { active: enableCheatsheet; sourceComponent: Cheatsheet {} }
+    
+    // Control Panel with direct instantiation
+    ControlPanel {
+        id: controlPanel
+        shell: root
+        isShown: true
+        Component.onCompleted: {
+            console.log("ControlPanel loaded directly in shell.qml")
+        }
+    }
+    
     Loader { active: enableDock; sourceComponent: Dock {} }
     Loader { active: enableHyprMenu; sourceComponent: HyprMenu {} }
     Loader { active: enableMediaControls; sourceComponent: MediaControls {} }

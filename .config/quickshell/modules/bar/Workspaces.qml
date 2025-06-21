@@ -50,6 +50,7 @@ Item {
     Layout.fillHeight: true
     implicitWidth: rowLayout.implicitWidth + rowLayout.spacing * 2
     implicitHeight: 40
+    Layout.topMargin: -1.5  // Move up by 1.5 pixels
 
     // Background
     Rectangle {
@@ -58,7 +59,12 @@ Item {
         implicitHeight: 32
         implicitWidth: rowLayout.implicitWidth + widgetPadding * 2
         radius: Appearance.rounding.small
-        color: borderless ? "transparent" : Appearance.colors.colLayer1
+        color: borderless ? "transparent" : Qt.rgba(
+            Appearance.colors.colLayer1.r,
+            Appearance.colors.colLayer1.g,
+            Appearance.colors.colLayer1.b,
+            0.65
+        )
     }
 
     // Scroll to switch workspaces
@@ -109,7 +115,12 @@ Item {
                 topRightRadius: radiusRight
                 bottomRightRadius: radiusRight
                 
-                color: ColorUtils.transparentize(Appearance.m3colors.m3secondaryContainer, 0.4)
+                color: Qt.rgba(
+                    Appearance.m3colors.m3secondaryContainer.r,
+                    Appearance.m3colors.m3secondaryContainer.g,
+                    Appearance.m3colors.m3secondaryContainer.b,
+                    0.65
+                )
                 opacity: (workspaceOccupied[index] && !(!activeWindow?.activated && monitor.activeWorkspace?.id === index+1)) ? 1 : 0
 
                 Behavior on opacity {
@@ -136,7 +147,12 @@ Item {
         property real activeWorkspaceMargin: 2
         implicitHeight: workspaceButtonWidth - activeWorkspaceMargin * 2
         radius: Appearance.rounding.full
-        color: Appearance.colors.colPrimary
+        color: Qt.rgba(
+            Appearance.colors.colPrimary.r,
+            Appearance.colors.colPrimary.g,
+            Appearance.colors.colPrimary.b,
+            0.85
+        )
         anchors.verticalCenter: parent.verticalCenter
 
         property real idx1: workspaceIndexInGroup

@@ -16,13 +16,17 @@ Item {
     Connections {
         target: Notifications
         function onInitDone() {
-            Notifications.list.slice().reverse().forEach((notification) => {
+            // Filter out any null notifications before processing
+            const validNotifications = Notifications.list.filter(notification => notification != null);
+            validNotifications.slice().reverse().forEach((notification) => {
+                if (!notification) return; // Skip null notifications
                 const notif = root.notifComponent.createObject(columnLayout, { notificationObject: notification });
                 notificationWidgetList.push(notif)
             })
         }
 
         function onNotify(notification) {
+            if (!notification) return; // Skip null notifications
             const notif = root.notifComponent.createObject(columnLayout, { notificationObject: notification });
             notificationWidgetList.unshift(notif)
 

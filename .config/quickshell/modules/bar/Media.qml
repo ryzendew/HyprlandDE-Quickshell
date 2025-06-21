@@ -46,7 +46,12 @@ Item {
         anchors.centerIn: parent
         width: parent.width
         implicitHeight: 32
-        color: borderless ? "transparent" : Appearance.colors.colLayer1
+        color: borderless ? "transparent" : Qt.rgba(
+            Appearance.colors.colLayer1.r,
+            Appearance.colors.colLayer1.g,
+            Appearance.colors.colLayer1.b,
+            0.65
+        )
         radius: Appearance.rounding.small
     }
 
