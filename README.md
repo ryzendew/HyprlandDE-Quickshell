@@ -4,3 +4,7 @@
 
 
 ## If anyone wants to fix the install script feel free i will accept the pull request! 
+
+## How to Install My dots
+
+Install End4 https://github.com/end-4/dots-hyprland and then overwrite all files from my .config https://github.com/ryzendew/Matts-Quickshell-Hyprland/tree/main/.config and done.
