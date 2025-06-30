@@ -19,9 +19,9 @@ TabButton {
     height: buttonBackground.height
     implicitWidth: Math.max(tabContentWidth, buttonBackground.implicitWidth, minimumWidth)
 
-    property color colBackground: ColorUtils.transparentize(Appearance?.colors.colLayer1Hover, 1) || "transparent"
-    property color colBackgroundHover: Appearance?.colors.colLayer1Hover ?? "#E5DFED"
-    property color colRipple: Appearance?.colors.colLayer1Active ?? "#D6CEE2"
+    property color colBackground: Qt.rgba(Appearance?.colors.colLayer1Hover.r, Appearance?.colors.colLayer1Hover.g, Appearance?.colors.colLayer1Hover.b, 0.6) || "transparent"
+    property color colBackgroundHover: Qt.rgba(Appearance?.colors.colLayer1Hover.r, Appearance?.colors.colLayer1Hover.g, Appearance?.colors.colLayer1Hover.b, 0.8) ?? "#E5DFED"
+    property color colRipple: Qt.rgba(Appearance?.colors.colLayer1Active.r, Appearance?.colors.colLayer1Active.g, Appearance?.colors.colLayer1Active.b, 0.8) ?? "#D6CEE2"
     property color colActive: Appearance?.colors.colPrimary ?? "#65558F"
     property color colInactive: Appearance?.colors.colOnLayer1 ?? "#45464F"
 

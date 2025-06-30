@@ -22,7 +22,9 @@ Button {
     background: Rectangle {
         anchors.fill: parent
         radius: Appearance.rounding.full
-        color: (button.down) ? Appearance.colors.colLayer2Active : (button.hovered ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2)
+        color: (button.down) ? Qt.rgba(Appearance.colors.colLayer2Active.r, Appearance.colors.colLayer2Active.g, Appearance.colors.colLayer2Active.b, 0.8) : 
+               (button.hovered ? Qt.rgba(Appearance.colors.colLayer2Hover.r, Appearance.colors.colLayer2Hover.g, Appearance.colors.colLayer2Hover.b, 0.8) : 
+                Qt.rgba(Appearance.colors.colLayer2.r, Appearance.colors.colLayer2.g, Appearance.colors.colLayer2.b, 0.8))
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)

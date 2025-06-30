@@ -50,7 +50,7 @@ Item {
                 text: "Clipboard History"
                 font.pixelSize: 16
                 font.weight: Font.Medium
-                color: Data.Colors.fgColor
+                color: Appearance.colors.colOnLayer0
                 Layout.fillWidth: true
             }
             
@@ -61,14 +61,14 @@ Item {
                 implicitHeight: 25
                 background: Rectangle {
                     radius: 12
-                    color: parent.down ? Qt.darker(Data.Colors.accentColor, 1.2) :
-                           parent.hovered ? Qt.lighter(Data.Colors.accentColor, 1.1) : 
-                           Qt.rgba(Data.Colors.accentColor.r, Data.Colors.accentColor.g, Data.Colors.accentColor.b, 0.8)
+                    color: parent.pressed ? Appearance.colors.colPrimary 
+                           : parent.hovered ? Qt.lighter(Appearance.colors.colPrimary, 1.2)
+                           : Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.7)
                 }
                 contentItem: Label {
                     text: parent.text
                     font.pixelSize: 11
-                    color: Data.Colors.fgColor
+                    color: Appearance.colors.colOnLayer0
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -96,9 +96,9 @@ Item {
                     contentItem: Rectangle {
                         implicitWidth: 6
                         radius: width / 2
-                        color: parent.pressed ? Data.Colors.accentColor 
-                             : parent.hovered ? Qt.lighter(Data.Colors.accentColor, 1.2)
-                             : Qt.rgba(Data.Colors.accentColor.r, Data.Colors.accentColor.g, Data.Colors.accentColor.b, 0.7)
+                        color: parent.pressed ? Appearance.colors.accentColor 
+                             : parent.hovered ? Qt.lighter(Appearance.colors.accentColor, 1.2)
+                             : Qt.rgba(Appearance.colors.accentColor.r, Appearance.colors.accentColor.g, Appearance.colors.accentColor.b, 0.7)
                     }
                 }
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -132,8 +132,8 @@ Item {
                         width: cliphistList.width
                         height: Math.max(50, contentText.contentHeight + 20)
                         radius: 8
-                        color: mouseArea.containsMouse ? Qt.darker(Data.Colors.bgColor, 1.15) : Qt.darker(Data.Colors.bgColor, 1.1)
-                        border.color: Data.Colors.accentColor
+                        color: mouseArea.containsMouse ? Qt.darker(Appearance.colors.colLayer0, 1.15) : Qt.darker(Appearance.colors.colLayer0, 1.1)
+                        border.color: Appearance.colors.colPrimary
                         border.width: 1
                         
                         // View optimization - only render visible items
@@ -162,7 +162,7 @@ Item {
                                     text: model.type === "image" ? "[Image Data]" : 
                                           (model.content.length > 100 ? model.content.substring(0, 100) + "..." : model.content)
                                     font.pixelSize: 12
-                                    color: Data.Colors.fgColor
+                                    color: Appearance.colors.colOnLayer0
                                     wrapMode: Text.WordWrap
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
@@ -176,7 +176,7 @@ Item {
                                     Label {
                                         text: model.type === "image" ? "Image" : (model.content.length + " chars")
                                         font.pixelSize: 10
-                                        color: Qt.darker(Data.Colors.fgColor, 1.5)
+                                        color: Qt.darker(Appearance.colors.colOnLayer0, 1.5)
                                     }
                                 }
                             }
@@ -201,7 +201,7 @@ Item {
                         anchors.centerIn: parent
                         text: "No clipboard history\nCopy something to get started"
                         font.pixelSize: 14
-                        color: Qt.darker(Data.Colors.fgColor, 1.5)
+                        color: Qt.darker(Appearance.colors.colOnLayer0, 1.5)
                         horizontalAlignment: Text.AlignHCenter
                         visible: cliphistList.count === 0
                         opacity: 0.7

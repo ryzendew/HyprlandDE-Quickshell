@@ -22,7 +22,7 @@ Singleton {
     // property real contentTransparency: 0.5
 
     m3colors: QtObject {
-        property bool darkmode: false
+        property bool darkmode: true
         property bool transparent: false
         property color m3primary_paletteKeyColor: "#91689E"
         property color m3secondary_paletteKeyColor: "#837186"
@@ -102,25 +102,25 @@ Singleton {
 
     colors: QtObject {
         property color colSubtext: m3colors.m3outline
-        property color colLayer0: ColorUtils.transparentize(m3colors.m3background, root.transparency)
+        property color colLayer0: m3colors.m3background
         property color colOnLayer0: m3colors.m3onBackground
-        property color colLayer0Hover: ColorUtils.transparentize(ColorUtils.mix(colLayer0, colOnLayer0, 0.9, root.contentTransparency))
-        property color colLayer0Active: ColorUtils.transparentize(ColorUtils.mix(colLayer0, colOnLayer0, 0.8, root.contentTransparency))
-        property color colLayer1: ColorUtils.transparentize(ColorUtils.mix(m3colors.m3surfaceContainerLow, m3colors.m3background, 0.7), root.contentTransparency);
-        property color colOnLayer1: m3colors.m3onSurfaceVariant;
-        property color colOnLayer1Inactive: ColorUtils.mix(colOnLayer1, colLayer1, 0.45);
-        property color colLayer2: ColorUtils.transparentize(ColorUtils.mix(m3colors.m3surfaceContainer, m3colors.m3surfaceContainerHigh, 0.55), root.contentTransparency)
-        property color colOnLayer2: m3colors.m3onSurface;
-        property color colOnLayer2Disabled: ColorUtils.mix(colOnLayer2, m3colors.m3background, 0.4);
-        property color colLayer3: ColorUtils.transparentize(ColorUtils.mix(m3colors.m3surfaceContainerHigh, m3colors.m3onSurface, 0.96), root.contentTransparency)
-        property color colOnLayer3: m3colors.m3onSurface;
-        property color colLayer1Hover: ColorUtils.transparentize(ColorUtils.mix(colLayer1, colOnLayer1, 0.92), root.contentTransparency)
-        property color colLayer1Active: ColorUtils.transparentize(ColorUtils.mix(colLayer1, colOnLayer1, 0.85), root.contentTransparency);
-        property color colLayer2Hover: ColorUtils.transparentize(ColorUtils.mix(colLayer2, colOnLayer2, 0.90), root.contentTransparency)
-        property color colLayer2Active: ColorUtils.transparentize(ColorUtils.mix(colLayer2, colOnLayer2, 0.80), root.contentTransparency);
-        property color colLayer2Disabled: ColorUtils.transparentize(ColorUtils.mix(colLayer2, m3colors.m3background, 0.8), root.contentTransparency);
-        property color colLayer3Hover: ColorUtils.transparentize(ColorUtils.mix(colLayer3, colOnLayer3, 0.90), root.contentTransparency)
-        property color colLayer3Active: ColorUtils.transparentize(ColorUtils.mix(colLayer3, colOnLayer3, 0.80), root.contentTransparency);
+        property color colLayer0Hover: ColorUtils.mix(colLayer0, colOnLayer0, 0.9)
+        property color colLayer0Active: ColorUtils.mix(colLayer0, colOnLayer0, 0.8)
+        property color colLayer1: m3colors.m3surfaceContainerLow
+        property color colOnLayer1: m3colors.m3onSurfaceVariant
+        property color colOnLayer1Inactive: ColorUtils.mix(colOnLayer1, colLayer1, 0.45)
+        property color colLayer2: ColorUtils.mix(m3colors.m3surfaceContainer, m3colors.m3surfaceContainerHigh, 0.55)
+        property color colOnLayer2: m3colors.m3onSurface
+        property color colOnLayer2Disabled: ColorUtils.mix(colOnLayer2, m3colors.m3background, 0.4)
+        property color colLayer3: ColorUtils.mix(m3colors.m3surfaceContainerHigh, m3colors.m3onSurface, 0.96)
+        property color colOnLayer3: m3colors.m3onSurface
+        property color colLayer1Hover: ColorUtils.mix(colLayer1, colOnLayer1, 0.92)
+        property color colLayer1Active: ColorUtils.mix(colLayer1, colOnLayer1, 0.85)
+        property color colLayer2Hover: ColorUtils.mix(colLayer2, colOnLayer2, 0.90)
+        property color colLayer2Active: ColorUtils.mix(colLayer2, colOnLayer2, 0.80)
+        property color colLayer2Disabled: ColorUtils.mix(colLayer2, m3colors.m3background, 0.8)
+        property color colLayer3Hover: ColorUtils.mix(colLayer3, colOnLayer3, 0.90)
+        property color colLayer3Active: ColorUtils.mix(colLayer3, colOnLayer3, 0.80)
         property color colPrimary: m3colors.m3primary
         property color colPrimaryHover: ColorUtils.mix(colors.colPrimary, colLayer1Hover, 0.87)
         property color colPrimaryActive: ColorUtils.mix(colors.colPrimary, colLayer1Active, 0.7)
@@ -133,10 +133,12 @@ Singleton {
         property color colSecondaryContainerActive: ColorUtils.mix(m3colors.m3secondaryContainer, colLayer1Active, 0.54)
         property color colSurfaceContainerHighestHover: ColorUtils.mix(m3colors.m3surfaceContainerHighest, m3colors.m3onSurface, 0.95)
         property color colSurfaceContainerHighestActive: ColorUtils.mix(m3colors.m3surfaceContainerHighest, m3colors.m3onSurface, 0.85)
-        property color colTooltip: m3colors.darkmode ? ColorUtils.mix(m3colors.m3background, "#3C4043", 0.5) : "#3C4043" // m3colors.m3inverseSurface in the specs, but the m3 website actually uses #3C4043
-        property color colOnTooltip: "#F8F9FA" // m3colors.m3inverseOnSurface in the specs, but the m3 website actually uses this color
+        property color colTooltip: m3colors.darkmode ? ColorUtils.mix(m3colors.m3background, "#3C4043", 0.5) : "#3C4043"
+        property color colOnTooltip: "#F8F9FA"
         property color colScrim: ColorUtils.transparentize(m3colors.m3scrim, 0.5)
         property color colShadow: ColorUtils.transparentize(m3colors.m3shadow, 0.7)
+        property color colOutline: m3colors.m3outline
+        property color colAccent: m3colors.m3primary
     }
 
     rounding: QtObject {
@@ -274,7 +276,7 @@ Singleton {
 
     sizes: QtObject {
         property real barHeight: 40
-        property real barCenterSideModuleWidth: 360
+        property real barCenterSideModuleWidth: 90
         property real barCenterSideModuleWidthShortened: 280
         property real barCenterSideModuleWidthHellaShortened: 190
         property real barShortenScreenWidthThreshold: 1200 // Shorten if screen width is at most this value

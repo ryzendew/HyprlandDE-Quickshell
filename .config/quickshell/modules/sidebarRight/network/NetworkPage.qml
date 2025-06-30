@@ -174,7 +174,12 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     height: settingsColumn.implicitHeight + 20
-                    color: Appearance.colors.colLayer2
+                    color: Qt.rgba(
+                        Appearance.colors.colLayer2.r,
+                        Appearance.colors.colLayer2.g,
+                        Appearance.colors.colLayer2.b,
+                        0.55
+                    )
                     radius: Appearance.rounding.small
 
                     ColumnLayout {

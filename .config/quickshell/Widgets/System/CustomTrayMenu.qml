@@ -11,8 +11,8 @@ Rectangle {
     implicitWidth: 360
     implicitHeight: Math.max(40, listView.contentHeight + 12 + 16)
     clip: true
-    color: Data.Colors.bgColor
-    border.color: Data.Colors.accentColor
+    color: Appearance.colors.colLayer0
+    border.color: Appearance.colors.colPrimary
     border.width: 3
     radius: 20
     visible: false
@@ -96,7 +96,7 @@ Rectangle {
 
             width: listView.width - 12
             height: modelData.isSeparator ? 10 : 28
-            color: modelData.isSeparator ? Data.Colors.bgColor : (mouseArea.containsMouse ? Data.Colors.highlightBg : "transparent")
+            color: modelData.isSeparator ? Appearance.colors.colLayer0 : (mouseArea.containsMouse ? Appearance.colors.colHighlightBg : "transparent")
             radius: modelData.isSeparator ? 0 : 4
 
             // Separator line rendering
@@ -109,7 +109,7 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width * 0.85
                     height: 1
-                    color: Data.Colors.accentColor
+                    color: Appearance.colors.colPrimary
                     opacity: 0.3
                 }
             }
@@ -124,7 +124,7 @@ Rectangle {
 
                 Text {
                     Layout.fillWidth: true
-                    color: (modelData?.enabled ?? true) ? Data.Colors.fgColor : Qt.darker(Data.Colors.fgColor, 1.8)
+                    color: (modelData?.enabled ?? true) ? Appearance.colors.colFg : Qt.darker(Appearance.colors.colFg, 1.8)
                     text: modelData?.text ?? ""
                     font.pixelSize: 12
                     font.family: "FiraCode Nerd Font"

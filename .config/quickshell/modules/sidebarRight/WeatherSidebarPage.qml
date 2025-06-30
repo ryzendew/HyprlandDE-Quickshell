@@ -34,7 +34,7 @@ Item {
     }
 
     property var forecastData: []
-    property string locationDisplay: ""
+    property string locationDisplay: "Halifax, Nova Scotia"
     property string lastUpdated: Qt.formatDateTime(new Date(), "hh:mm AP")
     property string currentTemp: "--"
     property string feelsLike: "--"
@@ -120,30 +120,35 @@ Item {
     // Isolated weather tab content
     ColumnLayout {
         anchors.fill: parent
-        spacing: 0
+        spacing: 12
         Layout.margins: 0
 
         // Header with location and refresh button
         Rectangle {
             Layout.fillWidth: true
-            height: 48
-            color: Appearance.colors.colLayer2
-            radius: 0
+            height: 74
+            color: Qt.rgba(
+                Appearance.colors.colLayer1.r,
+                Appearance.colors.colLayer1.g,
+                Appearance.colors.colLayer1.b,
+                0.55
+            )
+            radius: Appearance.rounding.normal
             border.color: Appearance.colors.colOnLayer0
             border.width: 0
             
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 12
+                anchors.margins: 8
                 spacing: 8
                 
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 0
                     Text {
-                        text: root.locationDisplay
-                        font.pixelSize: Appearance.font.pixelSize.normal
-                        font.weight: Font.Medium
+                        text: root.locationDisplay && root.locationDisplay.length > 0 ? root.locationDisplay : qsTr("Halifax, Nova Scotia")
+                        font.pixelSize: Appearance.font.pixelSize.larger
+                        font.weight: Font.Bold
                         color: Appearance.colors.colOnLayer1
                         horizontalAlignment: Text.AlignLeft
                         Layout.alignment: Qt.AlignLeft
@@ -159,18 +164,17 @@ Item {
                         elide: Text.ElideRight
                     }
                 }
-                
-                // Refresh button
+                Item { Layout.fillWidth: true }
                 RippleButton {
                     Layout.preferredWidth: 34
                     Layout.preferredHeight: 34
                     buttonRadius: Appearance.rounding.full
-                        onClicked: root.refreshWeather()
+                    onClicked: root.refreshWeather()
                     contentItem: MaterialSymbol {
-                            anchors.centerIn: parent
+                        anchors.centerIn: parent
                         text: "refresh"
                         iconSize: 16
-                            color: Appearance.colors.colOnLayer1
+                        color: Appearance.colors.colOnLayer1
                     }
                 }
             }
@@ -187,8 +191,13 @@ Item {
         // Current weather info section
         Rectangle {
             Layout.fillWidth: true
-            height: 64
-            color: Appearance.colors.colLayer1
+            height: 56
+            color: Qt.rgba(
+                Appearance.colors.colLayer1.r,
+                Appearance.colors.colLayer1.g,
+                Appearance.colors.colLayer1.b,
+                0.55
+            )
             
             RowLayout {
                 anchors.fill: parent
@@ -282,7 +291,7 @@ Item {
         Rectangle {
             visible: root.weatherAlerts.length > 0
             Layout.fillWidth: true
-            implicitHeight: alertColumn.implicitHeight + 12
+            implicitHeight: alertColumn.implicitHeight + 4
             color: Qt.rgba(1, 0.3, 0.2, 0.1)
             border.color: Qt.rgba(1, 0.3, 0.2, 0.3)
             border.width: 1
@@ -290,7 +299,7 @@ Item {
             ColumnLayout {
                 id: alertColumn
                 anchors.fill: parent
-                anchors.margins: 8
+                anchors.margins: 4
                 spacing: 4
                 Repeater {
                     model: root.weatherAlerts
@@ -317,117 +326,132 @@ Item {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-                spacing: 0
+            spacing: 8
 
-                // Section header
-                Rectangle {
+            // Section header
+            Text {
+                text: qsTr("7-Day Forecast")
+                font.pixelSize: Appearance.font.pixelSize.large
+                font.weight: Font.Bold
+                color: Appearance.colors.colOnLayer1
+                opacity: 0.9
+                Layout.topMargin: 8
+                Layout.bottomMargin: 4
+            }
+
+            // Forecast items
+            Repeater {
+                model: Math.min(7, root.forecastData.length)
+                delegate: Rectangle {
                     Layout.fillWidth: true
-                height: 40
-                    color: Appearance.colors.colLayer2
-                    
-                    Text {
-                        anchors.left: parent.left
-                        anchors.leftMargin: 16
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: qsTr("7-Day Forecast")
-                        font.pixelSize: Appearance.font.pixelSize.large
-                        font.weight: Font.Medium
-                        color: Appearance.colors.colOnLayer1
-                        opacity: 0.9
-                    }
-                }
-
-                // Forecast items
-                Repeater {
-                    model: Math.min(7, root.forecastData.length)
-                    delegate: Rectangle {
-                        Layout.fillWidth: true
-                    height: 64
-                        color: index % 2 === 0 ? Appearance.colors.colLayer1 : Qt.rgba(Appearance.colors.colLayer2.r, Appearance.colors.colLayer2.g, Appearance.colors.colLayer2.b, 0.3)
-                        
-                        RowLayout {
-                            anchors.fill: parent
-                        anchors.margins: 12
+                    height: 54
+                    color: index % 2 === 0 ? Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.55) : 
+                                   Qt.rgba(Appearance.colors.colLayer2.r, Appearance.colors.colLayer2.g, Appearance.colors.colLayer2.b, 0.3)
+                    Layout.topMargin: 6
+                    Layout.bottomMargin: 6
+                    radius: Appearance.rounding.normal
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 8
                         spacing: 12
-                            
-                            // Day name
-                            Text {
-                                Layout.preferredWidth: 60
-                                text: root.forecastData[index].date
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                                font.weight: Font.Bold
-                                color: Appearance.colors.colOnLayer1
-                                horizontalAlignment: Text.AlignLeft
+                        
+                        // Day name
+                        Text {
+                            Layout.preferredWidth: 60
+                            text: root.forecastData[index].date
+                            font.pixelSize: Appearance.font.pixelSize.large
+                            font.weight: Font.Bold
+                            color: Appearance.colors.colOnLayer1
+                            horizontalAlignment: Text.AlignLeft
+                        }
+                        
+                        // Weather emoji or SVG for fog
+                        Item {
+                            Layout.preferredWidth: 40
+                            Layout.preferredHeight: 40
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "transparent"
+                                z: 0
                             }
-                            
-                            // Weather emoji
+                            // Use SVG for fog, emoji for others
+                            Image {
+                                anchors.centerIn: parent
+                                source: root.forecastData[index].condition.toLowerCase().indexOf("fog") !== -1 ? "root:/assets/weather/fog.svg" : ""
+                                visible: root.forecastData[index].condition.toLowerCase().indexOf("fog") !== -1
+                                width: 32
+                                height: 32
+                                fillMode: Image.PreserveAspectFit
+                            }
                             Text {
-                                Layout.preferredWidth: 40
-                                text: root.forecastData[index].emoji
-                            font.pixelSize: 28
+                                anchors.centerIn: parent
+                                text: root.forecastData[index].condition.toLowerCase().indexOf("fog") !== -1 ? "" : root.forecastData[index].emoji
+                                font.pixelSize: 32
                                 horizontalAlignment: Text.AlignCenter
-                            }
-                            
-                            // Condition
-                            Text {
-                                Layout.fillWidth: true
-                                text: root.forecastData[index].condition
-                                font.pixelSize: Appearance.font.pixelSize.normal
-                                color: Appearance.colors.colOnLayer1
-                                opacity: 0.85
-                                elide: Text.ElideRight
-                                wrapMode: Text.WordWrap
-                            maximumLineCount: 1
-                            }
-                            
-                            // Temperature
-                            Text {
-                                Layout.preferredWidth: 80
-                                text: root.forecastData[index].temp
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                                font.weight: Font.Bold
-                                color: Appearance.colors.colOnLayer1
-                                horizontalAlignment: Text.AlignRight
+                                z: 1
                             }
                         }
                         
-                        // Bottom separator for each item except last
-                        Rectangle {
-                            anchors.bottom: parent.bottom
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            height: 1
-                            color: Appearance.colors.colOnLayer0
-                            opacity: 0.1
-                            visible: index < Math.min(7, root.forecastData.length) - 1
+                        // Condition
+                        Text {
+                            Layout.fillWidth: true
+                            text: root.forecastData[index].condition
+                            font.pixelSize: Appearance.font.pixelSize.large
+                            color: Appearance.colors.colOnLayer1
+                            opacity: 0.85
+                            elide: Text.ElideRight
+                            wrapMode: Text.WordWrap
+                        maximumLineCount: 1
+                        }
+                        
+                        // Temperature
+                        Text {
+                            Layout.preferredWidth: 80
+                            text: root.forecastData[index].temp
+                            font.pixelSize: Appearance.font.pixelSize.large
+                            font.weight: Font.Bold
+                            color: Appearance.colors.colOnLayer1
+                            horizontalAlignment: Text.AlignRight
                         }
                     }
-                }
-                
-                // Placeholder if no data
-                Item {
-                    visible: !root.forecastData || root.forecastData.length === 0
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 120
                     
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        spacing: 8
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            font.pixelSize: 32
-                            color: Appearance.colors.colOnLayer1
-                            opacity: 0.3
-                            horizontalAlignment: Text.AlignHCenter
-                            text: "☁️"
-                        }
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            font.pixelSize: Appearance.font.pixelSize.small
-                            color: Appearance.colors.colOnLayer1
-                            opacity: 0.5
-                            horizontalAlignment: Text.AlignHCenter
-                            text: qsTr("No forecast data")
+                    // Bottom separator for each item except last
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 1
+                        color: Appearance.colors.colOnLayer0
+                        opacity: 0.1
+                        visible: index < Math.min(7, root.forecastData.length) - 1
+                    }
+                }
+            }
+            
+            // Placeholder if no data
+            Item {
+                visible: !root.forecastData || root.forecastData.length === 0
+                Layout.fillWidth: true
+                Layout.preferredHeight: 120
+                
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        font.pixelSize: 32
+                        color: Appearance.colors.colOnLayer1
+                        opacity: 0.3
+                        horizontalAlignment: Text.AlignHCenter
+                        text: "☁️"
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: Appearance.colors.colOnLayer1
+                        opacity: 0.5
+                        horizontalAlignment: Text.AlignHCenter
+                        text: qsTr("No forecast data")
                     }
                 }
             }

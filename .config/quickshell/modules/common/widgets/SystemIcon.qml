@@ -49,7 +49,12 @@ Item {
                     var iconValue = line.substring(5).trim()
                     // console.log("[SYSTEMICON DEBUG] Found icon in desktop file:", iconValue)
                     
-                    if (iconValue.startsWith('/')) { // Absolute path
+                    // Check if we have a mapping for this .desktop file
+                    var mappedIcon = iconMappings[iconName]
+                    if (mappedIcon) {
+                        // console.log("[SYSTEMICON DEBUG] Using mapped icon:", mappedIcon, "for:", iconName)
+                        resolvedIconPath = IconTheme.getIconPath(mappedIcon, homeDirectory)
+                    } else if (iconValue.startsWith('/')) { // Absolute path
                         resolvedIconPath = iconValue
                     } else { // Icon name, resolve it
                         resolvedIconPath = IconTheme.getIconPath(iconValue, homeDirectory)
@@ -72,16 +77,25 @@ Item {
     // Simple icon mapping for common cases (fallback)
     property var iconMappings: {
         "cider": "cider", "Cider": "cider", "spotify": "spotify", "obs": "com.obsproject.Studio",
-        "vlc": "vlc", "mpv": "mpv", "code": "visual-studio-code", "cursor": "cursor", "Cursor": "cursor",
+        "vlc": "vlc", "mpv": "mpv", "code": "visual-studio-code", "cursor": "/opt/Cursor/code.png", "Cursor": "/opt/Cursor/code.png",
         "firefox": "firefox", "google-chrome": "google-chrome", "chromium": "chromium",
         "discord": "discord", "Discord": "discord", "vesktop": "discord", 
         "org.gnome.Nautilus": "system-file-manager", "nautilus": "system-file-manager",
-        "org.gnome.Ptyxis": "terminal", "ptyxis": "terminal"
+        "org.gnome.Ptyxis": "terminal", "ptyxis": "terminal",
+        "net.lutris.davinci-resolve-studio-20-1.desktop": "davinci-resolve",
+        "davinci-resolve-studio-20": "davinci-resolve",
+        "DaVinci Resolve Studio 20": "davinci-resolve",
+        "resolve": "davinci-resolve",
+        "com.blackmagicdesign.resolve": "davinci-resolve"
     }
     
     // Map window classes to their corresponding desktop files
     property var windowClassToDesktopFile: {
-        "photo.exe": "AffinityPhoto.desktop", "Photo.exe": "AffinityPhoto.desktop"
+        "photo.exe": "AffinityPhoto.desktop", "Photo.exe": "AffinityPhoto.desktop",
+        "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+        "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+        "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+        "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop"
     }
     
     // Get the best icon name to use for resolution
@@ -132,7 +146,10 @@ Item {
         if (sourcePath && sourcePath !== "") {
             mainIcon.source = formatPathForImageSource(sourcePath);
         } else {
-            // console.warn("[SYSTEMICON DEBUG] No valid icon path found for (updateIconSource):", iconName, ", attempting final fallback.");
+            // Only warn if logging is enabled and warnings are not suppressed
+            if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.warning && !ConfigOptions?.logging?.suppressIconWarnings) {
+                console.warn("[SYSTEMICON DEBUG] No valid icon path found for (updateIconSource):", iconName, ", attempting final fallback.");
+            }
             var fallbackPath = IconTheme.getIconPath(fallbackIcon, homeDirectory);
             mainIcon.source = formatPathForImageSource(fallbackPath); // Fallback icon
         }

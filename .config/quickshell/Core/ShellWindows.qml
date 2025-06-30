@@ -10,7 +10,6 @@ import "root:/Widgets/System" as System
 import "root:/Data" as Data
 import "root:/Widgets/Panel" as TopPanel
 import "root:/Widgets/Panel" as WidgetsBar
-import "root:/Widgets/ControlPanel" as ControlPanel
 
 // Multi-monitor shell window manager
 Scope {
@@ -100,10 +99,10 @@ Scope {
                 visible: shellWindow.screen === Quickshell.primaryScreen
             }
 
-            // Control panel on all screens
-            ControlPanel.ControlPanel {
-                shell: shellWindows.shell
-            }
+            // Control panel on all screens - DISABLED
+            // ControlPanel.ControlPanel {
+            //     shell: shellWindows.shell
+            // }
         }
     }
 }

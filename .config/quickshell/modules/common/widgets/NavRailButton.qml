@@ -30,8 +30,12 @@ Button {
             Layout.alignment: Qt.AlignHCenter
             radius: Appearance.rounding.full
             color: toggled ? 
-                (button.down ? Appearance.colors.colSecondaryContainerActive : button.hovered ? Appearance.colors.colSecondaryContainerHover : Appearance.m3colors.m3secondaryContainer) :
-                (button.down ? Appearance.colors.colLayer1Active : button.hovered ? Appearance.colors.colLayer1Hover : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1))
+                (button.down ? Qt.rgba(Appearance.colors.colSecondaryContainerActive.r, Appearance.colors.colSecondaryContainerActive.g, Appearance.colors.colSecondaryContainerActive.b, 0.8) : 
+                 button.hovered ? Qt.rgba(Appearance.colors.colSecondaryContainerHover.r, Appearance.colors.colSecondaryContainerHover.g, Appearance.colors.colSecondaryContainerHover.b, 0.8) : 
+                 Qt.rgba(Appearance.m3colors.m3secondaryContainer.r, Appearance.m3colors.m3secondaryContainer.g, Appearance.m3colors.m3secondaryContainer.b, 0.8)) :
+                (button.down ? Qt.rgba(Appearance.colors.colLayer1Active.r, Appearance.colors.colLayer1Active.g, Appearance.colors.colLayer1Active.b, 0.8) : 
+                 button.hovered ? Qt.rgba(Appearance.colors.colLayer1Hover.r, Appearance.colors.colLayer1Hover.g, Appearance.colors.colLayer1Hover.b, 0.8) : 
+                 Qt.rgba(Appearance.colors.colLayer1Hover.r, Appearance.colors.colLayer1Hover.g, Appearance.colors.colLayer1Hover.b, 0.6))
 
             Behavior on color {
                 animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)

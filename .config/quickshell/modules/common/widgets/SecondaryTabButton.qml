@@ -17,9 +17,9 @@ TabButton {
     height: buttonBackground.height
     property int tabContentWidth: buttonBackground.width - buttonBackground.radius*2
 
-    property color colBackground: ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
-    property color colBackgroundHover: Appearance.colors.colLayer1Hover
-    property color colRipple: Appearance.colors.colLayer1Active
+    property color colBackground: Qt.rgba(Appearance.colors.colLayer1Hover.r, Appearance.colors.colLayer1Hover.g, Appearance.colors.colLayer1Hover.b, 0.6)
+    property color colBackgroundHover: Qt.rgba(Appearance.colors.colLayer1Hover.r, Appearance.colors.colLayer1Hover.g, Appearance.colors.colLayer1Hover.b, 0.8)
+    property color colRipple: Qt.rgba(Appearance.colors.colLayer1Active.r, Appearance.colors.colLayer1Active.g, Appearance.colors.colLayer1Active.b, 0.8)
 
     PointingHandInteraction {}
 

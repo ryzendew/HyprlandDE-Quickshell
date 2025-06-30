@@ -131,4 +131,15 @@ Singleton {
         property int arbitraryRaceConditionDelay: 20 // milliseconds
     }
 
+    property QtObject logging: QtObject {
+        property bool enabled: false // Master switch for all logging
+        property bool debug: false
+        property bool info: false
+        property bool warning: false
+        property bool error: true // Keep errors enabled by default
+        property bool suppressIconWarnings: true // Suppress icon loading warnings
+        property bool suppressQmlWarnings: true // Suppress QML warnings
+        property bool suppressHyprlandWarnings: true // Suppress Hyprland dispatch warnings
+    }
+
 }

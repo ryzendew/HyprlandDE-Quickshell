@@ -22,9 +22,57 @@ DockButton {
     property real countDotWidth: 10
     property real countDotHeight: 4
     property bool appIsActive: appToplevel.toplevels.find(t => (t.activated == true)) !== undefined
+    property real mouseX: 0
+    property real mouseY: 0
 
     property bool isSeparator: appToplevel.appId === "SEPARATOR"
     property var desktopEntry: DesktopEntries.byId(appToplevel.appId)
+    Popup {
+    id: customMenu
+    x: mouseX
+    y: Math.max(0, mouseY - customMenu.height + 50)
+    width: 180
+    modal: false
+    focus: true
+    background: Rectangle {
+    color: Appearance.colors.colLayer0 // this is dark, matches dock
+    border.color: "white"
+    border.width: 2
+    radius: Appearance.rounding.normal
+}
+    Column {
+        spacing: 0
+        Button {
+            text: root.appToplevel.pinned ? "Unpin from Dock" : "Pin to Dock"
+            background: Rectangle {
+                color: hovered ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
+                radius: Appearance.rounding.normal
+            }
+            font.bold: true
+            font.pixelSize: 16
+            contentItem: Text {
+                text: parent.text
+                color: Appearance.colors.colOnLayer0 // Set text color here!
+                font.bold: true
+                font.pixelSize: 16
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                anchors.fill: parent
+            }
+            onClicked: {
+                if (root.appToplevel.pinned) {
+                    var index = ConfigOptions.dock.pinnedApps.indexOf(root.appToplevel.appId)
+                    if (index !== -1) {
+                        ConfigOptions.dock.pinnedApps.splice(index, 1)
+                    }
+                } else {
+                    ConfigOptions.dock.pinnedApps.push(root.appToplevel.appId)
+                }
+                customMenu.close()
+            }
+        }
+    }
+}
     enabled: !isSeparator
     implicitWidth: isSeparator ? 1 : implicitHeight - topInset - bottomInset
 
@@ -38,7 +86,55 @@ DockButton {
         sourceComponent: DockSeparator {}
     }
 
-    Loader {
+Menu {
+    id: contextMenu
+    palette {
+        window: Qt.rgba(1, 1, 1, 0.08)      // dark background
+        windowText: Qt.rgb(255, 255, 255)   // white text
+        button: Qt.rgba(1, 1, 1, 0.08)
+        buttonText: Qt.rgba(1, 1, 1, 0.08)
+        highlight: Qt.rgba(1, 1, 1, 0.08)
+    }
+    MenuItem {
+        text: root.appToplevel.pinned ? "Unpin from Dock" : "Pin to Dock"
+        contentItem: Text {
+            text: parent.text
+            color: "white"
+            font.pixelSize: 16
+            font.bold: true
+        }
+        background: Rectangle {
+            color: control.highlighted ? Qt.rgba(1, 1, 1, 0.08) : "transparent" // subtle white highlight
+            radius: 8 // rounded corners
+        }
+        // The rest of your onTriggered logic goes here
+        onTriggered: {
+            if (root.appToplevel.pinned) {
+                var index = ConfigOptions.dock.pinnedApps.indexOf(root.appToplevel.appId)
+                if (index !== -1) {
+                    ConfigOptions.dock.pinnedApps.splice(index, 1)
+                }
+            } else {
+                ConfigOptions.dock.pinnedApps.push(root.appToplevel.appId)
+            }
+        }
+    }
+}
+
+MouseArea {
+    anchors.fill: parent
+    acceptedButtons: Qt.RightButton | Qt.LeftButton
+    onClicked: (mouse) => {
+        if (mouse.button === Qt.RightButton) {
+            root.mouseX = mouse.x
+            root.mouseY = mouse.y
+            customMenu.open()
+        }
+        // Left-click logic here (if you have any)
+    }
+}
+
+Loader {
         anchors.fill: parent
         active: appToplevel.toplevels.length > 0
         sourceComponent: MouseArea {
@@ -106,7 +202,7 @@ DockButton {
                         implicitWidth: (appToplevel.toplevels.length <= 3) ? 
                             root.countDotWidth : root.countDotHeight // Circles when too many
                         implicitHeight: root.countDotHeight
-                        color: appIsActive ? Appearance.m3colors.m3primary : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.4)
+                        color: appIsActive ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.4)
                     }
                 }
             }

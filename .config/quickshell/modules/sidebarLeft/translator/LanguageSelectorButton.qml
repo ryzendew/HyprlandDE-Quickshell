@@ -13,7 +13,7 @@ import Quickshell.Hyprland
 RippleButton {
     id: root
     property string displayText: ""
-    colBackground: Appearance.colors.colLayer2
+    colBackground: Qt.rgba(Appearance.colors.colLayer2.r, Appearance.colors.colLayer2.g, Appearance.colors.colLayer2.b, 0.8)
 
     implicitWidth: contentItem.implicitWidth + horizontalPadding * 2
     implicitHeight: contentItem.implicitHeight + verticalPadding * 2

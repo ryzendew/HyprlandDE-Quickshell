@@ -8,8 +8,8 @@
     "lutris",
     "heroic",
     "obs",
-    "com.blackmagicdesign.resolve.desktop",
     "AffinityPhoto.desktop",
+    "resolve",
     "ptyxis"
   ],
   "autoHide": false

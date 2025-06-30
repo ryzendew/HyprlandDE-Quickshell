@@ -12,7 +12,6 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
 import Quickshell.Hyprland
-import "./CheatsheetKeybinds.qml"
 
 Scope { // Scope
     id: root

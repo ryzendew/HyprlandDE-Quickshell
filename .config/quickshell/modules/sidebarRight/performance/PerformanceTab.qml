@@ -16,7 +16,12 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         height: 48
-        color: Appearance.colors.colLayer2
+        color: Qt.rgba(
+            Appearance.colors.colLayer2.r,
+            Appearance.colors.colLayer2.g,
+            Appearance.colors.colLayer2.b,
+            0.55
+        )
         border.color: Appearance.colors.colOnLayer0
         border.width: 1
         RowLayout {

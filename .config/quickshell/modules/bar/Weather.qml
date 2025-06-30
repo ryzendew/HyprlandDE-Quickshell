@@ -44,15 +44,35 @@ Item {
         anchors {
             centerIn: parent
             verticalCenter: parent.verticalCenter
-            verticalCenterOffset: -11
+            verticalCenterOffset: -18
         }
 
+        // Weather icon container - supports both SVG and emoji
+        Item {
+            Layout.preferredWidth: 32
+            Layout.preferredHeight: 32
+            Layout.alignment: Qt.AlignVCenter
+
+            // SVG for fog
+            Image {
+                id: fogIcon
+                anchors.centerIn: parent
+                source: isFogCondition(weatherData.currentCondition) ? "root:/assets/weather/fog.svg" : ""
+                visible: isFogCondition(weatherData.currentCondition)
+                width: 28
+                height: 28
+                fillMode: Image.PreserveAspectFit
+            }
+
+            // Emoji for other conditions
         Text {
             id: weatherIcon
-            text: weatherData.currentEmoji || "❓"
+                anchors.centerIn: parent
+                text: isFogCondition(weatherData.currentCondition) ? "" : (weatherData.currentEmoji || "❓")
             font.pixelSize: Appearance.font.pixelSize.larger
             color: Appearance.colors.colOnLayer0
-            Layout.alignment: Qt.AlignVCenter
+                visible: !isFogCondition(weatherData.currentCondition)
+            }
         }
 
         RowLayout {
@@ -86,6 +106,13 @@ Item {
         ToolTip.visible: containsMouse
         ToolTip.text: weatherData.currentCondition || "Weather"
         ToolTip.delay: 500
+    }
+
+    // Helper function to check if condition is fog
+    function isFogCondition(condition) {
+        if (!condition) return false
+        const lower = condition.toLowerCase()
+        return lower.includes("fog") || lower.includes("mist")
     }
 
     function getWeatherEmoji(condition) {

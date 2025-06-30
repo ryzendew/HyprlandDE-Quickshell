@@ -378,9 +378,9 @@ Item {
                     width: parent.width
                     height: parent.height - parent.children[0].height - parent.spacing
                     color: Qt.rgba(
-                        Qt.lighter(Data.Colors.bgColor, 1.2).r,
-                        Qt.lighter(Data.Colors.bgColor, 1.2).g,
-                        Qt.lighter(Data.Colors.bgColor, 1.2).b,
+                        Qt.darker(Data.Colors.bgColor, 1.05).r,
+                        Qt.darker(Data.Colors.bgColor, 1.05).g,
+                        Qt.darker(Data.Colors.bgColor, 1.05).b,
                         0.85
                     )
                     radius: 20
@@ -460,7 +460,7 @@ Item {
                 Rectangle {
                     width: parent.width
                     height: parent.height - parent.children[0].height - parent.spacing
-                    color: Qt.lighter(Data.Colors.bgColor, 1.2)
+                    color: Qt.darker(Data.Colors.bgColor, 1.05)
                     radius: 20
                     clip: true
 
@@ -532,7 +532,7 @@ Item {
                 Rectangle {
                     width: parent.width
                     height: parent.height - parent.children[0].height - parent.spacing
-                    color: Qt.lighter(Data.Colors.bgColor, 1.2)
+                    color: Qt.darker(Data.Colors.bgColor, 1.05)
                     radius: 20
                     clip: true
 
@@ -565,7 +565,7 @@ Item {
                 Rectangle {
                     width: parent.width
                     height: parent.height - parent.children[0].height - parent.spacing
-                    color: Qt.lighter(Data.Colors.bgColor, 1.2)
+                    color: Qt.darker(Data.Colors.bgColor, 1.05)
                     radius: 20
                     clip: true
 

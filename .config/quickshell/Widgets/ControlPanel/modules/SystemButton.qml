@@ -22,12 +22,12 @@ Rectangle {
         } else {
             return mouseArea.containsMouse ? 
                    Qt.lighter(Data.Colors.accentColor, 1.2) : 
-                   Qt.lighter(Data.Colors.bgColor, 1.15)
+                   Qt.darker(Data.Colors.bgColor, 1.05)
         }
     }
     
     border.width: isActive ? 2 : 1
-    border.color: isActive ? Data.Colors.accentColor : Qt.lighter(Data.Colors.bgColor, 1.3)
+    border.color: isActive ? Data.Colors.accentColor : Qt.darker(Data.Colors.bgColor, 1.1)
     
     signal clicked()
     signal mouseChanged(bool containsMouse)

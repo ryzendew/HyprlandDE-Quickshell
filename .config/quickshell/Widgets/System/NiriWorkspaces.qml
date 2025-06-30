@@ -15,7 +15,7 @@ Rectangle {
     property int currentWorkspace: -1
     property bool isDestroying: false
     
-    color: Data.Colors.bgColor
+    color: Appearance.colors.colLayer0
     width: 32
     height: workspaceColumn.implicitHeight + 24
     
@@ -163,15 +163,15 @@ Rectangle {
                 // Material Design 3 inspired colors
                 color: {
                     if (model.isFocused) {
-                        return Data.Colors.accent;
+                        return Appearance.colors.colPrimary;
                     }
                     if (model.isActive) {
-                        return Qt.rgba(Data.Colors.accent.r, Data.Colors.accent.g, Data.Colors.accent.b, 0.5);
+                        return Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.5);
                     }
                     if (model.isUrgent) {
-                        return Data.Colors.error;
+                        return Appearance.colors.colError;
                     }
-                    return Qt.rgba(Data.Colors.primaryText.r, Data.Colors.primaryText.g, Data.Colors.primaryText.b, 0.4);
+                    return Qt.rgba(Appearance.colors.colOnLayer0.r, Appearance.colors.colOnLayer0.g, Appearance.colors.colOnLayer0.b, 0.4);
                 }
                 
                 // Elevation shadow
@@ -218,7 +218,7 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: model.idx.toString()
-                    color: model.isFocused ? Data.Colors.background : Data.Colors.primaryText
+                    color: model.isFocused ? Appearance.colors.colLayer0 : Appearance.colors.colOnLayer0
                     font.pixelSize: model.isFocused ? 10 : 8
                     font.bold: model.isFocused
                     font.family: "Roboto, sans-serif"
@@ -240,7 +240,7 @@ Rectangle {
                     // Hover feedback
                     onEntered: {
                         if (!model.isFocused) {
-                            workspacePill.color = Qt.rgba(Data.Colors.primaryText.r, Data.Colors.primaryText.g, Data.Colors.primaryText.b, 0.6);
+                            workspacePill.color = Qt.rgba(Appearance.colors.colOnLayer0.r, Appearance.colors.colOnLayer0.g, Appearance.colors.colOnLayer0.b, 0.6);
                         }
                     }
                     
@@ -248,11 +248,11 @@ Rectangle {
                         // Reset to normal color
                         if (!model.isFocused) {
                             if (model.isActive) {
-                                workspacePill.color = Qt.rgba(Data.Colors.accent.r, Data.Colors.accent.g, Data.Colors.accent.b, 0.5);
+                                workspacePill.color = Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.5);
                             } else if (model.isUrgent) {
-                                workspacePill.color = Data.Colors.error;
+                                workspacePill.color = Appearance.colors.colError;
                             } else {
-                                workspacePill.color = Qt.rgba(Data.Colors.primaryText.r, Data.Colors.primaryText.g, Data.Colors.primaryText.b, 0.4);
+                                workspacePill.color = Qt.rgba(Appearance.colors.colOnLayer0.r, Appearance.colors.colOnLayer0.g, Appearance.colors.colOnLayer0.b, 0.4);
                             }
                         }
                     }
@@ -278,7 +278,7 @@ Rectangle {
         id: topLeftCorner
         position: "topleft"
         size: 1.3
-        fillColor: Data.Colors.bgColor 
+        fillColor: Appearance.colors.colLayer0
         offsetX: -41
         offsetY: -25
     }
@@ -287,7 +287,7 @@ Rectangle {
         id: bottomLeftCorner
         position: "bottomleft"
         size: 1.3
-        fillColor: Data.Colors.bgColor
+        fillColor: Appearance.colors.colLayer0
         offsetX: -41
         offsetY: 78
     }

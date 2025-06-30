@@ -115,7 +115,7 @@ Popup {
     }
 
     background: Rectangle {
-        color: Data.Colors.bgColor
+        color: Appearance.colors.colLayer0
         topRightRadius: 20
     }
 }

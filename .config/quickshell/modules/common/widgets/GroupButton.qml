@@ -47,12 +47,12 @@ Button {
         animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
     }
 
-    property color colBackground: ColorUtils.transparentize(Appearance?.colors.colLayer1Hover, 1) || "transparent"
-    property color colBackgroundHover: Appearance?.colors.colLayer1Hover ?? "#E5DFED"
-    property color colBackgroundActive: Appearance?.colors.colLayer1Active ?? "#D6CEE2"
-    property color colBackgroundToggled: Appearance?.colors.colPrimary ?? "#65558F"
-    property color colBackgroundToggledHover: Appearance?.colors.colPrimaryHover ?? "#77699C"
-    property color colBackgroundToggledActive: Appearance?.colors.colPrimaryActive ?? "#D6CEE2"
+    property color colBackground: Qt.rgba(Appearance?.colors.colLayer1Hover.r, Appearance?.colors.colLayer1Hover.g, Appearance?.colors.colLayer1Hover.b, 0.6) || "transparent"
+    property color colBackgroundHover: Qt.rgba(Appearance?.colors.colLayer1Hover.r, Appearance?.colors.colLayer1Hover.g, Appearance?.colors.colLayer1Hover.b, 0.8) ?? "#E5DFED"
+    property color colBackgroundActive: Qt.rgba(Appearance?.colors.colLayer1Active.r, Appearance?.colors.colLayer1Active.g, Appearance?.colors.colLayer1Active.b, 0.8) ?? "#D6CEE2"
+    property color colBackgroundToggled: Qt.rgba(Appearance?.colors.colPrimary.r, Appearance?.colors.colPrimary.g, Appearance?.colors.colPrimary.b, 0.8) ?? "#65558F"
+    property color colBackgroundToggledHover: Qt.rgba(Appearance?.colors.colPrimaryHover.r, Appearance?.colors.colPrimaryHover.g, Appearance?.colors.colPrimaryHover.b, 0.8) ?? "#77699C"
+    property color colBackgroundToggledActive: Qt.rgba(Appearance?.colors.colPrimaryActive.r, Appearance?.colors.colPrimaryActive.g, Appearance?.colors.colPrimaryActive.b, 0.8) ?? "#D6CEE2"
 
     property real radius: root.down ? root.buttonRadiusPressed : root.buttonRadius
     property color color: root.enabled ? (root.toggled ? 

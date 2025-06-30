@@ -6,7 +6,7 @@ import "./modules/common/"
 import "./modules/backgroundWidgets/"
 import "./modules/bar/"
 import "./modules/cheatsheet/"
-import "./modules/ControlPanel/"
+// import "./modules/ControlPanel/"  // DISABLED
 import "./modules/dock/"
 import "./modules/mediaControls/"
 import "./modules/notificationPopup/"
@@ -33,7 +33,7 @@ ShellRoot {
     property bool enableBar: true
     property bool enableBackgroundWidgets: false
     property bool enableCheatsheet: true
-    property bool enableControlPanel: true
+    property bool enableControlPanel: false  // DISABLED
     property bool enableDock: true
     property bool enableMediaControls: true
     property bool enableNotificationPopup: true
@@ -69,15 +69,15 @@ ShellRoot {
     Loader { active: enableBackgroundWidgets; sourceComponent: BackgroundWidgets {} }
     Loader { active: enableCheatsheet; sourceComponent: Cheatsheet {} }
     
-    // Control Panel with direct instantiation
-    ControlPanel {
-        id: controlPanel
-        shell: root
-        isShown: true
-        Component.onCompleted: {
-            console.log("ControlPanel loaded directly in shell.qml")
-        }
-    }
+    // Control Panel - DISABLED
+    // ControlPanel {
+    //     id: controlPanel
+    //     shell: root
+    //     isShown: true
+    //     Component.onCompleted: {
+    //         console.log("ControlPanel loaded directly in shell.qml")
+    //     }
+    // }
     
     Loader { active: enableDock; sourceComponent: Dock {} }
     Loader { active: enableHyprMenu; sourceComponent: HyprMenu {} }

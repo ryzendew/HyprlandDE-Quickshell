@@ -31,10 +31,15 @@ Scope {
         try {
             Hyprland.dispatch(command);
         } catch (e) {
-            console.warn("Hyprland dispatch failed in Bar.qml:", command, e);
+            // Only warn if logging is enabled and Hyprland warnings are not suppressed
+            if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.warning && !ConfigOptions?.logging?.suppressHyprlandWarnings) {
+                console.warn("Hyprland dispatch failed in Bar.qml:", command, e);
+            }
             if (command.includes("setvar") && command.includes("decoration:blur")) {
                 hyprlandAvailable = false;
-                console.warn("Hyprland blur features disabled in Bar.qml due to errors");
+                if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.warning && !ConfigOptions?.logging?.suppressHyprlandWarnings) {
+                    console.warn("Hyprland blur features disabled in Bar.qml due to errors");
+                }
             }
         }
     }
@@ -69,9 +74,13 @@ Scope {
         // Check if Hyprland is available
         try {
             Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
-            console.log("Hyprland integration available in Bar.qml");
+            if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.info) {
+                console.log("Hyprland integration available in Bar.qml");
+            }
         } catch (e) {
-            console.warn("Hyprland integration not available in Bar.qml:", e);
+            if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.warning && !ConfigOptions?.logging?.suppressHyprlandWarnings) {
+                console.warn("Hyprland integration not available in Bar.qml:", e);
+            }
             hyprlandAvailable = false;
         }
         
@@ -89,7 +98,7 @@ Scope {
     }
 
     Variants {
-        model: Quickshell.screens
+        model: Quickshell.screens.filter(screen => screen.name === "DP-1")
 
         PanelWindow {
             id: barRoot
@@ -212,7 +221,7 @@ Scope {
                                     anchors.centerIn: parent
                                     width: 22
                                     height: 22
-                                    source: "/home/matt/.config/quickshell/logo/Arch-linux-logo.png"
+                                    source: "root:/logo/Arch-linux-logo.png"
                                     fillMode: Image.PreserveAspectFit
                                 }
                                 

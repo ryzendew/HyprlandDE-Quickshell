@@ -12,6 +12,12 @@ import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
+    Component.onCompleted: {
+        console.log("[DockMedia][DEBUG] Media.qml component loaded at very top!");
+    }
+    Rectangle {
+        width: 40; height: 40; color: "magenta"; z: 9999
+    }
     property bool borderless: ConfigOptions.bar.borderless
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || qsTr("No media")
@@ -30,9 +36,66 @@ Item {
     property real totalLength: activePlayer ? activePlayer.length : 0
     readonly property real progress: totalLength > 0 ? Math.min(1, Math.max(0, currentPosition / totalLength)) : 0
 
+    // Add property to track the latest cover art file
+    property string latestCoverArtFile: ""
+
     Layout.fillHeight: true
     implicitWidth: contentRow.implicitWidth + 35
     implicitHeight: parent.height
+
+    Component.onCompleted: {
+        console.log("[DockMedia][DEBUG] Component loaded. artUrl:", root.artUrl, "downloaded:", root.downloaded)
+        updateLatestCoverArt()
+    }
+
+    // Function to update latest cover art file
+    function updateLatestCoverArt() {
+        var dir = Quickshell.Io.Directories.coverArt;
+        var files = Quickshell.Io.listFiles(dir);
+        console.log("[DockMedia][DEBUG] Scanning cover art dir:", dir);
+        if (files) {
+            console.log("[DockMedia][DEBUG] Files found:", JSON.stringify(files.map(f => f.path + ' (mtime: ' + f.mtime + ')')));
+        } else {
+            console.log("[DockMedia][DEBUG] No files found in cover art dir.");
+        }
+        if (files && files.length > 0) {
+            // Sort by mtime descending
+            files.sort(function(a, b) { return b.mtime - a.mtime; });
+            root.latestCoverArtFile = files[0].path;
+            console.log("[DockMedia][DEBUG] Latest cover art file:", root.latestCoverArtFile);
+        } else {
+            root.latestCoverArtFile = "";
+            console.log("[DockMedia][DEBUG] No cover art file to display.");
+        }
+    }
+
+    onLatestCoverArtFileChanged: {
+        console.log("[DockMedia][DEBUG] latestCoverArtFile changed:", root.latestCoverArtFile);
+        if (root.latestCoverArtFile.length > 0) {
+            var exists = Quickshell.Io.fileExists(root.latestCoverArtFile);
+            console.log("[DockMedia][DEBUG] File exists?", exists, root.latestCoverArtFile);
+        }
+    }
+
+    onArtUrlChanged: {
+        console.log("[DockMedia][DEBUG] artUrl changed:", root.artUrl);
+        updateLatestCoverArt();
+        if (root.artUrl.length == 0) {
+            root.downloaded = false; // Reset downloaded state
+            console.log("[DockMedia][DEBUG] artUrl is empty, not downloading.");
+            return;
+        }
+        root.downloaded = false;
+        const cmd = (root.artUrl && root.artUrl.startsWith("file://"))
+            ? `mkdir -p '${root.artDownloadLocation}' && [ -f '${root.artFilePath}' ] || cp '${root.artUrl.replace("file://", "")}' '${root.artFilePath}'`
+            : `mkdir -p '${root.artDownloadLocation}' && [ -f '${root.artFilePath}' ] || curl -sSL '${root.artUrl}' -o '${root.artFilePath}'`;
+        console.log("[DockMedia][DEBUG] Download command:", cmd);
+        coverArtDownloader.running = true;
+    }
+
+    onDownloadedChanged: {
+        console.log("[DockMedia][DEBUG] downloaded changed:", root.downloaded);
+    }
 
     // Album art image (fills the background)
     Image {
@@ -46,26 +109,22 @@ Item {
         asynchronous: true
     }
 
-    // Art URL change handler and downloader process, similar to PlayerControl.qml
-    onArtUrlChanged: {
-        if (root.artUrl.length == 0) {
-            root.downloaded = false; // Reset downloaded state
-            return;
-        }
-        root.downloaded = false
-        coverArtDownloader.running = true
-    }
-
+    // Move Process to root level to prevent premature destruction
     Process { // Cover art downloader
         id: coverArtDownloader
         property string targetFile: root.artUrl
-        command: [ "bash", "-c", `mkdir -p '${root.artDownloadLocation}' && [ -f '${root.artFilePath}' ] || curl -sSL '${targetFile}' -o '${root.artFilePath}'` ]
+        property string downloadCmd: (root.artUrl && root.artUrl.startsWith("file://"))
+            ? `mkdir -p '${root.artDownloadLocation}' && [ -f '${root.artFilePath}' ] || cp '${root.artUrl.replace("file://", "")}' '${root.artFilePath}'`
+            : `mkdir -p '${root.artDownloadLocation}' && [ -f '${root.artFilePath}' ] || curl -sSL '${root.artUrl}' -o '${root.artFilePath}'`
+        command: [ "bash", "-c", downloadCmd ]
         onExited: (exitCode, exitStatus) => {
+            console.log("[DockMedia][DEBUG] Download exited. Exit code:", exitCode, "artFilePath:", root.artFilePath);
             if (exitCode === 0) {
-                root.downloaded = true
+                root.downloaded = true;
+                console.log("[DockMedia][DEBUG] Album art downloaded/copied successfully.");
             } else {
-                console.warn("Media.qml: Failed to download album art from", targetFile, "Exit code:", exitCode)
-                root.downloaded = false
+                console.warn("[DockMedia][DEBUG] Failed to download/copy album art from", targetFile, "Exit code:", exitCode);
+                root.downloaded = false;
             }
         }
     }
@@ -104,7 +163,54 @@ Item {
         id: contentRow
         anchors.centerIn: parent
         height: parent.height
-        spacing: 16
+        spacing: 12
+        Component.onCompleted: {
+            console.log("[DockMedia] contentRow created. artUrl:", root.artUrl, "downloaded:", root.downloaded)
+        }
+
+        // Album art thumbnail (always show latest from coverart dir)
+        Rectangle {
+            id: albumArtContainer
+            anchors.verticalCenter: parent.verticalCenter
+            width: 32
+            height: 32
+            radius: 6
+            color: Qt.rgba(
+                colorQuantizer.colors[0]?.r ?? Appearance.m3colors.m3secondaryContainer.r,
+                colorQuantizer.colors[0]?.g ?? Appearance.m3colors.m3secondaryContainer.g,
+                colorQuantizer.colors[0]?.b ?? Appearance.m3colors.m3secondaryContainer.b,
+                0.85
+            )
+            visible: root.latestCoverArtFile.length > 0
+            layer.enabled: true
+            layer.effect: OpacityMask {
+                maskSource: Rectangle {
+                    width: albumArtContainer.width
+                    height: albumArtContainer.height
+                    radius: albumArtContainer.radius
+                }
+            }
+
+            Image {
+                id: albumArtThumbnail
+                anchors.fill: parent
+                source: root.latestCoverArtFile.length > 0 ? Qt.resolvedUrl(root.latestCoverArtFile) : ""
+                fillMode: Image.PreserveAspectCrop
+                cache: false
+                asynchronous: true
+                visible: root.latestCoverArtFile.length > 0
+            }
+
+            // Fallback icon when no album art
+            MaterialSymbol {
+                anchors.centerIn: parent
+                fill: 1
+                text: "music_note"
+                iconSize: 18
+                color: Appearance.m3colors.m3onSecondaryContainer
+                visible: root.latestCoverArtFile.length == 0
+            }
+        }
 
         CircularProgress {
             id: progressCircle

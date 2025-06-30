@@ -1,0 +1,40 @@
+{
+  "logging": {
+    "enabled": false,
+    "debug": false,
+    "info": false,
+    "warning": false,
+    "error": true,
+    "suppressIconWarnings": true,
+    "suppressQmlWarnings": true,
+    "suppressHyprlandWarnings": true
+  },
+  "bar": {
+    "showBackground": true,
+    "bottom": false,
+    "borderless": false,
+    "topLeftIcon": "spark",
+    "resources": {
+      "alwaysShowSwap": true,
+      "alwaysShowCpu": false
+    },
+    "workspaces": {
+      "shown": 10,
+      "alwaysShowNumbers": false,
+      "showNumberDelay": 150
+    }
+  },
+  "dock": {
+    "height": 60,
+    "hoverRegionHeight": 3,
+    "pinnedOnStartup": false,
+    "hoverToReveal": false,
+    "pinnedApps": [
+      "org.kde.dolphin",
+      "kitty"
+    ]
+  },
+  "hacks": {
+    "arbitraryRaceConditionDelay": 20
+  }
+} 

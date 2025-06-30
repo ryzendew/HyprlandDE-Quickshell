@@ -62,17 +62,47 @@ Singleton {
         todoFileView.reload()
     }
 
+    function initializeWithSampleTasks() {
+        if (list.length === 0) {
+            addTask("Welcome to your todo list!")
+            addTask("Click the + button to add new tasks")
+            addTask("Click the checkmark to mark tasks as done")
+            addTask("Click the trash icon to delete tasks")
+        }
+    }
+
     Component.onCompleted: {
         refresh()
+        // Initialize with sample tasks after a short delay to ensure file is loaded
+        Qt.callLater(initializeWithSampleTasks, 1000)
     }
 
     FileView {
         id: todoFileView
         path: Qt.resolvedUrl(root.filePath)
         onLoaded: {
-            const fileContents = todoFileView.text()
-            root.list = JSON.parse(fileContents)
-            console.log("[To Do] File loaded")
+            try {
+                const fileContents = todoFileView.text()
+                if (fileContents && fileContents.trim() !== '') {
+                    const parsed = JSON.parse(fileContents)
+                    if (Array.isArray(parsed)) {
+                        root.list = parsed
+                    } else {
+                        console.log("[To Do] Invalid data format, creating new list")
+                        root.list = []
+                        todoFileView.setText(JSON.stringify(root.list))
+                    }
+                } else {
+                    console.log("[To Do] Empty file, creating new list")
+                    root.list = []
+                    todoFileView.setText(JSON.stringify(root.list))
+                }
+                console.log("[To Do] File loaded successfully")
+            } catch (e) {
+                console.log("[To Do] Error parsing JSON, creating new list:", e)
+                root.list = []
+                todoFileView.setText(JSON.stringify(root.list))
+            }
         }
         onLoadFailed: (error) => {
             if(error == FileViewError.FileNotFound) {
@@ -81,6 +111,7 @@ Singleton {
                 todoFileView.setText(JSON.stringify(root.list))
             } else {
                 console.log("[To Do] Error loading file: " + error)
+                root.list = []
             }
         }
     }

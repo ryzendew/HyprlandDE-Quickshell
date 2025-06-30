@@ -28,9 +28,9 @@ Rectangle {
                        0.85
                    ) : 
                    Qt.rgba(
-                       Qt.lighter(Data.Colors.bgColor, 1.15).r,
-                       Qt.lighter(Data.Colors.bgColor, 1.15).g,
-                       Qt.lighter(Data.Colors.bgColor, 1.15).b,
+                       Qt.darker(Data.Colors.bgColor, 1.05).r,
+                       Qt.darker(Data.Colors.bgColor, 1.05).g,
+                       Qt.darker(Data.Colors.bgColor, 1.05).b,
                        0.85
                    )
         }
@@ -45,9 +45,9 @@ Rectangle {
             0.85
         ) : 
         Qt.rgba(
-            Qt.lighter(Data.Colors.bgColor, 1.3).r,
-            Qt.lighter(Data.Colors.bgColor, 1.3).g,
-            Qt.lighter(Data.Colors.bgColor, 1.3).b,
+            Qt.darker(Data.Colors.bgColor, 1.1).r,
+            Qt.darker(Data.Colors.bgColor, 1.1).g,
+            Qt.darker(Data.Colors.bgColor, 1.1).b,
             0.85
         )
     

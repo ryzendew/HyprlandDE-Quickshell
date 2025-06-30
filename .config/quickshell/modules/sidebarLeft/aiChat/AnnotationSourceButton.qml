@@ -21,9 +21,9 @@ RippleButton {
     leftPadding: (implicitHeight - faviconSize) / 2
     rightPadding: 10
     buttonRadius: Appearance.rounding.full
-    colBackground: Appearance.m3colors.m3surfaceContainerHighest
-    colBackgroundHover: Appearance.colors.colSurfaceContainerHighestHover
-    colRipple: Appearance.colors.colSurfaceContainerHighestActive
+    colBackground: Qt.rgba(Appearance.m3colors.m3surfaceContainerHighest.r, Appearance.m3colors.m3surfaceContainerHighest.g, Appearance.m3colors.m3surfaceContainerHighest.b, 0.8)
+    colBackgroundHover: Qt.rgba(Appearance.colors.colSurfaceContainerHighestHover.r, Appearance.colors.colSurfaceContainerHighestHover.g, Appearance.colors.colSurfaceContainerHighestHover.b, 0.8)
+    colRipple: Qt.rgba(Appearance.colors.colSurfaceContainerHighestActive.r, Appearance.colors.colSurfaceContainerHighestActive.g, Appearance.colors.colSurfaceContainerHighestActive.b, 0.8)
 
     PointingHandInteraction {}
     onClicked: {

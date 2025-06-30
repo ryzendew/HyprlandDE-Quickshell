@@ -14,10 +14,42 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import Quickshell.Services.UPower
 
 Scope {
+    readonly property bool upowerReady: typeof PowerProfiles !== 'undefined' && PowerProfiles
+    readonly property int currentProfile: upowerReady ? PowerProfiles.profile : 0
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 15
+    property string currentSystemProfile: ""
+
+    // Refresh system profile from powerprofilesctl
+    function refreshSystemProfile() {
+        getProfileProcess.start()
+    }
+
+    Process {
+        id: getProfileProcess
+        command: ["powerprofilesctl", "get"]
+        onExited: {
+            if (getProfileProcess.stdout) {
+                currentSystemProfile = getProfileProcess.stdout.trim()
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        console.log("[Sidebar] PowerProfiles.profile on load:", PowerProfiles.profile)
+        refreshSystemProfile()
+    }
+
+    Connections {
+        target: PowerProfiles
+        onProfileChanged: {
+            console.log("[Sidebar] PowerProfiles.profile changed:", PowerProfiles.profile)
+            refreshSystemProfile()
+        }
+    }
 
     Loader {
         id: sidebarLoader
@@ -59,32 +91,21 @@ Scope {
             // Background
             Rectangle {
                 id: sidebarRightBackground
-
                 anchors.centerIn: parent
                 width: parent.width - Appearance.sizes.hyprlandGapsOut * 2
                 height: parent.height - Appearance.sizes.hyprlandGapsOut * 2
                 color: Qt.rgba(
-                    Appearance.colors.colLayer0.r,
-                    Appearance.colors.colLayer0.g,
-                    Appearance.colors.colLayer0.b,
-                    1 - AppearanceSettingsState.sidebarTransparency
+                    Appearance.colors.colLayer1.r,
+                    Appearance.colors.colLayer1.g,
+                    Appearance.colors.colLayer1.b,
+                    0.55
                 )
                 radius: Appearance.rounding.screenRounding - Appearance.sizes.elevationMargin + 1
-
-                // Add border
-                Rectangle {
-                    id: border
-                    anchors.fill: parent
-                    color: "transparent"
-                    radius: parent.radius
-                    border.width: 2
-                    border.color: Qt.rgba(1, 1, 1, 0.2)
-                }
-
+                border.width: 2
+                border.color: Appearance.colors.colOutline
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     source: sidebarRightBackground
-                    anchors.fill: sidebarRightBackground
                     shadowEnabled: true
                     shadowColor: Appearance.colors.colShadow
                     shadowVerticalOffset: 1
@@ -116,22 +137,21 @@ Scope {
                         Layout.margins: 10
                         Layout.topMargin: 5
                         Layout.bottomMargin: 0
-                        Layout.alignment: Qt.AlignVCenter
 
                         Item {
-                            implicitWidth: distroIcon.width
-                            implicitHeight: distroIcon.height
-                            Layout.alignment: Qt.AlignVCenter
-                            CustomIcon {
-                                id: distroIcon
+                            implicitWidth: 25
+                            implicitHeight: 25
+                            Image {
+                                id: cachyosLogo
                                 width: 25
                                 height: 25
-                                source: SystemInfo.distroIcon
+                                source: "root:/assets/icons/cachyos-symbolic.svg"
+                                fillMode: Image.PreserveAspectFit
                             }
                             ColorOverlay {
-                                anchors.fill: distroIcon
-                                source: distroIcon
-                                color: Appearance.colors.colOnLayer0
+                                anchors.fill: cachyosLogo
+                                source: cachyosLogo
+                                color: "#00ffcc"  // CachyOS brand teal color
                             }
                         }
 
@@ -140,27 +160,10 @@ Scope {
                             color: Appearance.colors.colOnLayer0
                             text: StringUtils.format(qsTr("Uptime: {0}"), DateTime.uptime)
                             textFormat: Text.MarkdownText
-                            Layout.alignment: Qt.AlignVCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        StyledText {
-                            font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colOnLayer0
-                            text: DateTime.time
-                            Layout.leftMargin: 10
-                            Layout.rightMargin: 0
-                            Layout.topMargin: 2
-                            Layout.bottomMargin: 2
-                            horizontalAlignment: Text.AlignRight
-                            verticalAlignment: Text.AlignVCenter
-                            Layout.alignment: Qt.AlignVCenter
-                            elide: Text.ElideRight
                         }
 
                         Item {
                             Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignVCenter
                         }
 
                         QuickToggleButton {
@@ -172,7 +175,6 @@ Scope {
                             StyledToolTip {
                                 content: qsTr("Reload Quickshell")
                             }
-                            Layout.alignment: Qt.AlignVCenter
                         }
                         QuickToggleButton {
                             toggled: false
@@ -183,7 +185,17 @@ Scope {
                             StyledToolTip {
                                 content: qsTr("Session")
                             }
-                            Layout.alignment: Qt.AlignVCenter
+                        }
+                        QuickToggleButton {
+                            toggled: false
+                            buttonIcon: "restart_alt"
+                            onClicked: {
+                                Hyprland.dispatch("reload")
+                                Quickshell.reload(true)
+                            }
+                            StyledToolTip {
+                                content: qsTr("Reload Hyprland & Quickshell")
+                            }
                         }
                     }
 
@@ -191,7 +203,12 @@ Scope {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.fillHeight: false
                         radius: Appearance.rounding.full
-                        color: Appearance.colors.colLayer1
+                        color: Qt.rgba(
+                            Appearance.colors.colLayer1.r,
+                            Appearance.colors.colLayer1.g,
+                            Appearance.colors.colLayer1.b,
+                            0.55
+                        )
                         implicitWidth: sidebarQuickControlsRow.implicitWidth + 10
                         implicitHeight: sidebarQuickControlsRow.implicitHeight + 10
                         
@@ -207,7 +224,27 @@ Scope {
                             NightLight {}
                             GameMode {}
                             IdleInhibitor {}
-                            
+                            QuickToggleButton {
+                                id: perfProfilePerformance
+                                buttonIcon: "speed"
+                                toggled: PowerProfiles.profile === PowerProfile.Performance
+                                onClicked: PowerProfiles.profile = PowerProfile.Performance
+                                StyledToolTip { content: qsTr("Performance Mode") }
+                            }
+                            QuickToggleButton {
+                                id: perfProfileBalanced
+                                buttonIcon: "balance"
+                                toggled: PowerProfiles.profile === PowerProfile.Balanced
+                                onClicked: PowerProfiles.profile = PowerProfile.Balanced
+                                StyledToolTip { content: qsTr("Balanced Mode") }
+                            }
+                            QuickToggleButton {
+                                id: perfProfileSaver
+                                buttonIcon: "battery_saver"
+                                toggled: PowerProfiles.profile === PowerProfile.PowerSaver
+                                onClicked: PowerProfiles.profile = PowerProfile.PowerSaver
+                                StyledToolTip { content: qsTr("Power Saver Mode") }
+                            }
                         }
                     }
 
@@ -276,4 +313,10 @@ Scope {
         }
     }
 
+    // Process to set profile and refresh after
+    Process {
+        id: setProfileProcess
+        command: ["true"]
+        onExited: refreshSystemProfile()
+    }
 }

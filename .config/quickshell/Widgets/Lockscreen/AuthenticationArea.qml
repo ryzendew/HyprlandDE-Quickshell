@@ -56,7 +56,7 @@ Column {
         radius: 50
         anchors.horizontalCenter: parent.horizontalCenter
         color: "transparent"
-        border.color: Data.Colors.accentColor
+        border.color: Appearance.colors.colPrimary
         border.width: 4
         clip: true
         
@@ -103,7 +103,7 @@ Column {
             text: "person"
             font.family: "Material Symbols Outlined"
             font.pixelSize: 48
-            color: Data.Colors.accentColor
+            color: Appearance.colors.colPrimary
             visible: avatarImage.status !== Image.Ready
         }
     }
@@ -114,7 +114,7 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         font.family: "FiraCode Nerd Font"
         font.pixelSize: 18
-        color: Data.Colors.primaryText
+        color: Appearance.colors.colOnLayer0
         text: usernameText
     }
     
@@ -123,8 +123,8 @@ Column {
         width: parent.width
         height: 50
         radius: 25
-        color: Data.Colors.withOpacity(Data.Colors.bgLighter, 0.4)
-        border.color: passwordField.activeFocus ? Data.Colors.accentColor : Data.Colors.withOpacity(Data.Colors.border, 0.6)
+        color: Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.4)
+        border.color: passwordField.activeFocus ? Appearance.colors.colPrimary : Qt.rgba(Appearance.colors.colOutline.r, Appearance.colors.colOutline.g, Appearance.colors.colOutline.b, 0.6)
         border.width: 2
         
         TextInput {
@@ -135,7 +135,7 @@ Column {
             font.family: "FiraCode Nerd Font"
             font.pixelSize: 16
             color: "transparent"  // Hide the actual text
-            selectionColor: Data.Colors.accentColor
+            selectionColor: Appearance.colors.colPrimary
             selectByMouse: true
             focus: isVisible
             
@@ -163,7 +163,7 @@ Column {
                         width: 8
                         height: 8
                         radius: 4
-                        color: Data.Colors.primaryText
+                        color: Appearance.colors.colOnLayer0
                         
                         property bool isNewDot: index >= passwordDotsRow.previousLength
                         
@@ -214,7 +214,7 @@ Column {
                 text: "Password"
                 font.family: passwordField.font.family
                 font.pixelSize: passwordField.font.pixelSize
-                color: Data.Colors.withOpacity(Data.Colors.secondaryText, 0.7)
+                color: Qt.rgba(Appearance.colors.colOnLayer0.r, Appearance.colors.colOnLayer0.g, Appearance.colors.colOnLayer0.b, 0.7)
                 visible: passwordField.text.length === 0 && !passwordField.activeFocus
             }
         }
@@ -226,7 +226,7 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         font.family: "FiraCode Nerd Font"
         font.pixelSize: 14
-        color: Data.Colors.errorColor
+        color: Appearance.colors.colError
         text: errorMessage
         visible: errorMessage !== ""
         wrapMode: Text.WordWrap
@@ -240,7 +240,7 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         font.family: "FiraCode Nerd Font"
         font.pixelSize: 14
-        color: authSuccess ? Data.Colors.success : Data.Colors.accentColorBright
+        color: authSuccess ? Appearance.colors.colSuccess : Appearance.colors.colPrimary
         text: {
             if (authSuccess) return "Authentication successful!"
             if (isAuthenticating) return "Authenticating..."

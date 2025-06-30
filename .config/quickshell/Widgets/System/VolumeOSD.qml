@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import "root:/Data/" as Data
 import "root:/Core" as Core
+import "root:/Appearance" as Appearance
 
 // Volume OSD with slide animation
 Item {
@@ -87,7 +88,7 @@ Item {
         id: osdBackground
         width: 45
         height: 250
-        color: Data.Colors.bgColor
+        color: Appearance.colors.colOnLayer0
         topLeftRadius: 20
         bottomLeftRadius: 20
         
@@ -101,7 +102,7 @@ Item {
                 id: volumeIcon
                 font.family: "JetBrainsMono Nerd Font"
                 font.pixelSize: 16
-                color: Data.Colors.fgColor
+                color: Appearance.colors.colOnLayer0
                 text: {
                     if (!shell || shell.volume === undefined) return "󰝟"
                     var vol = shell.volume
@@ -126,8 +127,8 @@ Item {
                 width: 10
                 height: parent.height - volumeIcon.height - volumeLabel.height - 36
                 radius: 5
-                color: Qt.darker(Data.Colors.accentColor, 1.5)
-                border.color: Qt.darker(Data.Colors.accentColor, 2.0)
+                color: Qt.darker(Appearance.colors.colPrimary, 1.5)
+                border.color: Qt.darker(Appearance.colors.colPrimary, 2.0)
                 border.width: 1
                 anchors.horizontalCenter: parent.horizontalCenter
                 
@@ -137,7 +138,7 @@ Item {
                     width: parent.width - 2
                     radius: parent.radius - 1
                     x: 1
-                    color: Data.Colors.accentColor
+                    color: Appearance.colors.colPrimary
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: 1
                     height: {
@@ -157,7 +158,7 @@ Item {
                 text: (shell && shell.volume !== undefined ? shell.volume + "%" : "0%")
                 font.pixelSize: 10
                 font.weight: Font.Bold
-                color: Data.Colors.fgColor
+                color: Appearance.colors.colOnLayer0
                 anchors.horizontalCenter: parent.horizontalCenter
                 
                 // Fade animation on volume change
@@ -172,7 +173,7 @@ Item {
         id: bottomRightCorner
         position: "bottomright"
         size: 1.3
-        fillColor: Data.Colors.bgColor
+        fillColor: Appearance.colors.colLayer0
         offsetX: 39 + osdBackground.x
         offsetY: 78
     }
@@ -181,7 +182,7 @@ Item {
         id: topRightCorner
         position: "topright"
         size: 1.3
-        fillColor: Data.Colors.bgColor
+        fillColor: Appearance.colors.colLayer0
         offsetX: 39 + osdBackground.x
         offsetY: -26
     }

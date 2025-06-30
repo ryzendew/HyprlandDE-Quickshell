@@ -19,7 +19,7 @@ Scope {
     property bool visible: false
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property var realPlayers: Mpris.players.values.filter(player => isRealPlayer(player))
-    readonly property var meaningfulPlayers: filterDuplicatePlayers(realPlayers)
+    readonly property var meaningfulPlayers: filterDuplicatePlayers(realPlayers).filter(player => (player.trackTitle && player.trackTitle.length > 0) || (player.trackArtist && player.trackArtist.length > 0))
     readonly property real osdWidth: Appearance.sizes.osdWidth
     readonly property real widgetWidth: Appearance.sizes.mediaControlsWidth
     readonly property real widgetHeight: Appearance.sizes.mediaControlsHeight
@@ -87,9 +87,8 @@ Scope {
             WlrLayershell.namespace: "quickshell:mediaControls"
 
             anchors {
-                top: !ConfigOptions.bar.bottom
-                bottom: ConfigOptions.bar.bottom
-                left: true
+                top: true
+                right: true
             }
             mask: Region {
                 item: playerColumnLayout

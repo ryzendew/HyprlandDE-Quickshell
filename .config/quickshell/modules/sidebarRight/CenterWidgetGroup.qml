@@ -14,7 +14,12 @@ import Quickshell
 Rectangle {
     id: root
     radius: Appearance.rounding.normal
-    color: Appearance.colors.colLayer1
+    color: Qt.rgba(
+        Appearance.colors.colLayer1.r,
+        Appearance.colors.colLayer1.g,
+        Appearance.colors.colLayer1.b,
+        0.55
+    )
 
     // Debug mode - prevent closing
     property bool debugMode: false  // Set to true to prevent closing
@@ -49,8 +54,7 @@ Rectangle {
     property var tabButtonList: [
         {"icon": "notifications", "name": qsTr("Notifications")},
         {"icon": "volume_up", "name": qsTr("Volume mixer")},
-        {"icon": "cloud", "name": qsTr("Weather")},
-        {"icon": "speed", "name": qsTr("Performance")}
+        {"icon": "cloud", "name": qsTr("Weather")}
     ]
 
     // Intercept the close signal
@@ -108,7 +112,6 @@ Rectangle {
                     case 0: return notificationComponent;
                     case 1: return volumeMixerComponent;
                     case 2: return weatherComponent;
-                    case 3: return performanceComponent;
                     default: return notificationComponent;
                 }
             }
@@ -117,6 +120,5 @@ Rectangle {
         Component { id: notificationComponent; NotificationList {} }
         Component { id: volumeMixerComponent; VolumeMixer {} }
         Component { id: weatherComponent; WeatherSidebarPage {} }
-        Component { id: performanceComponent; PerformanceTab {} }
     }
 }

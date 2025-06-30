@@ -17,9 +17,9 @@ GroupButton {
     clickedWidth: baseWidth + 20
     baseHeight: contentItem.implicitHeight + verticalPadding * 2
 
-    colBackground: Appearance.colors.colLayer2
-    colBackgroundHover: Appearance.colors.colLayer2Hover
-    colBackgroundActive: Appearance.colors.colLayer2Active
+    colBackground: Qt.rgba(Appearance.colors.colLayer2.r, Appearance.colors.colLayer2.g, Appearance.colors.colLayer2.b, 0.8)
+    colBackgroundHover: Qt.rgba(Appearance.colors.colLayer2Hover.r, Appearance.colors.colLayer2Hover.g, Appearance.colors.colLayer2Hover.b, 0.8)
+    colBackgroundActive: Qt.rgba(Appearance.colors.colLayer2Active.r, Appearance.colors.colLayer2Active.g, Appearance.colors.colLayer2Active.b, 0.8)
 
     contentItem: StyledText {
         horizontalAlignment: Text.AlignHCenter

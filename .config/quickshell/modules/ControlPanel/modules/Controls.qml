@@ -28,9 +28,9 @@ Row {
         height: parent.height
         radius: 20
         color: Qt.rgba(
-            Qt.darker(Data.Colors.bgColor, 1.15).r,
-            Qt.darker(Data.Colors.bgColor, 1.15).g,
-            Qt.darker(Data.Colors.bgColor, 1.15).b,
+            Appearance.colors.colLayer1.r,
+            Appearance.colors.colLayer1.g,
+            Appearance.colors.colLayer1.b,
             0.85
         )
         visible: true
@@ -75,9 +75,9 @@ Row {
         height: parent.height
         radius: 20
         color: Qt.rgba(
-            Qt.darker(Data.Colors.bgColor, 1.15).r,
-            Qt.darker(Data.Colors.bgColor, 1.15).g,
-            Qt.darker(Data.Colors.bgColor, 1.15).b,
+            Appearance.colors.colLayer1.r,
+            Appearance.colors.colLayer1.g,
+            Appearance.colors.colLayer1.b,
             0.85
         )
         visible: true

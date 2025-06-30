@@ -80,7 +80,7 @@ Scope {
     }
 
     Variants {
-        model: Quickshell.screens
+        model: Quickshell.screens.filter(screen => screen.name === "DP-1")
         
         PanelWindow {
             id: menuWindow
@@ -149,6 +149,10 @@ Scope {
             Rectangle {
                 id: menuContainer
                 
+                // Animation properties
+                property bool isAnimating: false
+                property real animationProgress: 0
+                
                 // Dynamic positioning based on menuPosition
                 anchors.horizontalCenter: root.menuPosition.includes("center") || root.menuPosition === "center" ? parent.horizontalCenter : undefined
                 anchors.left: root.menuPosition.includes("left") ? parent.left : undefined
@@ -167,10 +171,55 @@ Scope {
                 height: 600
                 radius: 12
                 
-                // Black theme with transparency and blur
-                color: Qt.rgba(0.0, 0.0, 0.0, 0.55)  // Black with transparency
-                border.color: Qt.rgba(0.3, 0.3, 0.3, 0.9)  // Dark gray border
+                // Transform origin for scaling from bottom
+                transformOrigin: Item.Bottom
+                
+                // Scale and opacity for animation
+                scale: menuWindow.visible ? 1.0 : 0.8
+                opacity: menuWindow.visible ? 1.0 : 0.0
+                
+                // Y position animation to slide up from bottom
+                y: menuWindow.visible ? 0 : 50
+                
+                // Material 3 dark theme with transparency
+                color: Qt.rgba(
+                    Appearance.colors.colLayer0.r,
+                    Appearance.colors.colLayer0.g,
+                    Appearance.colors.colLayer0.b,
+                    0.55
+                )
+                border.color: Qt.rgba(
+                    Appearance.colors.colOutline.r,
+                    Appearance.colors.colOutline.g,
+                    Appearance.colors.colOutline.b,
+                    0.9
+                )
                 border.width: 1
+                
+                // Animation behaviors
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: Appearance.animation.elementMoveFast.duration
+                        easing.type: Appearance.animation.elementMoveFast.type
+                        easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                    }
+                }
+                
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: Appearance.animation.elementMoveFast.duration
+                        easing.type: Appearance.animation.elementMoveFast.type
+                        easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                    }
+                }
+                
+                Behavior on y {
+                    NumberAnimation {
+                        duration: Appearance.animation.elementMoveFast.duration
+                        easing.type: Appearance.animation.elementMoveFast.type
+                        easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                    }
+                }
                 
                 // Enhanced drop shadow with blur
                 layer.enabled: true
@@ -183,14 +232,14 @@ Scope {
                     shadowBlur: 32
                 }
                 
-                // Dark gradient overlay for depth
+                // Material 3 gradient overlay for depth
                 Rectangle {
                     anchors.fill: parent
                     radius: parent.radius
                     gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.rgba(0.1, 0.1, 0.1, 0.3) }
-                        GradientStop { position: 0.5; color: Qt.rgba(0.05, 0.05, 0.05, 0.2) }
-                        GradientStop { position: 1.0; color: Qt.rgba(0.0, 0.0, 0.0, 0.4) }
+                        GradientStop { position: 0.0; color: Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.3) }
+                        GradientStop { position: 0.5; color: Qt.rgba(Appearance.colors.colLayer0.r, Appearance.colors.colLayer0.g, Appearance.colors.colLayer0.b, 0.2) }
+                        GradientStop { position: 1.0; color: Qt.rgba(Appearance.colors.colLayer0.r, Appearance.colors.colLayer0.g, Appearance.colors.colLayer0.b, 0.4) }
                     }
                 }
                 
@@ -260,8 +309,8 @@ Scope {
                             width: 40
                             height: 40
                             radius: 8
-                            color: refreshArea.containsMouse ? Qt.rgba(0.2, 0.2, 0.2, 0.6) : Qt.rgba(0.1, 0.1, 0.1, 0.4)
-                            border.color: Qt.rgba(0.3, 0.3, 0.3, 0.8)
+                            color: refreshArea.containsMouse ? Qt.rgba(Appearance.colors.colLayer2Hover.r, Appearance.colors.colLayer2Hover.g, Appearance.colors.colLayer2Hover.b, 0.8) : Qt.rgba(Appearance.colors.colLayer2.r, Appearance.colors.colLayer2.g, Appearance.colors.colLayer2.b, 0.6)
+                            border.color: Qt.rgba(Appearance.colors.colOutline.r, Appearance.colors.colOutline.g, Appearance.colors.colOutline.b, 0.8)
                             border.width: 1
                             opacity: menuWindow.isRefreshing ? 0.6 : 1.0
                             
@@ -269,7 +318,7 @@ Scope {
                                 anchors.centerIn: parent
                                 text: "refresh"
                                 iconSize: 20
-                                color: Qt.rgba(0.9, 0.9, 0.9, 0.9)  // Light gray icon
+                                color: Appearance.colors.colOnLayer2
                                 
                                 // Rotation animation when refreshing
                                 RotationAnimation on rotation {
@@ -312,15 +361,15 @@ Scope {
                             width: 40
                             height: 40
                             radius: 8
-                            color: viewToggleArea.containsMouse ? Qt.rgba(0.2, 0.2, 0.2, 0.6) : Qt.rgba(0.1, 0.1, 0.1, 0.4)
-                            border.color: Qt.rgba(0.3, 0.3, 0.3, 0.8)
+                            color: viewToggleArea.containsMouse ? Qt.rgba(Appearance.colors.colLayer2Hover.r, Appearance.colors.colLayer2Hover.g, Appearance.colors.colLayer2Hover.b, 0.8) : Qt.rgba(Appearance.colors.colLayer2.r, Appearance.colors.colLayer2.g, Appearance.colors.colLayer2.b, 0.6)
+                            border.color: Qt.rgba(Appearance.colors.colOutline.r, Appearance.colors.colOutline.g, Appearance.colors.colOutline.b, 0.8)
                             border.width: 1
                             
                             MaterialSymbol {
                                 anchors.centerIn: parent
                                 text: menuWindow.isGridView ? "view_list" : "grid_view"
                                 iconSize: 20
-                                color: Qt.rgba(0.9, 0.9, 0.9, 0.9)  // Light gray icon
+                                color: Appearance.colors.colOnLayer2
                             }
                             
                             MouseArea {
@@ -348,8 +397,8 @@ Scope {
                                     Layout.preferredHeight: 32
                                     Layout.preferredWidth: categoryText.implicitWidth + 24
                                     radius: 6
-                                    color: menuWindow.selectedCategory === modelData ? Qt.rgba(0.3, 0.3, 0.3, 0.8) : (categoryArea.containsMouse ? Qt.rgba(0.2, 0.2, 0.2, 0.5) : Qt.rgba(0.1, 0.1, 0.1, 0.3))
-                                    border.color: Qt.rgba(0.3, 0.3, 0.3, 0.7)
+                                    color: menuWindow.selectedCategory === modelData ? Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.8) : (categoryArea.containsMouse ? Qt.rgba(Appearance.colors.colLayer2Hover.r, Appearance.colors.colLayer2Hover.g, Appearance.colors.colLayer2Hover.b, 0.6) : Qt.rgba(Appearance.colors.colLayer2.r, Appearance.colors.colLayer2.g, Appearance.colors.colLayer2.b, 0.4))
+                                    border.color: Qt.rgba(Appearance.colors.colOutline.r, Appearance.colors.colOutline.g, Appearance.colors.colOutline.b, 0.7)
                                     border.width: menuWindow.selectedCategory === modelData ? 0 : 1
                                     
                                     Text {
@@ -357,8 +406,8 @@ Scope {
                                         anchors.centerIn: parent
                                         text: modelData
                                         color: menuWindow.selectedCategory === modelData ? 
-                                               Qt.rgba(1.0, 1.0, 1.0, 0.95) : 
-                                               Qt.rgba(0.9, 0.9, 0.9, 0.9)
+                                               Appearance.colors.colOnLayer2 : 
+                                               Appearance.colors.colOnLayer1
                                         font.pixelSize: Appearance.font.pixelSize.small
                                         font.weight: menuWindow.selectedCategory === modelData ? Font.Medium : Font.Normal
                                     }
@@ -382,8 +431,8 @@ Scope {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         radius: 8
-                        color: Qt.rgba(0.1, 0.1, 0.1, 0.6)  // Black with transparency
-                        border.color: Qt.rgba(0.3, 0.3, 0.3, 0.8)  // Dark gray border
+                        color: Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.6)
+                        border.color: Qt.rgba(Appearance.colors.colOutline.r, Appearance.colors.colOutline.g, Appearance.colors.colOutline.b, 0.8)
                         border.width: 1
                         
                         // Grid view

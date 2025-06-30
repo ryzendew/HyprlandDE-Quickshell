@@ -7,7 +7,7 @@ import "root:/Data" as Data
 Rectangle {
     id: root
     required property var shell
-    color: Qt.darker(Data.Colors.bgColor, 1.15)
+    color: Qt.darker(Appearance.colors.colLayer0, 1.15)
     radius: 20
 
     property bool containsMouse: weatherMouseArea.containsMouse || (forecastPopup.visible && forecastPopup.containsMouse)
@@ -108,14 +108,14 @@ Rectangle {
             text: shell.weatherData && shell.weatherData.forecast && shell.weatherData.forecast[0] ? 
                   shell.weatherData.forecast[0].emoji || "❓" : "❓"
             font.pixelSize: 24
-            color: Data.Colors.fgColor
+            color: Appearance.colors.colOnLayer0
         }
 
         // Temperature
         Text {
             text: shell.weatherData ? shell.weatherData.currentTemp || "?" : "?"
             font.pixelSize: 16
-            color: Data.Colors.fgColor
+            color: Appearance.colors.colOnLayer0
         }
     }
 
@@ -128,10 +128,10 @@ Rectangle {
         height: 226
         padding: 12
         background: Rectangle {
-            color: Qt.darker(Data.Colors.bgColor, 1.15)
+            color: Qt.darker(Appearance.colors.colLayer0, 1.15)
             radius: 20
             border.width: 1
-            border.color: Qt.lighter(Data.Colors.bgColor, 1.3)
+            border.color: Qt.lighter(Appearance.colors.colLayer0, 1.3)
         }
 
         property bool containsMouse: forecastMouseArea.containsMouse
@@ -184,7 +184,7 @@ Rectangle {
                     // Weather condition description
                     Label {
                         text: shell.weatherData ? shell.weatherData.currentCondition || "Weather" : "Weather"
-                        color: Data.Colors.fgColor
+                        color: Appearance.colors.colOnLayer0
                         font.pixelSize: 16
                         font.bold: true
                         Layout.fillWidth: true
@@ -194,7 +194,7 @@ Rectangle {
                     // Location
                     Label {
                         text: shell.weatherData ? shell.weatherData.locationDisplay || "" : ""
-                        color: Data.Colors.fgColor
+                        color: Appearance.colors.colOnLayer0
                         opacity: 0.7
                         font.pixelSize: 12
                         Layout.fillWidth: true
@@ -208,7 +208,7 @@ Rectangle {
 
                         Label {
                             text: shell.weatherData ? shell.weatherData.currentTemp || "?" : "?"
-                            color: Data.Colors.fgColor
+                            color: Appearance.colors.colOnLayer0
                             font.pixelSize: 16
                             font.bold: true
                         }
@@ -216,7 +216,7 @@ Rectangle {
                         Label {
                             text: shell.weatherData && shell.weatherData.feelsLike ? 
                                   "Feels like " + shell.weatherData.feelsLike : ""
-                            color: Data.Colors.fgColor
+                            color: Appearance.colors.colOnLayer0
                             opacity: 0.7
                             font.pixelSize: 12
                             visible: shell.weatherData && shell.weatherData.feelsLike

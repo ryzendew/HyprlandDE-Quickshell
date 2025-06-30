@@ -44,7 +44,7 @@ Column {
         font.family: "JetBrains Mono"
         font.pixelSize: 84
         font.weight: Font.ExtraLight
-        color: Data.Colors.brightText
+        color: Appearance.colors.colOnLayer0
         text: Qt.formatTime(new Date(), "hh:mm")
     }
     

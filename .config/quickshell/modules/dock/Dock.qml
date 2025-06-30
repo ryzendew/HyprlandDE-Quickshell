@@ -1,11 +1,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
+import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
-import Qt5Compat.GraphicalEffects
 import "root:/"
 import "root:/modules/common"
 import "root:/modules/common/widgets"
@@ -13,6 +14,7 @@ import "root:/services"
 import Qt.labs.platform
 import "root:/modules/bar"
 import "root:/modules/common/functions/icon_theme.js" as IconTheme
+import "root:/Data" as Data
 
 Scope {
     id: dock
@@ -63,6 +65,7 @@ Scope {
             "heroic",
             "obs",
             "com.blackmagicdesign.resolve.desktop",
+            "net.lutris.davinci-resolve-studio-20-1.desktop",
             "AffinityPhoto.desktop",
             "ptyxis"
     ]
@@ -99,6 +102,7 @@ Scope {
         "heroic": "heroic",
         "obs": "obs",
         "com.blackmagicdesign.resolve": "resolve",
+        "net.lutris.davinci-resolve-studio-20-1.desktop": "gtk-launch net.lutris.davinci-resolve-studio-20-1.desktop",
         "AffinityPhoto": "AffinityPhoto",
         "AffinityPhoto.desktop": "gtk-launch AffinityPhoto.desktop",
         "AffinityDesigner": "AffinityDesigner",
@@ -160,7 +164,7 @@ Scope {
     // FileView to monitor Qt6 theme settings changes
     FileView {
         id: qt6SettingsView
-        path: "/home/matt/.config/qt6ct/qt6ct.conf"
+        path: Qt.binding(() => Qt.getenv("HOME") + "/.config/qt6ct/qt6ct.conf")
         
         property string lastTheme: ""
         
@@ -374,7 +378,7 @@ Scope {
     }
     
     Variants {
-        model: Quickshell.screens
+        model: Quickshell.screens.filter(screen => screen.name === "DP-1")
 
         PanelWindow {
             id: dockRoot
@@ -466,8 +470,8 @@ Scope {
                 }
                 if (windowClass.endsWith('.desktop')) {
                     // Try user applications first, then system applications
-                    var userPath = `/home/matt/.local/share/applications/${windowClass}`
-                    var systemPath = `/usr/share/applications/${windowClass}`
+                    var userPath = Qt.getenv("HOME") + "/.local/share/applications/" + windowClass
+                    var systemPath = "/usr/share/applications/" + windowClass
                     var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', dock)
                     var content = ""
                     try {
@@ -514,7 +518,8 @@ Scope {
                         'lutris': ['lutris', 'net.lutris.lutris'],
                         'heroic': ['heroic', 'heroicgameslauncher'],
                         'obs': ['obs', 'com.obsproject.studio'],
-                        'ptyxis': ['ptyxis', 'org.gnome.ptyxis']
+                        'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
+                        'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                     };
                 var targetClass = windowClass.toLowerCase();
                 var possibleClasses = [targetClass];
@@ -541,7 +546,7 @@ Scope {
                         cmd = dock.getDesktopFileExecCommand(appInfo.class);
                         if (!cmd) {
                             // Fallback to gio launch if we can't parse the desktop file
-                            cmd = `gio launch /home/matt/.local/share/applications/${appInfo.class} || gio launch /usr/share/applications/${appInfo.class}`;
+                            cmd = `gio launch ${Qt.getenv("HOME")}/.local/share/applications/${appInfo.class} || gio launch /usr/share/applications/${appInfo.class}`;
                         }
                     } else {
                         // For regular apps, use mapping or fallback
@@ -579,6 +584,20 @@ Scope {
                             Appearance.colors.colLayer0.b,
                             1 - AppearanceSettingsState.dockTransparency
                         )
+
+                        // Enable layer for effects
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            source: dockContent
+                            shadowEnabled: true
+                            shadowColor: Qt.rgba(0, 0, 0, 0.3)
+                            shadowVerticalOffset: 4
+                            shadowHorizontalOffset: 0
+                            shadowBlur: 12
+                            blurEnabled: true
+                            blurMultiplier: 0.7
+                            blurMax: 64
+                        }
 
                         Behavior on color {
                             ColorAnimation {
@@ -630,7 +649,7 @@ Scope {
                                     // Arch Linux logo
                                     Image {
                                         anchors.centerIn: parent
-                                        source: "/home/matt/.config/quickshell/logo/Arch-linux-logo.png"
+                                        source : StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/quickshell/logo/Arch-linux-logo.png"
                                         width: parent.width * 0.65
                                         height: parent.height * 0.65
                                         fillMode: Image.PreserveAspectFit
@@ -680,7 +699,8 @@ Scope {
                                             'lutris': ['lutris', 'net.lutris.lutris'],
                                             'heroic': ['heroic', 'heroicgameslauncher'],
                                             'obs': ['obs', 'com.obsproject.studio'],
-                                            'ptyxis': ['ptyxis', 'org.gnome.ptyxis']
+                                            'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
+                                            'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                                         };
                                         
                                         // Build list of possible window classes for this pinned app
@@ -721,7 +741,7 @@ Scope {
                                                 if (entry && entry.execute) {
                                                     entry.execute();
                                                 } else {
-                                                    Hyprland.dispatch(`exec gio launch /home/matt/.local/share/applications/${modelData} || gio launch /usr/share/applications/${modelData}`);
+                                                    Hyprland.dispatch(`exec gio launch ${Qt.getenv("HOME")}/.local/share/applications/${modelData} || gio launch /usr/share/applications/${modelData}`);
                                                 }
                                             } else {
                                                 let cmd = dock.desktopIdToCommand[modelData] || modelData.toLowerCase();
@@ -766,7 +786,8 @@ Scope {
                                         'lutris': ['lutris', 'net.lutris.lutris'],
                                         'heroic': ['heroic', 'heroicgameslauncher'],
                                         'obs': ['obs', 'com.obsproject.studio'],
-                                        'ptyxis': ['ptyxis', 'org.gnome.ptyxis']
+                                        'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
+                                        'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                                     };
                                     // Build a set of all window classes covered by pinned apps
                                     var pinnedClasses = new Set()
@@ -830,7 +851,7 @@ Scope {
 
                             // Media controls at right edge
                             Item {
-                                Layout.preferredWidth: mediaComponent.implicitWidth
+                                Layout.preferredWidth: mediaComponent.implicitWidth + 40 // Add extra space for album art
                                 Layout.preferredHeight: dockHeight * 0.65
                                 Layout.rightMargin: dockHeight * 0.25
 
@@ -851,8 +872,8 @@ Scope {
     function getDesktopFileExecCommand(desktopFileName) {
         try {
             // Try user applications first, then system applications
-            var userPath = `/home/matt/.local/share/applications/${desktopFileName}`
-            var systemPath = `/usr/share/applications/${desktopFileName}`
+            var userPath = Qt.getenv("HOME") + "/.local/share/applications/" + desktopFileName
+            var systemPath = "/usr/share/applications/" + desktopFileName
             
             var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', dock)
             
@@ -922,46 +943,88 @@ Scope {
         // console.log("[DOCK DEBUG] Icon refresh initiated");
     }
 
-    // Window Preview System
-    WindowPreview {
-        id: windowPreview
-        screen: dockRoot.screen  // Pass screen info to preview
+    // Background blur system - static blur approach inspired by Blur My Shell
+    PanelWindow {
+        id: dockBackgroundBlur
+        visible: dockRoot.visible
+        screen: dockRoot.screen
+        
+        // Position behind the dock
+        anchors.left: dockRoot.anchors.left
+        anchors.right: dockRoot.anchors.right
+        anchors.bottom: dockRoot.anchors.bottom
+        
+        // Set layer to be behind the dock
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "quickshell:dock:background"
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+        
+        // Match dock dimensions
+        implicitWidth: dockRoot.implicitWidth
+        implicitHeight: dockRoot.implicitHeight
+        color: "transparent"
+        
+        // Static blur background using wallpaper capture
+        Rectangle {
+            id: staticBlurBackground
+            anchors.centerIn: parent
+            width: dockContent.width
+            height: dockContent.height
+            radius: 30
+            color: "transparent"
+            
+            // Wallpaper background for static blur
+            Image {
+                id: wallpaperForBlur
+                anchors.fill: parent
+                source: Data.WallpaperManager.currentWallpaper ? "file://" + Data.WallpaperManager.currentWallpaper : ""
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                cache: false
+                
+                // Apply MultiEffect blur to the wallpaper
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    source: wallpaperForBlur
+                    blurEnabled: true
+                    blurMultiplier: 0.7
+                    blurMax: 64
+                    saturation: 0.8  // Reduce saturation for better blur effect
+                }
+            }
+            
+            // Semi-transparent overlay to enhance blur effect
+            Rectangle {
+                anchors.fill: parent
+                color: Qt.rgba(0, 0, 0, 0.3) // Dark overlay to enhance blur
+                radius: parent.radius
+            }
+            
+            // Border to cover blur edge artifacts
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                border.width: 2.5
+                border.color: "black" // Or use Qt.rgba(0,0,0,0.5) for a softer look
+                radius: parent.radius
+                z: 2
+            }
+        }
+        
+        // Mask to match dock shape
+        mask: Region {
+            item: Rectangle {
+                width: dockContent.width
+                height: dockContent.height
+                x: dockContent.x + (dockRoot.width - dockContent.width) / 2
+                y: dockContent.y
+                radius: 30
+            }
+        }
     }
 
     // Preview helper functions
-    function showWindowPreviews(appClass, position, itemWidth) {
-        // console.log("[DOCK PREVIEW DEBUG] showWindowPreviews called with:", appClass);
-        
-        // Get all windows for this app class
-        const windows = HyprlandData.windowList.filter(w => 
-            w.class && w.class.toLowerCase() === appClass.toLowerCase()
-        );
-        
-        // console.log("[DOCK PREVIEW DEBUG] Found", windows.length, "windows for class:", appClass);
-        // console.log("[DOCK PREVIEW DEBUG] All windows:", JSON.stringify(windows.map(w => ({class: w.class, title: w.title})), null, 2));
-        
-        if (windows.length > 0) {  // Changed from > 1 to > 0 for testing
-            // console.log("[DOCK PREVIEW DEBUG] Showing previews for", windows.length, "windows");
-            // Show previews for any windows (temporarily changed for testing)
-            previewAppClass = appClass;
-            previewPosition = position;
-            previewItemWidth = itemWidth;
-            windowPreview.showPreviews(windows, appClass, position, itemWidth);
-            showDockPreviews = true;
-        } else {
-            // console.log("[DOCK PREVIEW DEBUG] Not showing previews - only", windows.length, "window(s)");
-        }
-    }
-    
-    function hideWindowPreviews() {
-        windowPreview.hidePreviews();
-        showDockPreviews = false;
-    }
-    
-    function hideWindowPreviewsImmediately() {
-        windowPreview.hideImmediately();
-        showDockPreviews = false;
-    }
+    // (Removed showWindowPreviews, hideWindowPreviews, hideWindowPreviewsImmediately, and all windowPreview references)
 
     Menu {
         id: dockContextMenu
@@ -982,7 +1045,7 @@ Scope {
                 var command = ""
                 if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.class) {
                     if (dockContextMenu.contextAppInfo.class.endsWith('.desktop')) {
-                        command = `gio launch /home/matt/.local/share/applications/${dockContextMenu.contextAppInfo.class} || gio launch /usr/share/applications/${dockContextMenu.contextAppInfo.class}`;
+                        command = `gio launch ${Qt.getenv("HOME")}/.local/share/applications/${dockContextMenu.contextAppInfo.class} || gio launch /usr/share/applications/${dockContextMenu.contextAppInfo.class}`;
                     } else {
                         var classLower = dockContextMenu.contextAppInfo.class.toLowerCase()
                         var classWithDesktop = dockContextMenu.contextAppInfo.class + ".desktop"
@@ -1154,6 +1217,7 @@ Scope {
     function openDockContextMenu(appInfo, isPinned, dockItem, mouse) {
         var finalAppInfo = appInfo
         
+        
         // For pinned apps, we need to find the actual window to get the address
         if (isPinned && appInfo && appInfo.class) {
             // Build mapping for .desktop files to possible window classes
@@ -1167,7 +1231,8 @@ Scope {
                 'lutris': ['lutris', 'net.lutris.lutris'],
                 'heroic': ['heroic', 'heroicgameslauncher'],
                 'obs': ['obs', 'com.obsproject.studio'],
-                'ptyxis': ['ptyxis', 'org.gnome.ptyxis']
+                'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
+                'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
             };
             
             // Build list of possible window classes for this pinned app
@@ -1204,4 +1269,8 @@ Scope {
         // Just open the menu at default position for now
         dockContextMenu.open()
     }
+
+    // --- DOCK APP LIST AND PREVIEW (End4 1:1 port) ---
+    DockApps { id: dockApps }
+    // --- END DOCK APP LIST AND PREVIEW ---
 }
