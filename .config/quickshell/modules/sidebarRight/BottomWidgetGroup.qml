@@ -18,6 +18,11 @@ Rectangle {
     )
     clip: true
     implicitHeight: calendarWidget.implicitHeight
+    
+    // Property to control visibility - will be set by parent
+    property bool hideCalendar: false
+    
+    visible: !hideCalendar
 
     CalendarWidget {
         id: calendarWidget

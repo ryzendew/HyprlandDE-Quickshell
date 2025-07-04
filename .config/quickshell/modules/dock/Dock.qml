@@ -97,6 +97,7 @@ Scope {
         // Other apps
         "vesktop": "vesktop --new-window",
         "microsoft-edge-dev": "microsoft-edge-dev --new-window",
+        "cursor-cursor": "gtk-launch cursor-cursor",
         "steam-native": "steam-native -newbigpicture",
         "lutris": "lutris",
         "heroic": "heroic",
@@ -164,7 +165,7 @@ Scope {
     // FileView to monitor Qt6 theme settings changes
     FileView {
         id: qt6SettingsView
-        path: Qt.binding(() => Qt.getenv("HOME") + "/.config/qt6ct/qt6ct.conf")
+        path: Qt.binding(() => StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/qt6ct/qt6ct.conf")
         
         property string lastTheme: ""
         
@@ -470,7 +471,7 @@ Scope {
                 }
                 if (windowClass.endsWith('.desktop')) {
                     // Try user applications first, then system applications
-                    var userPath = Qt.getenv("HOME") + "/.local/share/applications/" + windowClass
+                    var userPath = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications/" + windowClass
                     var systemPath = "/usr/share/applications/" + windowClass
                     var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', dock)
                     var content = ""
@@ -518,6 +519,7 @@ Scope {
                         'lutris': ['lutris', 'net.lutris.lutris'],
                         'heroic': ['heroic', 'heroicgameslauncher'],
                         'obs': ['obs', 'com.obsproject.studio'],
+                        'cursor-cursor': ['cursor', 'Cursor'],
                         'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
                         'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                     };
@@ -542,11 +544,22 @@ Scope {
                 } else {
                     let cmd;
                     if (appInfo.class.endsWith('.desktop')) {
-                        // For .desktop files, extract the actual Exec command
-                        cmd = dock.getDesktopFileExecCommand(appInfo.class);
+                        // For .desktop files, try DesktopEntries first
+                        let entry = DesktopEntries.applications[appInfo.class];
+                        if (entry && entry.execute) {
+                            entry.execute();
+                            return; // Exit early since execute() handles the launch
+                        }
+                        
+                        // Try the desktopIdToCommand mapping
+                        cmd = dock.desktopIdToCommand[appInfo.class];
                         if (!cmd) {
-                            // Fallback to gio launch if we can't parse the desktop file
-                            cmd = `gio launch ${Qt.getenv("HOME")}/.local/share/applications/${appInfo.class} || gio launch /usr/share/applications/${appInfo.class}`;
+                            // Try to extract the actual Exec command
+                            cmd = dock.getDesktopFileExecCommand(appInfo.class);
+                            if (!cmd) {
+                                // Fallback to gio launch if we can't parse the desktop file
+                                cmd = `gio launch ${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/share/applications/${appInfo.class} || gio launch /usr/share/applications/${appInfo.class}`;
+                            }
                         }
                     } else {
                         // For regular apps, use mapping or fallback
@@ -699,6 +712,7 @@ Scope {
                                             'lutris': ['lutris', 'net.lutris.lutris'],
                                             'heroic': ['heroic', 'heroicgameslauncher'],
                                             'obs': ['obs', 'com.obsproject.studio'],
+                                            'com.obsproject.Studio.desktop': ['obs', 'com.obsproject.studio'],
                                             'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
                                             'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                                         };
@@ -741,7 +755,14 @@ Scope {
                                                 if (entry && entry.execute) {
                                                     entry.execute();
                                                 } else {
-                                                    Hyprland.dispatch(`exec gio launch ${Qt.getenv("HOME")}/.local/share/applications/${modelData} || gio launch /usr/share/applications/${modelData}`);
+                                                    // Try the desktopIdToCommand mapping first
+                                                    let cmd = dock.desktopIdToCommand[modelData];
+                                                    if (cmd) {
+                                                        Hyprland.dispatch(`exec ${cmd}`);
+                                                    } else {
+                                                        // Fallback to gio launch
+                                                        Hyprland.dispatch(`exec gio launch ${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/share/applications/${modelData} || gio launch /usr/share/applications/${modelData}`);
+                                                    }
                                                 }
                                             } else {
                                                 let cmd = dock.desktopIdToCommand[modelData] || modelData.toLowerCase();
@@ -786,6 +807,8 @@ Scope {
                                         'lutris': ['lutris', 'net.lutris.lutris'],
                                         'heroic': ['heroic', 'heroicgameslauncher'],
                                         'obs': ['obs', 'com.obsproject.studio'],
+                                        'com.obsproject.Studio.desktop': ['obs', 'com.obsproject.studio'],
+                                        'cursor-cursor': ['cursor', 'Cursor'],
                                         'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
                                         'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                                     };
@@ -872,7 +895,7 @@ Scope {
     function getDesktopFileExecCommand(desktopFileName) {
         try {
             // Try user applications first, then system applications
-            var userPath = Qt.getenv("HOME") + "/.local/share/applications/" + desktopFileName
+            var userPath = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications/" + desktopFileName
             var systemPath = "/usr/share/applications/" + desktopFileName
             
             var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', dock)
@@ -1045,7 +1068,7 @@ Scope {
                 var command = ""
                 if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.class) {
                     if (dockContextMenu.contextAppInfo.class.endsWith('.desktop')) {
-                        command = `gio launch ${Qt.getenv("HOME")}/.local/share/applications/${dockContextMenu.contextAppInfo.class} || gio launch /usr/share/applications/${dockContextMenu.contextAppInfo.class}`;
+                        command = `gio launch ${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/share/applications/${dockContextMenu.contextAppInfo.class} || gio launch /usr/share/applications/${dockContextMenu.contextAppInfo.class}`;
                     } else {
                         var classLower = dockContextMenu.contextAppInfo.class.toLowerCase()
                         var classWithDesktop = dockContextMenu.contextAppInfo.class + ".desktop"
@@ -1231,6 +1254,7 @@ Scope {
                 'lutris': ['lutris', 'net.lutris.lutris'],
                 'heroic': ['heroic', 'heroicgameslauncher'],
                 'obs': ['obs', 'com.obsproject.studio'],
+                                                            'cursor-cursor': ['cursor', 'Cursor'],
                 'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
                 'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
             };

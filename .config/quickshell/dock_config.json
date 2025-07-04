@@ -1,16 +1,16 @@
 {
   "pinnedApps": [
+    "microsoft-edge-dev",
     "org.gnome.Nautilus",
     "vesktop",
     "cider",
     "steam-native",
     "lutris",
     "heroic.desktop",
-    "obs.desktop",
-    "com.blackmagicdesign.resolve.desktop",
+    "com.obsproject.Studio.desktop",
     "net.lutris.davinci-resolve-studio-20-1.desktop",
     "AffinityPhoto.desktop",
     "org.gnome.Ptyxis.desktop"
   ],
   "autoHide": false
-} 
+}

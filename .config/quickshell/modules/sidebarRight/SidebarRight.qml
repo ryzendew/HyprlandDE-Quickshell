@@ -22,6 +22,7 @@ Scope {
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 15
     property string currentSystemProfile: ""
+    property bool showBluetoothDialog: false
 
     // Refresh system profile from powerprofilesctl
     function refreshSystemProfile() {
@@ -220,7 +221,9 @@ Scope {
                             spacing: 5
 
                             NetworkToggle {}
-                            BluetoothToggle {}
+                            BluetoothToggle {
+                                id: bluetoothToggle
+                            }
                             NightLight {}
                             GameMode {}
                             IdleInhibitor {}
@@ -250,6 +253,7 @@ Scope {
 
                     // Center widget group
                     CenterWidgetGroup {
+                        id: centerWidgetGroup
                         focus: sidebarRoot.visible
                         Layout.alignment: Qt.AlignHCenter
                         Layout.fillHeight: true
@@ -261,6 +265,7 @@ Scope {
                         Layout.fillHeight: false
                         Layout.fillWidth: true
                         Layout.preferredHeight: implicitHeight
+                        hideCalendar: centerWidgetGroup.selectedTab === 3
                     }
                 }
             }
@@ -318,5 +323,22 @@ Scope {
         id: setProfileProcess
         command: ["true"]
         onExited: refreshSystemProfile()
+    }
+
+    Loader {
+        id: bluetoothDialogLoader
+        active: showBluetoothDialog
+        visible: showBluetoothDialog
+        z: 9999
+        source: showBluetoothDialog ? "quickToggles/BluetoothConnectModule.qml" : undefined
+        onStatusChanged: {
+            if (status === Loader.Error) {
+                console.log("Bluetooth dialog failed to load:", errorString);
+            }
+        }
+    }
+    Connections {
+        target: bluetoothToggle
+        onRequestBluetoothDialog: showBluetoothDialog = true
     }
 }

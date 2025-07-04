@@ -77,8 +77,9 @@ Item {
     // Simple icon mapping for common cases (fallback)
     property var iconMappings: {
         "cider": "cider", "Cider": "cider", "spotify": "spotify", "obs": "com.obsproject.Studio",
-        "vlc": "vlc", "mpv": "mpv", "code": "visual-studio-code", "cursor": "/opt/Cursor/code.png", "Cursor": "/opt/Cursor/code.png",
+        "vlc": "vlc", "mpv": "mpv", "code": "visual-studio-code", "cursor": "file:///opt/Cursor/co.anysphere.cursor.png", "Cursor": "file:///opt/Cursor/co.anysphere.cursor.png", "cursor-cursor": "file:///opt/Cursor/co.anysphere.cursor.png",
         "firefox": "firefox", "google-chrome": "google-chrome", "chromium": "chromium",
+        "microsoft-edge-dev": "microsoft-edge-dev", "microsoft-edge": "microsoft-edge-dev",
         "discord": "discord", "Discord": "discord", "vesktop": "discord", 
         "org.gnome.Nautilus": "system-file-manager", "nautilus": "system-file-manager",
         "org.gnome.Ptyxis": "terminal", "ptyxis": "terminal",
