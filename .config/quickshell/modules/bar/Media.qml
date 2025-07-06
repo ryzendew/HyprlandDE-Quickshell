@@ -101,7 +101,7 @@ Item {
         command: [ "bash", "-c", `mkdir -p '${artDownloadLocation}' && curl -sSL '${targetFile}' -o '${artFilePath}' 2>/dev/null || true` ]
         onExited: (exitCode, exitStatus) => {
             // Always try to set downloaded to true - let the Image component handle errors
-            root.downloaded = true
+                root.downloaded = true
         }
     }
 
@@ -248,12 +248,12 @@ Item {
                     visible: text.length > 0
                 }
                 
-                StyledText {
+            StyledText {
                     id: timeDisplay
-                    color: Appearance.colors.colOnLayer1
+                color: Appearance.colors.colOnLayer1
                     opacity: 0.6
                     text: formatTime(displayPosition) + " / " + formatTime(Math.max(0, (activePlayer?.length || 0) - 1))
-                    font.pixelSize: Appearance.font.pixelSize.smaller
+                font.pixelSize: Appearance.font.pixelSize.smaller
                     visible: root.activePlayer
                 }
             }

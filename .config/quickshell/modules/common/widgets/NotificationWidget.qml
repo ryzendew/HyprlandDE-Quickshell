@@ -133,6 +133,50 @@ Item {
                 Notifications.discardNotification(notificationObject.id)
             } else if (mouse.button === Qt.RightButton) {
                 root.toggleExpanded()
+            } else if (mouse.button === Qt.LeftButton) {
+                // Try to focus the application that sent the notification
+                if (notificationObject && notificationObject.appName) {
+                    // Common app name to window class mappings
+                    const appClassMappings = {
+                        "Discord": ["vesktop", "discord", "Discord"],
+                        "Spotify": ["spotify", "Spotify"],
+                        "Firefox": ["firefox", "Firefox"],
+                        "Chrome": ["google-chrome", "chromium", "chrome"],
+                        "Code": ["code", "Code"],
+                        "Telegram": ["telegram-desktop", "telegram"],
+                        "Steam": ["steam", "Steam"],
+                        "OBS": ["obs", "OBS Studio"],
+                        "Thunderbird": ["thunderbird", "Thunderbird"]
+                    }
+                    
+                    const appName = notificationObject.appName
+                    let classesToTry = []
+                    
+                    // Check if we have a mapping for this app
+                    if (appClassMappings[appName]) {
+                        classesToTry = appClassMappings[appName]
+                    } else {
+                        // Fallback to original app name and common variations
+                        classesToTry = [
+                            appName,
+                            appName.toLowerCase(),
+                            appName.replace(/\s+/g, '-').toLowerCase(),
+                            appName.replace(/\s+/g, '').toLowerCase()
+                        ]
+                    }
+                    
+                    // Try each class variation
+                    let focused = false
+                    for (const className of classesToTry) {
+                        if (className && className !== "") {
+                            console.log("Attempting to focus window class:", className)
+                            Hyprland.dispatch(`focuswindow class:${className}`)
+                        }
+                    }
+                    
+                    // Close the sidebar after attempting to focus
+                    Hyprland.dispatch("global quickshell:sidebarRightClose")
+                }
             }
         }
         

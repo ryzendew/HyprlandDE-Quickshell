@@ -214,6 +214,43 @@ Singleton {
         root.timeout(id);
     }
 
+    function timeoutAll() {
+        root.list.forEach((notif) => {
+            if (notif && notif.popup) {
+                notif.popup = false;
+                root.timeout(notif.id);
+            }
+        });
+        root.list = [...root.list]; // Trigger update
+        saveNotifications()
+        triggerListChange()
+    }
+
+    function attemptInvokeAction(notificationId, actionIdentifier) {
+        // Find the notification in the server's tracked notifications
+        const serverNotif = notifServer.trackedNotifications.values.find(
+            (notif) => notif && (notif.id + root.idOffset) === notificationId
+        );
+        
+        if (serverNotif) {
+            // Find the action by identifier
+            const action = serverNotif.actions.find(
+                (action) => action && action.identifier === actionIdentifier
+            );
+            
+            if (action) {
+                console.log("Invoking notification action:", actionIdentifier, "for notification:", notificationId);
+                action.invoke();
+                // Close the sidebar after invoking action
+                Hyprland.dispatch("global quickshell:sidebarRightClose");
+            } else {
+                console.warn("Action not found:", actionIdentifier, "for notification:", notificationId);
+            }
+        } else {
+            console.warn("Notification not found in server:", notificationId);
+        }
+    }
+
     function triggerListChange() {
         listChanged();
     }
