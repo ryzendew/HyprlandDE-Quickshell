@@ -94,7 +94,7 @@ Scope {
         Layout.topMargin: barHeight / 3
         Layout.bottomMargin: barHeight / 3
         Layout.fillHeight: true
-        implicitWidth: 2
+        implicitWidth: 1
         color: Appearance.m3colors.m3outlineVariant
     }
 
@@ -395,8 +395,8 @@ Scope {
                                                     })
                                                 } else {
                                                     console.log("No audio sink available")
-                                                }
                                             }
+                                        }
                                         }
                                     }
                                     
@@ -497,8 +497,8 @@ Scope {
                                                     Hyprland.dispatch("global quickshell:osdMicrophone:trigger")
                                                 } else {
                                                     console.log("No mic")
-                                                }
                                             }
+                                        }
                                         }
                                     }
                                     
@@ -507,7 +507,7 @@ Scope {
                                         Layout.rightMargin: 4
                                         text: "mic"
                                         iconSize: Appearance.font.pixelSize.huge
-                                        color: rightSidebarButton.colText
+                                            color: rightSidebarButton.colText
                                         visible: !(Audio.source?.audio?.muted ?? false)
                                         MouseArea {
                                             anchors.fill: parent
@@ -521,8 +521,8 @@ Scope {
                                                     // Right-click toggles mute
                                                     if (Audio.source?.audio) {
                                                         Audio.source.audio.muted = !Audio.source.audio.muted
-                                                    }
-                                                }
+                                            }
+                                        }
                                             }
                                             
                                             onWheel: function(wheel) {
@@ -537,8 +537,8 @@ Scope {
                                                     Hyprland.dispatch("global quickshell:osdMicrophone:trigger")
                                                 } else {
                                                     console.log("No mic")
-                                                }
-                                            }
+                                        }
+                                    }
                                         }
                                     }
                                     

@@ -106,24 +106,24 @@ Scope {
 						Layout.alignment: Qt.AlignVCenter
 						spacing: 8
 
-						Text {
-							text: root.failed ? "Quickshell: Reload failed" : "Quickshell reloaded"
+					Text {
+						text: root.failed ? "Quickshell: Reload failed" : "Quickshell reloaded"
 							color: "#ffffff"
 							font.pixelSize: 16
 							font.weight: Font.Medium
 							Layout.fillWidth: true
-						}
+					}
 
-						Text {
+					Text {
 							text: root.errorString
 							color: "#ffffff"
 							font.pixelSize: 12
-							font.family: "JetBrains Mono NF"
+						font.family: "JetBrains Mono NF"
 							opacity: 0.9
 							wrapMode: Text.WordWrap
 							Layout.fillWidth: true
 							Layout.maximumWidth: 250
-							visible: root.errorString != ""
+						visible: root.errorString != ""
 						}
 					}
 				}
@@ -147,21 +147,21 @@ Scope {
 						radius: 2
 						color: "#ffffff"
 
-						PropertyAnimation {
-							id: anim
+					PropertyAnimation {
+						id: anim
 							target: progressBar
-							property: "width"
+						property: "width"
 							from: modernRect.width - 2
-							to: 0
-							duration: failed ? 10000 : 1000
-							onFinished: popupLoader.active = false
+						to: 0
+						duration: failed ? 10000 : 1000
+						onFinished: popupLoader.active = false
 
-							// Pause the animation when the mouse is hovering over the popup,
-							// so it stays onscreen while reading. This updates reactively
-							// when the mouse moves on and off the popup.
-							paused: mouseArea.containsMouse
-						}
+						// Pause the animation when the mouse is hovering over the popup,
+						// so it stays onscreen while reading. This updates reactively
+						// when the mouse moves on and off the popup.
+						paused: mouseArea.containsMouse
 					}
+				}
 				}
 
 				// Entrance animation
@@ -192,8 +192,8 @@ Scope {
 					scaleAnimation.start()
 					anim.start()
 					forceCloseTimer.start()
-				}
-				
+			}
+
 				// Force close timer to prevent popup from getting stuck
 				Timer {
 					id: forceCloseTimer
@@ -222,7 +222,7 @@ Scope {
 					border.color: Qt.rgba(1, 1, 1, 0.05)
 					border.width: 1
 				}
-			}
+            }
 		}
 	}
 }

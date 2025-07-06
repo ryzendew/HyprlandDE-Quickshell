@@ -56,7 +56,8 @@ Rectangle {
     property var tabButtonList: [
         {"icon": "notifications", "name": qsTr("Notifications")},
         {"icon": "volume_up", "name": qsTr("Volume mixer")},
-        {"icon": "cloud", "name": qsTr("Weather")}
+        {"icon": "cloud", "name": qsTr("Weather")},
+        {"icon": "calendar_month", "name": qsTr("Calendar")}
     ]
 
     // Intercept the close signal
@@ -114,6 +115,7 @@ Rectangle {
                     case 0: return notificationComponent;
                     case 1: return volumeMixerComponent;
                     case 2: return weatherComponent;
+                    case 3: return calendarComponent;
                     default: return notificationComponent;
                 }
             }
@@ -122,5 +124,6 @@ Rectangle {
         Component { id: notificationComponent; NotificationList {} }
         Component { id: volumeMixerComponent; VolumeMixer {} }
         Component { id: weatherComponent; WeatherSidebarPage {} }
+        Component { id: calendarComponent; CalendarSidebarPage {} }
     }
 }

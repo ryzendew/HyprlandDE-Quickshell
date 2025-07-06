@@ -69,43 +69,43 @@ Item {
         Rectangle {
             Layout.preferredWidth: 40
             Layout.preferredHeight: 40
-            Layout.alignment: Qt.AlignVCenter
+                Layout.alignment: Qt.AlignVCenter
             color: Qt.rgba(1, 1, 1, 0.1)
             radius: 12
             
             MaterialSymbol {
-                anchors.centerIn: parent
+                    anchors.centerIn: parent
                 color: "#ffffff"
-                text: root.icon
+                    text: root.icon
                 iconSize: 24
-                
-                Behavior on iconSize {
+
+                    Behavior on iconSize {
                     NumberAnimation {
                         duration: 200
                         easing.type: Easing.OutQuad
                     }
                 }
+                }
             }
-        }
 
         // Content section
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
+                Layout.alignment: Qt.AlignVCenter
             spacing: 8
 
             // Title and percentage row
             RowLayout {
-                Layout.fillWidth: true
+                        Layout.fillWidth: true
                 spacing: 0
 
                 Text {
-                    text: root.name
+                        text: root.name
                     color: "#ffffff"
                     font.pixelSize: 16
                     font.weight: Font.Medium
                 }
-
+                
                 Item {
                     Layout.fillWidth: true
                     Layout.minimumWidth: 12
@@ -139,9 +139,9 @@ Item {
                         NumberAnimation {
                             duration: 300
                             easing.type: Easing.OutQuad
-                        }
-                    }
                 }
+            }
+        }
             }
         }
     }

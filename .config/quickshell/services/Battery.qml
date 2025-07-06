@@ -15,7 +15,7 @@ Singleton {
     property var primaryBattery: UPower.displayDevice
     property var chargeState: primaryBattery.state
     property bool isCharging: chargeState == UPowerDeviceState.Charging
-    property bool isPluggedIn: isCharging || chargeState == UPowerDeviceState.PendingCharge
+    property bool isPluggedIn: isCharging || chargeState == UPowerDeviceState.PendingCharge || chargeState == UPowerDeviceState.FullyCharged
     property real percentage: primaryBattery.percentage
     property bool isFullyCharged: chargeState == UPowerDeviceState.FullyCharged
 

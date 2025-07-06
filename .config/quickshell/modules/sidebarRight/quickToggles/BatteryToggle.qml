@@ -9,9 +9,8 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 QuickToggleButton {
-    toggled: Battery.isCharging
-    buttonIcon: Battery.isFullyCharged ? "battery_full" : 
-                Battery.isCharging ? "battery_charging_full" :
+    toggled: Battery.isPluggedIn
+    buttonIcon: Battery.isPluggedIn ? (Battery.isFullyCharged ? "power" : "battery_charging_full") :
                 Battery.isCritical ? "battery_alert" :
                 Battery.isLow ? "battery_low" :
                 "battery_6_bar"

@@ -45,7 +45,7 @@ ColumnLayout {
                 selected: (index == root.externalTrackedTab)
                 buttonText: modelData.name
                 buttonIcon: modelData.icon
-                minimumWidth: 160
+                minimumWidth: 130
             }
         }
     }

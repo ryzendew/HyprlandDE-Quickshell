@@ -50,12 +50,12 @@ function detectCurrentIconTheme(homeDir) {
         
         if (content) {
             var lines = content.split('\n');
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim();
-                if (line.startsWith('icon_theme=')) {
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line.startsWith('icon_theme=')) {
                     detectedTheme = line.substring(11);
-                    debugLog('Detected theme from qt6ct.conf:', detectedTheme);
-                    break;
+                debugLog('Detected theme from qt6ct.conf:', detectedTheme);
+                break;
                 }
             }
         }

@@ -178,9 +178,11 @@ Scope {
                         border.color: Qt.rgba(1, 1, 1, 0.15)
                         border.width: 1
                         
+                        // Left side - Logo and uptime
                         RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 12
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 12
                             spacing: 10
 
                             Item {
@@ -206,9 +208,17 @@ Scope {
                                 text: StringUtils.format(qsTr("Uptime: {0}"), DateTime.uptime)
                                 textFormat: Text.MarkdownText
                             }
+                        }
 
-                            Item {
-                                Layout.fillWidth: true
+                        // Right side - Buttons
+                        RowLayout {
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.rightMargin: 12
+                            spacing: 0
+
+                            BatteryToggle {
+                                visible: Battery.available
                             }
 
                             QuickToggleButton {
@@ -262,30 +272,40 @@ Scope {
                         
                         RowLayout {
                             id: sidebarQuickControlsRow
-                            anchors.fill: parent
+                            anchors.centerIn: parent
+                            anchors.left: parent.left
+                            anchors.right: parent.right
                             anchors.margins: 5
-                            spacing: 5
+                            spacing: 14
                             
                             Item { Layout.fillWidth: true }
                             
                             RowLayout {
-                                spacing: 5
+                                spacing: 14
+                                Layout.alignment: Qt.AlignVCenter
 
-                                NetworkToggle {}
-                                BatteryToggle {
-                                    visible: Battery.available
+                                NetworkToggle {
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
                                 BluetoothToggle {
                                     id: bluetoothToggle
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
-                                NightLight {}
-                                GameMode {}
-                                IdleInhibitor {}
+                                NightLight {
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+                                GameMode {
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+                                IdleInhibitor {
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
                                 QuickToggleButton {
                                     id: perfProfilePerformance
                                     buttonIcon: "speed"
                                     toggled: PowerProfiles.profile === PowerProfile.Performance
                                     onClicked: PowerProfiles.profile = PowerProfile.Performance
+                                    Layout.alignment: Qt.AlignVCenter
                                     StyledToolTip { content: qsTr("Performance Mode") }
                                 }
                                 QuickToggleButton {
@@ -293,6 +313,7 @@ Scope {
                                     buttonIcon: "balance"
                                     toggled: PowerProfiles.profile === PowerProfile.Balanced
                                     onClicked: PowerProfiles.profile = PowerProfile.Balanced
+                                    Layout.alignment: Qt.AlignVCenter
                                     StyledToolTip { content: qsTr("Balanced Mode") }
                                 }
                                 QuickToggleButton {
@@ -300,6 +321,7 @@ Scope {
                                     buttonIcon: "battery_saver"
                                     toggled: PowerProfiles.profile === PowerProfile.PowerSaver
                                     onClicked: PowerProfiles.profile = PowerProfile.PowerSaver
+                                    Layout.alignment: Qt.AlignVCenter
                                     StyledToolTip { content: qsTr("Power Saver Mode") }
                                 }
                             }
@@ -308,27 +330,13 @@ Scope {
                         }
                     }
 
-                    // Main content (tabs: notifications, volume, weather)
+                    // Main content (tabs: notifications, volume, weather, calendar)
                     CenterWidgetGroup {
                         id: centerWidgetGroup
                         focus: sidebarRoot.visible
                         Layout.alignment: Qt.AlignHCenter
                         Layout.fillHeight: true
                         Layout.fillWidth: true
-                    }
-
-                    // Calendar (shown only on notifications tab)
-                    Loader {
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.fillHeight: false
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: item ? item.implicitHeight : 0
-                        active: centerWidgetGroup.selectedTab === 0
-                        sourceComponent: Component {
-                            BottomWidgetGroup {
-                                hideCalendar: false
-                            }
-                        }
                     }
                 }
             }

@@ -200,6 +200,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parse Hyprland keybinds')
     parser.add_argument('--path', type=str, default=get_default_config_path(), help='path to keybind file (sourcing isn\'t supported)')
     args = parser.parse_args()
-    
+
     ParsedKeys = parse_keys(args.path)
     print(json.dumps(ParsedKeys))
