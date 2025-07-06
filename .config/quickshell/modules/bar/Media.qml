@@ -14,7 +14,7 @@ Item {
     property bool borderless: ConfigOptions.bar.borderless
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || qsTr("No media")
-    property string latestCoverArtFile: ""
+
     property string artUrl: activePlayer?.trackArtUrl || ""
     property string artDownloadLocation: Directories.coverArt
     property string artFileName: Qt.md5(artUrl) + ".jpg"
@@ -70,87 +70,97 @@ Item {
     Rectangle { // Background
         anchors.centerIn: parent
         width: parent.width
-        implicitHeight: 48
+        implicitHeight: 56
         anchors.leftMargin: 0
         anchors.rightMargin: 0
-        anchors.topMargin: 4
-        anchors.bottomMargin: 4
+        anchors.topMargin: 2
+        anchors.bottomMargin: 2
         color: borderless ? "transparent" : Qt.rgba(
             Appearance.colors.colLayer1.r,
             Appearance.colors.colLayer1.g,
             Appearance.colors.colLayer1.b,
-            0.25
+            0.35
         )
         radius: Appearance.rounding.small
     }
 
-    function updateLatestCoverArt() {
-        var dir = Directories.coverArt;
-        var files = Quickshell.Io.listFiles(dir);
-        console.log("[BarMedia][DEBUG] Scanning cover art dir:", dir);
-        if (files) {
-            console.log("[BarMedia][DEBUG] Files found:", JSON.stringify(files.map(f => f.path + ' (mtime: ' + f.mtime + ')')));
-        } else {
-            console.log("[BarMedia][DEBUG] No files found in cover art dir.");
-        }
-        if (files && files.length > 0) {
-            files.sort(function(a, b) { return b.mtime - a.mtime; });
-            root.latestCoverArtFile = files[0].path;
-            console.log("[BarMedia][DEBUG] Latest cover art file:", root.latestCoverArtFile);
-        } else {
-            root.latestCoverArtFile = "";
-            console.log("[BarMedia][DEBUG] No cover art file to display.");
-        }
-    }
 
-    onLatestCoverArtFileChanged: {
-        console.log("[BarMedia][DEBUG] latestCoverArtFile changed:", root.latestCoverArtFile);
-    }
 
     onArtUrlChanged: {
-        if (root.artUrl.length == 0) {
+        if (root.artUrl && root.artUrl.length > 0) {
             root.downloaded = false
-            return;
+            coverArtDownloader.running = true
+        } else {
+            root.downloaded = false
         }
-        root.downloaded = false
-        coverArtDownloader.running = true
     }
 
-    Process { // Cover art downloader
+    Process { // Cover art downloader - simplified
         id: coverArtDownloader
         property string targetFile: root.artUrl
-        command: [ "bash", "-c", `mkdir -p '${artDownloadLocation}' && [ -f '${artFilePath}' ] || curl -sSL '${targetFile}' -o '${artFilePath}'` ]
+        command: [ "bash", "-c", `mkdir -p '${artDownloadLocation}' && curl -sSL '${targetFile}' -o '${artFilePath}' 2>/dev/null || true` ]
         onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0) {
-                root.downloaded = true
-                updateLatestCoverArt()
+            // Always try to set downloaded to true - let the Image component handle errors
+            root.downloaded = true
+        }
+    }
+
+    // Track the current song to detect changes
+    property string currentTrackId: activePlayer ? (activePlayer.trackTitle + "|" + activePlayer.trackArtist) : ""
+    property real displayPosition: 0
+    
+    onCurrentTrackIdChanged: {
+        // Reset display position when song changes
+        displayPosition = 0
+    }
+    
+    // Update display position, but reset to 0 when song changes or ends
+    Timer {
+        id: positionUpdateTimer
+        running: activePlayer?.playbackState == MprisPlaybackState.Playing
+        interval: 100
+        repeat: true
+        onTriggered: {
+            if (activePlayer) {
+                var actualPosition = activePlayer.position || 0
+                var trackLength = activePlayer.length || 0
+                
+                // If position is very close to end or greater than length, reset to 0
+                if (actualPosition >= trackLength - 1 || actualPosition >= trackLength) {
+                    displayPosition = 0
+                } else {
+                    displayPosition = actualPosition
+                }
             }
         }
     }
 
-    Component.onCompleted: updateLatestCoverArt()
     Connections {
         target: activePlayer
-        function onTrackTitleChanged() { updateLatestCoverArt() }
-        function onTrackArtistChanged() { updateLatestCoverArt() }
         function onTrackArtUrlChanged() { root.artUrl = activePlayer?.trackArtUrl || "" }
-        function onLengthChanged() {
-            console.log('[BarMedia] activePlayer properties:', JSON.stringify(activePlayer))
+        function onTrackTitleChanged() { 
+            // Reset position when track changes
+            displayPosition = 0
         }
     }
 
     RowLayout { // Real content
         id: rowLayout
-        spacing: 8
-        anchors.fill: parent
-        anchors.leftMargin: 16
-        anchors.rightMargin: 16
+        spacing: 10
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.leftMargin: 12
+        anchors.rightMargin: 12
+        anchors.topMargin: 2
+        height: parent.height - anchors.topMargin
 
+        // Album art on the left
         Rectangle {
             id: albumArtContainer
-            width: 36
-            height: 36
-            radius: 8
+            Layout.preferredWidth: 32
+            Layout.preferredHeight: 32
+            radius: 6
             color: Qt.rgba(
                 Appearance.colors.colLayer1.r,
                 Appearance.colors.colLayer1.g,
@@ -164,79 +174,123 @@ Item {
                 0.3
             )
             border.width: 1
-            visible: root.artUrl.length > 0
-            Layout.alignment: Qt.AlignVCenter
+            visible: root.activePlayer
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: -3
             layer.enabled: true
             layer.smooth: true
+            
             Image {
                 anchors.fill: parent
                 source: root.downloaded ? Qt.resolvedUrl(root.artFilePath) : ""
                 fillMode: Image.PreserveAspectCrop
                 cache: false
                 asynchronous: true
-                visible: root.downloaded
+                visible: root.downloaded && status === Image.Ready
                 layer.enabled: true
                 layer.smooth: true
+                
+                onStatusChanged: {
+                    if (status === Image.Error) {
+                        console.log("[BarMedia] Image load error for:", source)
+                    }
+                }
             }
+            
             MaterialSymbol {
                 anchors.centerIn: parent
                 fill: 1
                 text: "music_note"
                 iconSize: 16
                 color: Appearance.m3colors.m3onSecondaryContainer
-                visible: !root.downloaded
+                visible: !root.downloaded || albumArtContainer.children[0].status !== Image.Ready
             }
         }
 
-        // Song/album/artist stacked, fill width
+        // Main content area with song info and progress bar
         ColumnLayout {
-            Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: true
-            spacing: 2
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: -3
+            spacing: 0
+
+            // Song name on top
             StyledText {
+                id: songTitle
+                Layout.fillWidth: true
                 text: activePlayer?.trackTitle || cleanedTitle
                 color: Appearance.colors.colOnLayer1
                 font.pixelSize: Appearance.font.pixelSize.normal
-                font.bold: true
+                font.weight: Font.Medium
                 elide: Text.ElideRight
-                Layout.fillWidth: true
+                maximumLineCount: 1
             }
-            StyledText {
-                property var meta: activePlayer?.metadata || {}
-                property var year: meta["xesam:contentCreated"] ? meta["xesam:contentCreated"].toString().slice(0,4) : (meta["xesam:year"] ? meta["xesam:year"].toString() : (activePlayer?.trackYear ? activePlayer.trackYear.toString() : ""))
-                property bool validYear: year && year.length === 4 && !isNaN(Number(year))
-                text: (activePlayer?.trackAlbum ? activePlayer.trackAlbum : "")
-                    + (validYear ? ` [${year}]` : "")
-                    + (activePlayer?.trackArtist ? ` - ${activePlayer.trackArtist}` : "")
-                color: Appearance.colors.colOnLayer1
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                font.bold: false
-                opacity: 0.8
-                elide: Text.ElideRight
-                Layout.fillWidth: true
-            }
-        }
 
-        // Elapsed time and year (right side)
-        ColumnLayout {
-            Layout.alignment: Qt.AlignVCenter
-            spacing: 2
-            StyledText {
-                property real pos: activePlayer?.position || 0
-                text: formatTime(pos)
-                color: Appearance.colors.colOnLayer1
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                font.bold: true
-                horizontalAlignment: Text.AlignRight
+            // Album - Artist name with time display
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 2
+                
+                StyledText {
+                    id: albumArtistText
+                    Layout.fillWidth: true
+                    color: Appearance.colors.colOnLayer1
+                    opacity: 0.7
+                    text: {
+                        var parts = []
+                        if (activePlayer?.trackAlbum) parts.push(activePlayer.trackAlbum)
+                        if (activePlayer?.trackArtist) parts.push(activePlayer.trackArtist)
+                        return parts.join(" - ")
+                    }
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    elide: Text.ElideRight
+                    maximumLineCount: 1
+                    visible: text.length > 0
+                }
+                
+                StyledText {
+                    id: timeDisplay
+                    color: Appearance.colors.colOnLayer1
+                    opacity: 0.6
+                    text: formatTime(displayPosition) + " / " + formatTime(Math.max(0, (activePlayer?.length || 0) - 1))
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    visible: root.activePlayer
+                }
             }
-            StyledText {
-                property var meta: activePlayer?.metadata || {}
-                property var year: meta["xesam:contentCreated"] ? meta["xesam:contentCreated"].toString().slice(0,4) : (meta["xesam:year"] ? meta["xesam:year"].toString() : (activePlayer?.trackYear ? activePlayer.trackYear.toString() : ""))
-                text: (year && year.length === 4 && !isNaN(Number(year))) ? year : ""
-                color: Appearance.colors.colOnLayer1
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                opacity: 0.7
-                horizontalAlignment: Text.AlignRight
+
+            // Progress bar at the bottom
+            Rectangle {
+                id: progressBarBackground
+                Layout.fillWidth: true
+                Layout.preferredHeight: 3
+                Layout.topMargin: 4
+                Layout.leftMargin: -41
+                radius: 1.5
+                color: Qt.rgba(
+                    Appearance.m3colors.m3secondaryContainer.r,
+                    Appearance.m3colors.m3secondaryContainer.g,
+                    Appearance.m3colors.m3secondaryContainer.b,
+                    0.4
+                )
+                visible: root.activePlayer
+
+                Rectangle {
+                    id: progressBarFill
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width * Math.max(0, Math.min(1, displayPosition / Math.max(1, activePlayer?.length || 1)))
+                    height: parent.height
+                    radius: parent.radius
+                    color: Appearance.m3colors.m3primary
+                    
+                    Behavior on width {
+                        enabled: activePlayer?.playbackState == MprisPlaybackState.Playing
+                        NumberAnimation {
+                            duration: 300
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                }
             }
         }
     }
