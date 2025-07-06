@@ -50,43 +50,7 @@ ColumnLayout {
         }
     }
 
-    Item { // Tab indicator
-        id: tabIndicator
-        Layout.fillWidth: true
-        height: 3
-        Connections {
-            target: root
-            function onExternalTrackedTabChanged() {
-                root.enableIndicatorAnimation = true
-            }
-        }
 
-        Rectangle {
-            id: indicator
-            property int tabCount: root.tabButtonList.length
-            property real fullTabSize: root.width / tabCount;
-            property real targetWidth: tabBar.contentItem.children[0].children[tabBar.currentIndex].tabContentWidth
-
-            implicitWidth: targetWidth
-            anchors {
-                top: parent.top
-                bottom: parent.bottom
-            }
-
-            x: tabBar.currentIndex * fullTabSize + (fullTabSize - targetWidth) / 2
-
-            color: root.colIndicator
-            radius: Appearance?.rounding.full ?? 9999
-
-            Behavior on x {
-                animation: Appearance?.animation.elementMove.numberAnimation.createObject(this)
-            }
-
-            Behavior on implicitWidth {
-                animation: Appearance?.animation.elementMove.numberAnimation.createObject(this)
-            }
-        }
-    }
 
     Rectangle { // Tabbar bottom border
         id: tabBarBottomBorder

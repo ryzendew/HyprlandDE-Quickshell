@@ -4,6 +4,6 @@
     "weatherLocation": "Halifax, Nova Scotia, Canada",
     "displayTime": 6000,
     "videoPath": "~/Videos/",
-    "wallpaperDirectory": "/home/lysec/nixos/assets/wallpapers/",
+    "wallpaperDirectory": "~/Pictures/Wallpapers/",
     "lastWallpaperPath": ""
 }

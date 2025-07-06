@@ -204,9 +204,9 @@ Item {
                             locationDisplay = geoData.results[0].name + ", " + geoData.results[0].admin1 + ", " + geoData.results[0].country;
                         }
                         
-                        // Now get 7-day forecast from Open-Meteo
+                        // Now get 10-day forecast from Open-Meteo
                         var xhr = new XMLHttpRequest();
-                        var url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,relative_humidity_2m_max&timezone=auto&forecast_days=7&temperature_unit=celsius&wind_speed_unit=kmh`;
+                        var url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_probability_mean,wind_speed_10m_max,relative_humidity_2m_max&timezone=auto&forecast_days=10&temperature_unit=celsius&wind_speed_unit=kmh`;
                         xhr.onreadystatechange = function() {
                             if (xhr.readyState === XMLHttpRequest.DONE) {
                                 if (xhr.status === 200) {
@@ -248,7 +248,7 @@ Item {
         }
         
         if (data.daily && data.daily.time && data.daily.time.length > 0) {
-            for (var i = 0; i < Math.min(7, data.daily.time.length); i++) {
+            for (var i = 0; i < Math.min(10, data.daily.time.length); i++) {
                 var dateStr = data.daily.time[i];
                 var dateParts = dateStr.split('-');
                 var date = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
@@ -259,11 +259,15 @@ Item {
                 var condition = mapWeatherCode(weatherCode);
                 var wind = Math.round(data.daily.wind_speed_10m_max[i]);
                 var humidity = Math.round(data.daily.relative_humidity_2m_max[i]);
-                
+                var precip = data.daily.precipitation_probability_max ? Math.round(data.daily.precipitation_probability_max[i]) : 0;
+                var precipMean = data.daily.precipitation_probability_mean ? Math.round(data.daily.precipitation_probability_mean[i]) : 0;
                 forecast.push({
                     date: dayName,
                     emoji: getWeatherEmoji(condition),
-                    temp: maxTemp + "°/" + minTemp + "°",
+                    tempMin: minTemp,
+                    tempMax: maxTemp,
+                    precip: precip,
+                    precipMean: precipMean,
                     condition: condition,
                     wind: wind,
                     humidity: humidity

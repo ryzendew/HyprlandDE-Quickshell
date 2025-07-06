@@ -19,6 +19,11 @@ Item {
     property bool isConnecting: false
     property bool settingsExpanded: false
 
+    // Use SystemPaths for network interface detection
+    readonly property string wirelessInterface: SystemPaths.detectedWirelessInterface
+    
+
+
     function toggleWifi() {
         const cmd = Network.wifiEnabled ? "nmcli radio wifi off" : "nmcli radio wifi on"
         Process.launch(cmd)
@@ -873,8 +878,8 @@ Item {
 
     function togglePowerSave() {
         const cmd = powerSaveEnabled ?
-            "iwconfig wlan0 power off" :
-            "iwconfig wlan0 power on"
+            `iwconfig ${wirelessInterface} power off` :
+            `iwconfig ${wirelessInterface} power on`
         Io.shellCommand(cmd, (exitCode) => {
             if (exitCode === 0) {
                 powerSaveEnabled = !powerSaveEnabled
@@ -906,8 +911,8 @@ Item {
             randomMacEnabled = stdout.includes("random")
         })
 
-        // Check power save mode
-        Io.shellCommand("iwconfig wlan0 | grep Power", (exitCode, stdout) => {
+        // Check power save mode using detected interface
+        Io.shellCommand(`iwconfig ${wirelessInterface} | grep Power`, (exitCode, stdout) => {
             powerSaveEnabled = stdout.includes("Power Management:on")
         })
     }

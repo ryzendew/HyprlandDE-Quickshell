@@ -3,19 +3,15 @@
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Basic
 
 import "./modules/common/"
-import "./modules/backgroundWidgets/"
 import "./modules/bar/"
 import "./modules/cheatsheet/"
-// import "./modules/ControlPanel/"  // DISABLED
 import "./modules/dock/"
 import "./modules/mediaControls/"
 import "./modules/notificationPopup/"
 import "./modules/onScreenDisplay/"
 import "./modules/onScreenKeyboard/"
 import "./modules/overview/"
-import "./modules/screenCorners/"
 import "./modules/session/"
-import "./modules/sidebarLeft/"
 import "./modules/sidebarRight/"
 import "./modules/hyprmenu/"
 import QtQuick
@@ -31,20 +27,17 @@ ShellRoot {
     // Enable/disable modules here. False = not loaded at all, so rest assured
     // no unnecessary stuff will take up memory if you decide to only use, say, the overview.
     property bool enableBar: true
-    property bool enableBackgroundWidgets: false
     property bool enableCheatsheet: true
-    property bool enableControlPanel: false  // DISABLED
     property bool enableDock: true
     property bool enableMediaControls: true
     property bool enableNotificationPopup: true
     property bool enableOnScreenDisplayBrightness: true
     property bool enableOnScreenDisplayVolume: true
+    property bool enableOnScreenDisplayMicrophone: true
     property bool enableOnScreenKeyboard: true
     property bool enableOverview: true
     property bool enableReloadPopup: true
-    property bool enableScreenCorners: false
     property bool enableSession: true
-    property bool enableSidebarLeft: false
     property bool enableSidebarRight: true
     property bool enableHyprMenu: true
 
@@ -65,31 +58,20 @@ ShellRoot {
     property alias weatherData: weatherService.weatherData
     property alias weatherLoading: weatherService.loading
 
+    // Modules
     Loader { active: enableBar; sourceComponent: Bar {} }
-    Loader { active: enableBackgroundWidgets; sourceComponent: BackgroundWidgets {} }
     Loader { active: enableCheatsheet; sourceComponent: Cheatsheet {} }
-    
-    // Control Panel - DISABLED
-    // ControlPanel {
-    //     id: controlPanel
-    //     shell: root
-    //     isShown: true
-    //     Component.onCompleted: {
-    //         console.log("ControlPanel loaded directly in shell.qml")
-    //     }
-    // }
-    
     Loader { active: enableDock; sourceComponent: Dock {} }
-    Loader { active: enableHyprMenu; sourceComponent: HyprMenu {} }
     Loader { active: enableMediaControls; sourceComponent: MediaControls {} }
     Loader { active: enableNotificationPopup; sourceComponent: NotificationPopup {} }
     Loader { active: enableOnScreenDisplayBrightness; sourceComponent: OnScreenDisplayBrightness {} }
     Loader { active: enableOnScreenDisplayVolume; sourceComponent: OnScreenDisplayVolume {} }
+    Loader { active: enableOnScreenDisplayMicrophone; sourceComponent: OnScreenDisplayMicrophone {} }
     Loader { active: enableOnScreenKeyboard; sourceComponent: OnScreenKeyboard {} }
     Loader { active: enableOverview; sourceComponent: Overview {} }
     Loader { active: enableReloadPopup; sourceComponent: ReloadPopup {} }
-    Loader { active: enableScreenCorners; sourceComponent: ScreenCorners {} }
     Loader { active: enableSession; sourceComponent: Session {} }
     Loader { active: enableSidebarRight; sourceComponent: SidebarRight {} }
+    Loader { active: enableHyprMenu; sourceComponent: HyprMenu {} }
 }
 

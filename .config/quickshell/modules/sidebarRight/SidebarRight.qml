@@ -20,9 +20,10 @@ Scope {
     readonly property bool upowerReady: typeof PowerProfiles !== 'undefined' && PowerProfiles
     readonly property int currentProfile: upowerReady ? PowerProfiles.profile : 0
     property int sidebarWidth: Appearance.sizes.sidebarWidth
-    property int sidebarPadding: 15
+    property int sidebarPadding: 8
     property string currentSystemProfile: ""
     property bool showBluetoothDialog: false
+    property bool pinned: false
 
     // Refresh system profile from powerprofilesctl
     function refreshSystemProfile() {
@@ -64,7 +65,7 @@ Scope {
             visible: sidebarLoader.active
 
             function hide() {
-                sidebarLoader.active = false
+                if (!pinned) sidebarLoader.active = false
             }
 
             exclusiveZone: 0
@@ -85,32 +86,64 @@ Scope {
                 windows: [ sidebarRoot ]
                 active: sidebarRoot.visible
                 onCleared: () => {
-                    if (!active) sidebarRoot.hide()
+                    if (!active && !pinned) sidebarRoot.hide()
                 }
             }
 
-            // Background
+            // Modern Background
             Rectangle {
                 id: sidebarRightBackground
                 anchors.centerIn: parent
                 width: parent.width - Appearance.sizes.hyprlandGapsOut * 2
                 height: parent.height - Appearance.sizes.hyprlandGapsOut * 2
-                color: Qt.rgba(
-                    Appearance.colors.colLayer1.r,
-                    Appearance.colors.colLayer1.g,
-                    Appearance.colors.colLayer1.b,
-                    0.55
+                radius: Appearance.rounding.verylarge
+                
+                gradient: Gradient {
+                    GradientStop { 
+                        position: 0.0
+                        color: Qt.rgba(
+                            Appearance.colors.colLayer1.r,
+                            Appearance.colors.colLayer1.g,
+                            Appearance.colors.colLayer1.b,
+                            0.75
+                        )
+                    }
+                    GradientStop { 
+                        position: 1.0
+                        color: Qt.rgba(
+                            Appearance.colors.colLayer1.r,
+                            Appearance.colors.colLayer1.g,
+                            Appearance.colors.colLayer1.b,
+                            0.65
+                        )
+                    }
+                }
+                
+                border.width: 1
+                border.color: Qt.rgba(
+                    Appearance.colors.colOutline.r,
+                    Appearance.colors.colOutline.g,
+                    Appearance.colors.colOutline.b,
+                    0.3
                 )
-                radius: Appearance.rounding.screenRounding - Appearance.sizes.elevationMargin + 1
-                border.width: 2
-                border.color: Appearance.colors.colOutline
+                
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     source: sidebarRightBackground
                     shadowEnabled: true
-                    shadowColor: Appearance.colors.colShadow
-                    shadowVerticalOffset: 1
-                    shadowBlur: 0.5
+                    shadowColor: Qt.rgba(0, 0, 0, 0.15)
+                    shadowVerticalOffset: 8
+                    shadowHorizontalOffset: 0
+                    shadowBlur: 24
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 1
+                    radius: parent.radius - 1
+                    color: "transparent"
+                    border.color: Qt.rgba(1, 1, 1, 0.08)
+                    border.width: 1
                 }
 
                 Behavior on color {
@@ -121,7 +154,7 @@ Scope {
                 }
 
                 Keys.onPressed: (event) => {
-                    if (event.key === Qt.Key_Escape) {
+                    if (event.key === Qt.Key_Escape && !pinned) {
                         sidebarRoot.hide();
                     }
                 }
@@ -129,79 +162,92 @@ Scope {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: sidebarPadding
-                    
-                    spacing: sidebarPadding
+                    spacing: 6
 
-                    RowLayout {
-                        Layout.fillHeight: false
-                        spacing: 10
-                        Layout.margins: 10
-                        Layout.topMargin: 5
-                        Layout.bottomMargin: 0
+                    // Header with logo, uptime, and action buttons
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 60
+                        radius: Appearance.rounding.large
+                        color: Qt.rgba(
+                            Appearance.colors.colLayer1.r,
+                            Appearance.colors.colLayer1.g,
+                            Appearance.colors.colLayer1.b,
+                            0.3
+                        )
+                        border.color: Qt.rgba(1, 1, 1, 0.15)
+                        border.width: 1
+                        
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 10
 
-                        Item {
-                            implicitWidth: 25
-                            implicitHeight: 25
-                            Image {
-                                id: cachyosLogo
-                                width: 25
-                                height: 25
-                                source: "root:/assets/icons/cachyos-symbolic.svg"
-                                fillMode: Image.PreserveAspectFit
+                            Item {
+                                implicitWidth: 25
+                                implicitHeight: 25
+                                Image {
+                                    id: cachyosLogo
+                                    width: 25
+                                    height: 25
+                                    source: "root:/assets/icons/cachyos-symbolic.svg"
+                                    fillMode: Image.PreserveAspectFit
+                                }
+                                ColorOverlay {
+                                    anchors.fill: cachyosLogo
+                                    source: cachyosLogo
+                                    color: "#00ffcc"
+                                }
                             }
-                            ColorOverlay {
-                                anchors.fill: cachyosLogo
-                                source: cachyosLogo
-                                color: "#00ffcc"  // CachyOS brand teal color
-                            }
-                        }
 
-                        StyledText {
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                            color: Appearance.colors.colOnLayer0
-                            text: StringUtils.format(qsTr("Uptime: {0}"), DateTime.uptime)
-                            textFormat: Text.MarkdownText
-                        }
+                            StyledText {
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                color: Appearance.colors.colOnLayer0
+                                text: StringUtils.format(qsTr("Uptime: {0}"), DateTime.uptime)
+                                textFormat: Text.MarkdownText
+                            }
 
-                        Item {
-                            Layout.fillWidth: true
-                        }
+                            Item {
+                                Layout.fillWidth: true
+                            }
 
-                        QuickToggleButton {
-                            toggled: false
-                            buttonIcon: "refresh"
-                            onClicked: {
-                                Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+                            QuickToggleButton {
+                                toggled: pinned
+                                buttonIcon: "push_pin"
+                                onClicked: pinned = !pinned
+                                StyledToolTip {
+                                    content: pinned ? qsTr("Unpin sidebar (auto-close)") : qsTr("Pin sidebar (keep open)")
+                                }
                             }
-                            StyledToolTip {
-                                content: qsTr("Reload Quickshell")
+                            
+                            QuickToggleButton {
+                                toggled: false
+                                buttonIcon: "restart_alt"
+                                onClicked: {
+                                    Hyprland.dispatch("reload")
+                                    Quickshell.reload(true)
+                                }
+                                StyledToolTip {
+                                    content: qsTr("Reload Hyprland & Quickshell")
+                                }
                             }
-                        }
-                        QuickToggleButton {
-                            toggled: false
-                            buttonIcon: "power_settings_new"
-                            onClicked: {
-                                Hyprland.dispatch("global quickshell:sessionOpen")
-                            }
-                            StyledToolTip {
-                                content: qsTr("Session")
-                            }
-                        }
-                        QuickToggleButton {
-                            toggled: false
-                            buttonIcon: "restart_alt"
-                            onClicked: {
-                                Hyprland.dispatch("reload")
-                                Quickshell.reload(true)
-                            }
-                            StyledToolTip {
-                                content: qsTr("Reload Hyprland & Quickshell")
+                            
+                            QuickToggleButton {
+                                toggled: false
+                                buttonIcon: "power_settings_new"
+                                onClicked: {
+                                    Hyprland.dispatch("global quickshell:sessionOpen")
+                                }
+                                StyledToolTip {
+                                    content: qsTr("Session")
+                                }
                             }
                         }
                     }
 
+                    // Quick toggle controls
                     Rectangle {
-                        Layout.alignment: Qt.AlignHCenter
+                        Layout.fillWidth: true
                         Layout.fillHeight: false
                         radius: Appearance.rounding.full
                         color: Qt.rgba(
@@ -210,48 +256,59 @@ Scope {
                             Appearance.colors.colLayer1.b,
                             0.55
                         )
-                        implicitWidth: sidebarQuickControlsRow.implicitWidth + 10
+                        border.color: Qt.rgba(1, 1, 1, 0.12)
+                        border.width: 1
                         implicitHeight: sidebarQuickControlsRow.implicitHeight + 10
-                        
                         
                         RowLayout {
                             id: sidebarQuickControlsRow
                             anchors.fill: parent
                             anchors.margins: 5
                             spacing: 5
+                            
+                            Item { Layout.fillWidth: true }
+                            
+                            RowLayout {
+                                spacing: 5
 
-                            NetworkToggle {}
-                            BluetoothToggle {
-                                id: bluetoothToggle
+                                NetworkToggle {}
+                                BatteryToggle {
+                                    visible: Battery.available
+                                }
+                                BluetoothToggle {
+                                    id: bluetoothToggle
+                                }
+                                NightLight {}
+                                GameMode {}
+                                IdleInhibitor {}
+                                QuickToggleButton {
+                                    id: perfProfilePerformance
+                                    buttonIcon: "speed"
+                                    toggled: PowerProfiles.profile === PowerProfile.Performance
+                                    onClicked: PowerProfiles.profile = PowerProfile.Performance
+                                    StyledToolTip { content: qsTr("Performance Mode") }
+                                }
+                                QuickToggleButton {
+                                    id: perfProfileBalanced
+                                    buttonIcon: "balance"
+                                    toggled: PowerProfiles.profile === PowerProfile.Balanced
+                                    onClicked: PowerProfiles.profile = PowerProfile.Balanced
+                                    StyledToolTip { content: qsTr("Balanced Mode") }
+                                }
+                                QuickToggleButton {
+                                    id: perfProfileSaver
+                                    buttonIcon: "battery_saver"
+                                    toggled: PowerProfiles.profile === PowerProfile.PowerSaver
+                                    onClicked: PowerProfiles.profile = PowerProfile.PowerSaver
+                                    StyledToolTip { content: qsTr("Power Saver Mode") }
+                                }
                             }
-                            NightLight {}
-                            GameMode {}
-                            IdleInhibitor {}
-                            QuickToggleButton {
-                                id: perfProfilePerformance
-                                buttonIcon: "speed"
-                                toggled: PowerProfiles.profile === PowerProfile.Performance
-                                onClicked: PowerProfiles.profile = PowerProfile.Performance
-                                StyledToolTip { content: qsTr("Performance Mode") }
-                            }
-                            QuickToggleButton {
-                                id: perfProfileBalanced
-                                buttonIcon: "balance"
-                                toggled: PowerProfiles.profile === PowerProfile.Balanced
-                                onClicked: PowerProfiles.profile = PowerProfile.Balanced
-                                StyledToolTip { content: qsTr("Balanced Mode") }
-                            }
-                            QuickToggleButton {
-                                id: perfProfileSaver
-                                buttonIcon: "battery_saver"
-                                toggled: PowerProfiles.profile === PowerProfile.PowerSaver
-                                onClicked: PowerProfiles.profile = PowerProfile.PowerSaver
-                                StyledToolTip { content: qsTr("Power Saver Mode") }
-                            }
+                            
+                            Item { Layout.fillWidth: true }
                         }
                     }
 
-                    // Center widget group
+                    // Main content (tabs: notifications, volume, weather)
                     CenterWidgetGroup {
                         id: centerWidgetGroup
                         focus: sidebarRoot.visible
@@ -260,16 +317,21 @@ Scope {
                         Layout.fillWidth: true
                     }
 
-                    BottomWidgetGroup {
+                    // Calendar (shown only on notifications tab)
+                    Loader {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.fillHeight: false
                         Layout.fillWidth: true
-                        Layout.preferredHeight: implicitHeight
-                        hideCalendar: centerWidgetGroup.selectedTab === 3
+                        Layout.preferredHeight: item ? item.implicitHeight : 0
+                        active: centerWidgetGroup.selectedTab === 0
+                        sourceComponent: Component {
+                            BottomWidgetGroup {
+                                hideCalendar: false
+                            }
+                        }
                     }
                 }
             }
-
         }
     }
 

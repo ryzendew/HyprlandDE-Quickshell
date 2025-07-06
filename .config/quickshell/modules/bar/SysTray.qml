@@ -31,6 +31,7 @@ Item {
 
                 bar: root.bar
                 item: modelData
+                systrayWidget: root
             }
 
         }

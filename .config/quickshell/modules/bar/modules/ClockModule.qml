@@ -6,7 +6,7 @@ import "root:/modules/common"
 import "../"
 
 Item {
-    Layout.alignment: Qt.AlignVCenter
+    Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
     Layout.rightMargin: 4
     Layout.leftMargin: 4
     implicitWidth: clockWidget.implicitWidth
@@ -14,7 +14,6 @@ Item {
     
     ClockWidget {
         id: clockWidget
-        anchors.fill: parent
-        anchors.topMargin: -3.5  // Move up by 3.5 pixels
+        anchors.centerIn: parent
     }
 } 

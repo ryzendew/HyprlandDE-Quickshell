@@ -9,17 +9,50 @@ const substitutions = {
     "wpsoffice": "wps-office2019-kprometheus",
     "footclient": "foot",
     "zen": "zen-browser",
-    "ptyxis": "$HOME/.local/share/icons/Tela-circle-blue-dark/scalable/apps/org.gnome.Ptyxis.svg",
-    "AffinityPhoto.desktop": "$HOME/.local/share/icons/AffinityPhoto.png",
-    "steam-native": "$HOME/.local/share/icons/Tela-circle-blue-dark/scalable/apps/steam.svg",
-    "lutris": "$HOME/.local/share/icons/Tela-circle-blue-dark/scalable/apps/lutris.svg",
-    "com.blackmagicdesign.resolve.desktop": "$HOME/.local/share/icons/Tela-circle-blue-dark/scalable/apps/resolve.svg",
-    "cider": "$HOME/.local/share/icons/Tela-circle-blue-dark/scalable/apps/cider.svg",
-    "vesktop": "$HOME/.local/share/icons/Tela-circle-blue-dark/scalable/apps/vesktop.svg",
-    "obs": "$HOME/.config/quickshell/assets/icons/obs.svg",
-    "heroic": "$HOME/.local/share/icons/Tela-circle-blue-dark/scalable/apps/heroic.svg",
-    "microsoft-edge-dev": "$HOME/.local/share/icons/Tela-circle-blue-dark/scalable/apps/microsoft-edge-dev.svg",
-    "org.gnome.Nautilus": "$HOME/.local/share/icons/Tela-circle-blue-dark/scalable/apps/nautilus.svg",
+    "ptyxis": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/scalable/apps/org.gnome.Ptyxis.svg`;
+    },
+    "AffinityPhoto.desktop": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/AffinityPhoto.png`;
+    },
+    "steam-native": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/scalable/apps/steam.svg`;
+    },
+    "lutris": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/scalable/apps/lutris.svg`;
+    },
+    "com.blackmagicdesign.resolve.desktop": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/scalable/apps/resolve.svg`;
+    },
+    "cider": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/scalable/apps/cider.svg`;
+    },
+    "vesktop": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/scalable/apps/vesktop.svg`;
+    },
+    "obs": () => {
+        const configDir = StandardPaths.writableLocation(StandardPaths.ConfigLocation);
+        return `${configDir}/quickshell/assets/icons/obs.svg`;
+    },
+    "heroic": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/scalable/apps/heroic.svg`;
+    },
+    "microsoft-edge-dev": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/scalable/apps/microsoft-edge-dev.svg`;
+    },
+    "org.gnome.Nautilus": () => {
+        const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        return `${homeDir}/.local/share/icons/scalable/apps/nautilus.svg`;
+    },
     "": "image-missing"
 }
 
@@ -40,8 +73,13 @@ function iconExists(iconName) {
 
 function substitute(str) {
     // Normal substitutions
-    if (substitutions[str])
+    if (substitutions[str]) {
+        // If it's a function, call it to get dynamic path
+        if (typeof substitutions[str] === 'function') {
+            return substitutions[str]();
+        }
         return substitutions[str];
+    }
 
     // Regex substitutions
     for (let i = 0; i < regexSubstitutions.length; i++) {
@@ -64,8 +102,13 @@ function noKnowledgeIconGuess(str) {
     if (!str) return "image-missing";
 
     // Normal substitutions
-    if (substitutions[str])
+    if (substitutions[str]) {
+        // If it's a function, call it to get dynamic path
+        if (typeof substitutions[str] === 'function') {
+            return substitutions[str]();
+        }
         return substitutions[str];
+    }
 
     // Regex substitutions
     for (let i = 0; i < regexSubstitutions.length; i++) {

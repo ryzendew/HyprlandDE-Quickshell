@@ -15,10 +15,11 @@ import Quickshell.Io
 import Quickshell.Services.Mpris
 import "." as BarComponents
 
+
 Scope {
     id: bar
 
-    readonly property int barHeight: Appearance.sizes.barHeight
+    readonly property int barHeight: Appearance.sizes.barHeight - 4
     readonly property int barCenterSideModuleWidth: Appearance.sizes.barCenterSideModuleWidth
     readonly property int osdHideMouseMoveThreshold: 20
     property bool showBarBackground: ConfigOptions.bar.showBackground
@@ -93,7 +94,7 @@ Scope {
         Layout.topMargin: barHeight / 3
         Layout.bottomMargin: barHeight / 3
         Layout.fillHeight: true
-        implicitWidth: 1
+        implicitWidth: 2
         color: Appearance.m3colors.m3outlineVariant
     }
 
@@ -148,14 +149,13 @@ Scope {
                     }
                 }
 
-                // Bottom border
+                // Bottom border - matching sidebar style
                 Rectangle {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
-                    height: 3
-                    color: "black"
-                    opacity: 0.9
+                    height: 1
+                    color: Qt.rgba(1, 1, 1, 0.12)
                 }
                 
                 MouseArea {
@@ -201,6 +201,7 @@ Scope {
                         RowLayout {
                             id: leftSectionRowLayout
                             anchors.fill: parent
+                            anchors.verticalCenter: parent.verticalCenter
                             spacing: 10
 
                             Rectangle {
@@ -208,13 +209,14 @@ Scope {
                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                 Layout.leftMargin: 2
                                 Layout.fillWidth: false
+                                Layout.fillHeight: true
                                 
                                 radius: Appearance.rounding.full
                                 color: archMouseArea.containsMouse ? 
                                     Qt.rgba(Appearance.colors.colLayer1Active.r, Appearance.colors.colLayer1Active.g, Appearance.colors.colLayer1Active.b, 0.8) : 
                                     "transparent"
                                 implicitWidth: archLogo.width + 10
-                                implicitHeight: archLogo.height + 10
+                                implicitHeight: barHeight
 
                                 Image {
                                     id: archLogo
@@ -253,6 +255,7 @@ Scope {
                 RowLayout {
                     id: middleSection
                     anchors.centerIn: parent
+                    anchors.verticalCenter: parent.verticalCenter
                     spacing: 8
 
                     RowLayout {
@@ -267,7 +270,7 @@ Scope {
                         Layout.fillHeight: true
                         Workspaces {
                             bar: barRoot
-                            Layout.alignment: Qt.AlignCenter
+                            Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
                             Layout.fillWidth: false  // Don't fill width to keep centered
                             MouseArea {
                                 anchors.fill: parent
@@ -292,9 +295,12 @@ Scope {
                     id: barRightSideMouseArea
                     anchors.right: parent.right
                     implicitHeight: barHeight
+                    width: rightSectionRowLayout.implicitWidth
                     acceptedButtons: Qt.NoButton
                     hoverEnabled: false
                     propagateComposedEvents: true
+                    
+
 
                     Item {
                         anchors.fill: parent
@@ -304,13 +310,16 @@ Scope {
                         RowLayout {
                             id: rightSectionRowLayout
                             anchors.fill: parent
+                            anchors.verticalCenter: parent.verticalCenter
                             layoutDirection: Qt.RightToLeft
+                            spacing: 2
 
                             RippleButton { // Right sidebar button (indicators)
                                 id: rightSidebarButton
-                                Layout.margins: 4
+                                Layout.margins: 0
                                 Layout.fillHeight: true
-                                implicitWidth: indicatorsRowLayout.implicitWidth + 10*2
+                                Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
+                                implicitWidth: indicatorsRowLayout.implicitWidth + 6*2
                                 buttonRadius: Appearance.rounding.full
                                 colBackground: barRightSideMouseArea.hovered ? Appearance.colors.colLayer1Hover : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
                                 colBackgroundHover: Appearance.colors.colLayer1Hover
@@ -332,78 +341,245 @@ Scope {
                                 RowLayout {
                                     id: indicatorsRowLayout
                                     anchors.centerIn: parent
-                                    property real realSpacing: 15
+                                    property real realSpacing: 8
                                     spacing: 0
                                     
-                                    Revealer {
-                                        reveal: Audio.sink?.audio?.muted ?? false
-                                        Layout.fillHeight: true
-                                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
-                                        Behavior on Layout.rightMargin {
-                                            NumberAnimation {
-                                                duration: Appearance.animation.elementMoveFast.duration
-                                                easing.type: Appearance.animation.elementMoveFast.type
-                                                easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                                    // Volume muted indicator
+                                    MaterialSymbol {
+                                        Layout.rightMargin: 4
+                                        text: "volume_off"
+                                        iconSize: Appearance.font.pixelSize.huge
+                                        color: rightSidebarButton.colText
+                                        visible: Audio.sink?.audio?.muted ?? false
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                            onClicked: (mouse) => {
+                                                if (mouse.button === Qt.LeftButton) {
+                                                    if (Audio.sink?.audio) {
+                                                        Audio.sink.audio.muted = false
+                                                    }
+                                                } else if (mouse.button === Qt.RightButton) {
+                                                    // Right-click toggles mute
+                                                    if (Audio.sink?.audio) {
+                                                        Audio.sink.audio.muted = !Audio.sink.audio.muted
+                                                    }
+                                                }
+                                            }
+                                            
+                                            onWheel: function(wheel) {
+                                                console.log("Volume scroll detected:", wheel.angleDelta.y)
+                                                if (Audio.sink?.audio) {
+                                                    var currentVolume = Audio.sink.audio.volume;
+                                                    console.log("Current volume before change:", currentVolume)
+                                                    
+                                                    var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05  // 5% steps
+                                                    var newVolume = Math.max(0, Math.min(1, currentVolume + delta))
+                                                    
+                                                    console.log("Calculated new volume:", newVolume)
+                                                    console.log("Setting Audio.sink.audio.volume to:", newVolume)
+                                                    
+                                                    // Try different methods to set volume
+                                                    if (typeof Audio.sink.audio.setVolume === 'function') {
+                                                        console.log("Using setVolume method")
+                                                        Audio.sink.audio.setVolume(newVolume)
+                                                    } else {
+                                                        console.log("Using direct property assignment")
+                                                        Audio.sink.audio.volume = newVolume
+                                                    }
+                                                    
+                                                    // Check if it actually changed
+                                                    Qt.callLater(() => {
+                                                        console.log("Volume after setting:", Audio.sink.audio.volume)
+                                                    })
+                                                } else {
+                                                    console.log("No audio sink available")
+                                                }
                                             }
                                         }
-                                        MaterialSymbol {
-                                            text: "volume_off"
-                                            iconSize: Appearance.font.pixelSize.larger
-                                            color: rightSidebarButton.colText
-                                        }
                                     }
-                                    Revealer {
-                                        reveal: Audio.source?.audio?.muted ?? false
-                                        Layout.fillHeight: true
-                                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
-                                        Behavior on Layout.rightMargin {
-                                            NumberAnimation {
-                                                duration: Appearance.animation.elementMoveFast.duration
-                                                easing.type: Appearance.animation.elementMoveFast.type
-                                                easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                                    
+                                    // Volume level indicator
+                                        MaterialSymbol {
+                                        Layout.rightMargin: 4
+                                        text: {
+                                            var volume = Audio.sink?.audio?.volume ?? 0
+                                            if (volume > 0.6) return "volume_up"
+                                            else if (volume > 0.3) return "volume_down"
+                                            else return "volume_mute"
+                                        }
+                                        iconSize: Appearance.font.pixelSize.huge
+                                            color: rightSidebarButton.colText
+                                        visible: !(Audio.sink?.audio?.muted ?? false)
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                            onClicked: (mouse) => {
+                                                if (mouse.button === Qt.LeftButton) {
+                                                    if (Audio.sink?.audio) {
+                                                        Audio.sink.audio.muted = true
+                                                    }
+                                                } else if (mouse.button === Qt.RightButton) {
+                                                    // Right-click toggles mute
+                                                    if (Audio.sink?.audio) {
+                                                        Audio.sink.audio.muted = !Audio.sink.audio.muted
+                                                    }
+                                                }
+                                            }
+                                            
+                                            onWheel: function(wheel) {
+                                                console.log("Volume scroll detected:", wheel.angleDelta.y)
+                                                if (Audio.sink?.audio) {
+                                                    var currentVolume = Audio.sink.audio.volume;
+                                                    console.log("Current volume before change:", currentVolume)
+                                                    
+                                                    var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05  // 5% steps
+                                                    var newVolume = Math.max(0, Math.min(1, currentVolume + delta))
+                                                    
+                                                    console.log("Calculated new volume:", newVolume)
+                                                    console.log("Setting Audio.sink.audio.volume to:", newVolume)
+                                                    
+                                                    // Try different methods to set volume
+                                                    if (typeof Audio.sink.audio.setVolume === 'function') {
+                                                        console.log("Using setVolume method")
+                                                        Audio.sink.audio.setVolume(newVolume)
+                                                    } else {
+                                                        console.log("Using direct property assignment")
+                                                        Audio.sink.audio.volume = newVolume
+                                                    }
+                                                    
+                                                    // Check if it actually changed
+                                                    Qt.callLater(() => {
+                                                        console.log("Volume after setting:", Audio.sink.audio.volume)
+                                                    })
+                                                } else {
+                                                    console.log("No audio sink available")
+                                                }
                                             }
                                         }
-                                        MaterialSymbol {
-                                            text: "mic_off"
-                                            iconSize: Appearance.font.pixelSize.larger
-                                            color: rightSidebarButton.colText
+                                    }
+                                    
+                                                                            // Microphone muted indicator
+                                    MaterialSymbol {
+                                        Layout.rightMargin: 4
+                                        text: "mic_off"
+                                        iconSize: Appearance.font.pixelSize.huge
+                                        color: rightSidebarButton.colText
+                                        visible: Audio.source?.audio?.muted ?? false
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                            onClicked: (mouse) => {
+                                                if (mouse.button === Qt.LeftButton) {
+                                                    if (Audio.source?.audio) {
+                                                        Audio.source.audio.muted = false
+                                                    }
+                                                } else if (mouse.button === Qt.RightButton) {
+                                                    // Right-click toggles mute
+                                                    if (Audio.source?.audio) {
+                                                        Audio.source.audio.muted = !Audio.source.audio.muted
+                                                    }
+                                                }
+                                            }
+                                            
+                                            onWheel: function(wheel) {
+                                                console.log("=== MIC MUTED SCROLL ===")
+                                                if (Audio.source?.audio) {
+                                                    var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05
+                                                    var newVol = Math.max(0, Math.min(1, Audio.source.audio.volume + delta))
+                                                    console.log("Setting mic volume to:", newVol)
+                                                    Audio.source.audio.volume = newVol
+                                                    
+                                                    // Trigger microphone OSD
+                                                    Hyprland.dispatch("global quickshell:osdMicrophone:trigger")
+                                                } else {
+                                                    console.log("No mic")
+                                                }
+                                            }
                                         }
                                     }
+                                    
+                                    // Microphone active indicator
+                                        MaterialSymbol {
+                                        Layout.rightMargin: 4
+                                        text: "mic"
+                                        iconSize: Appearance.font.pixelSize.huge
+                                        color: rightSidebarButton.colText
+                                        visible: !(Audio.source?.audio?.muted ?? false)
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                            onClicked: (mouse) => {
+                                                if (mouse.button === Qt.LeftButton) {
+                                                    if (Audio.source?.audio) {
+                                                        Audio.source.audio.muted = true
+                                                    }
+                                                } else if (mouse.button === Qt.RightButton) {
+                                                    // Right-click toggles mute
+                                                    if (Audio.source?.audio) {
+                                                        Audio.source.audio.muted = !Audio.source.audio.muted
+                                                    }
+                                                }
+                                            }
+                                            
+                                            onWheel: function(wheel) {
+                                                console.log("=== MIC ACTIVE SCROLL ===")
+                                                if (Audio.source?.audio) {
+                                                    var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05
+                                                    var newVol = Math.max(0, Math.min(1, Audio.source.audio.volume + delta))
+                                                    console.log("Setting mic volume to:", newVol)
+                                                    Audio.source.audio.volume = newVol
+                                                    
+                                                    // Trigger microphone OSD
+                                                    Hyprland.dispatch("global quickshell:osdMicrophone:trigger")
+                                                } else {
+                                                    console.log("No mic")
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
                                     MaterialSymbol {
                                         Layout.rightMargin: indicatorsRowLayout.realSpacing
                                         text: Network.materialSymbol
-                                        iconSize: Appearance.font.pixelSize.larger
+                                        iconSize: Appearance.font.pixelSize.huge
                                         color: rightSidebarButton.colText
                                     }
                                     MaterialSymbol {
                                         text: Bluetooth.bluetoothConnected ? "bluetooth_connected" : Bluetooth.bluetoothEnabled ? "bluetooth" : "bluetooth_disabled"
-                                        iconSize: Appearance.font.pixelSize.larger
+                                        iconSize: Appearance.font.pixelSize.huge
                                         color: rightSidebarButton.colText
                                     }
+
                                 }
                             }
 
-                            Item { width: 4 }
+                            ClockWidget {
+                                Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
+                            }
 
-                            ClockWidget {}
-
-                            Item { width: 4 }
+                            Item { width: 12 }
 
                             Item {
-                                width: 100 // Reserve more space for weather
+                                width: 120 // Reserve more space for weather
+                                Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
                                 BarComponents.Weather {
                                     anchors.centerIn: parent
                                     weatherLocation: "Halifax, Nova Scotia, Canada"
                                 }
                             }
 
-                            Item { width: 4 }
+                            Item { width: 12 }
 
                             SysTray {
                                 bar: barRoot
                                 visible: barRoot.useShortenedForm === 0
                                 Layout.fillWidth: false
                                 Layout.fillHeight: true
+                                Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
                             }
                         }
                     }
@@ -411,4 +587,9 @@ Scope {
             }
         }
     }
+
+    // Audio Control Popup - standalone component
+
+
+
 }

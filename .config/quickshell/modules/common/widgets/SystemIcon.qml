@@ -12,7 +12,7 @@ Item {
     property string iconName: ""
     property real iconSize: 24
     property color iconColor: "transparent"
-    property string fallbackIcon: "application-x-executable"
+    property string fallbackIcon: "gnome-terminal"
     property string resolvedIconPath: ""
     
     // Get user's home directory from QML context using StandardPaths
@@ -77,7 +77,7 @@ Item {
     // Simple icon mapping for common cases (fallback)
     property var iconMappings: {
         "cider": "cider", "Cider": "cider", "spotify": "spotify", "obs": "com.obsproject.Studio",
-        "vlc": "vlc", "mpv": "mpv", "code": "visual-studio-code", "cursor": "file:///opt/Cursor/co.anysphere.cursor.png", "Cursor": "file:///opt/Cursor/co.anysphere.cursor.png", "cursor-cursor": "file:///opt/Cursor/co.anysphere.cursor.png",
+        "vlc": "vlc", "mpv": "mpv", "code": "visual-studio-code", "cursor": "cursor", "Cursor": "cursor", "cursor-cursor": "cursor",
         "firefox": "firefox", "google-chrome": "google-chrome", "chromium": "chromium",
         "microsoft-edge-dev": "microsoft-edge-dev", "microsoft-edge": "microsoft-edge-dev",
         "discord": "discord", "Discord": "discord", "vesktop": "discord", 
@@ -121,13 +121,31 @@ Item {
     
     // Helper to format path for Image.source
     function formatPathForImageSource(rawPath) {
-        if (rawPath && rawPath.startsWith("/")) {
+        if (!rawPath || rawPath === "") {
+            return "";
+        }
+        
+        if (rawPath.startsWith("/")) {
             // It's an absolute path, ensure it becomes file:///abs/path
             // Triple slash is important for absolute paths.
             return "file://" + rawPath;
         }
-        // If it already has a scheme (e.g., "file://", "http://", "qrc://") or is empty/invalid, return as is.
-        // icon_theme.js is expected to return absolute paths or an empty string.
+        
+        if (rawPath.startsWith("file://") || rawPath.startsWith("http://") || rawPath.startsWith("qrc://")) {
+            // It already has a scheme, return as is
+            return rawPath;
+        }
+        
+        // If it's just an icon name (no path separators), try to resolve it through the icon theme
+        if (!rawPath.includes("/") && !rawPath.includes("\\")) {
+            var resolvedPath = IconTheme.getIconPath(rawPath, homeDirectory);
+            if (resolvedPath && resolvedPath !== "" && resolvedPath !== rawPath) {
+                // The icon theme returned a different path, format it
+                return formatPathForImageSource(resolvedPath);
+            }
+        }
+        
+        // For any other case, return as is
         return rawPath;
     }
     
@@ -210,6 +228,11 @@ Item {
     Component.onCompleted: {
         // console.log("[SYSTEMICON DEBUG] Component.onCompleted for iconName:", iconName, "homeDirectory is:", homeDirectory);
         // mainIcon.source = "file:///usr/share/icons/hicolor/48x48/apps/utilities-terminal.png"; // REVERTED HARDCODED TEST
+        
+        // Initialize icon theme system if not already done
+        if (!IconTheme.getCurrentTheme()) {
+            IconTheme.initializeIconTheme(homeDirectory);
+        }
         
         if (iconName && iconName.trim() !== "") {
             iconNameChanged() // Trigger initial icon load

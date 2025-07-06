@@ -92,22 +92,107 @@ TabButton {
         }
     }
 
-    background: Rectangle {
+    background: Item {
         id: buttonBackground
-        radius: Appearance?.rounding.small
         implicitHeight: 50
-        color: (button.hovered ? button.colBackgroundHover : button.colBackground)
-        layer.enabled: true
-        layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: buttonBackground.width
-                height: buttonBackground.height
-                radius: buttonBackground.radius
+        
+        // Professional selected tab background with top-only rounded corners
+        Item {
+            anchors.centerIn: parent
+            width: Math.max(button.tabContentWidth + 24, button.minimumWidth * 0.85)
+            height: parent.height + 3
+            visible: button.selected
+            
+            Rectangle {
+                anchors.fill: parent
+                topLeftRadius: (Appearance?.rounding.medium ?? 8) + 2
+                topRightRadius: (Appearance?.rounding.medium ?? 8) + 2
+                bottomLeftRadius: 0
+                bottomRightRadius: 0
+                
+                // Clean gradient background
+                gradient: Gradient {
+                    GradientStop { 
+                        position: 0.0
+                        color: Qt.rgba(
+                            Appearance?.colors.colPrimary.r ?? 0.4,
+                            Appearance?.colors.colPrimary.g ?? 0.3,
+                            Appearance?.colors.colPrimary.b ?? 0.6,
+                            0.12
+                        )
+                    }
+                    GradientStop { 
+                        position: 1.0
+                        color: Qt.rgba(
+                            Appearance?.colors.colPrimary.r ?? 0.4,
+                            Appearance?.colors.colPrimary.g ?? 0.3,
+                            Appearance?.colors.colPrimary.b ?? 0.6,
+                            0.08
+                        )
+                    }
+                }
+            }
+            
+            // Border outline with rounded top corners
+            Rectangle {
+                anchors.fill: parent
+                topLeftRadius: (Appearance?.rounding.medium ?? 8) + 2
+                topRightRadius: (Appearance?.rounding.medium ?? 8) + 2
+                bottomLeftRadius: 0
+                bottomRightRadius: 0
+                color: "transparent"
+                border.color: Qt.rgba(1, 1, 1, 0.15)
+                border.width: 1
+            }
+            
+            // Hide bottom border by covering it
+            Rectangle {
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: 1
+                anchors.rightMargin: 1
+                height: 4
+                color: Qt.rgba(
+                    Appearance?.colors.colPrimary.r ?? 0.4,
+                    Appearance?.colors.colPrimary.g ?? 0.3,
+                    Appearance?.colors.colPrimary.b ?? 0.6,
+                    0.08
+                )
+            }
+            
+            // Smooth transitions
+            Behavior on opacity {
+                NumberAnimation { 
+                    duration: 200
+                    easing.type: Easing.OutQuart
+                }
             }
         }
         
-        Behavior on color {
-            animation: Appearance?.animation.elementMoveFast.colorAnimation.createObject(this)
+        // Minimal hover background with top-only rounded corners
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.max(button.tabContentWidth + 16, button.minimumWidth * 0.8)
+            height: parent.height - 10
+            topLeftRadius: (Appearance?.rounding.medium ?? 8) + 2
+            topRightRadius: (Appearance?.rounding.medium ?? 8) + 2
+            bottomLeftRadius: 0
+            bottomRightRadius: 0
+            visible: button.hovered && !button.selected
+            color: Qt.rgba(
+                Appearance?.colors.colOnLayer1.r ?? 0.3,
+                Appearance?.colors.colOnLayer1.g ?? 0.3,
+                Appearance?.colors.colOnLayer1.b ?? 0.3,
+                0.06
+            )
+            
+            Behavior on opacity {
+                NumberAnimation { 
+                    duration: 150
+                    easing.type: Easing.OutQuart
+                }
+            }
         }
 
         Item {

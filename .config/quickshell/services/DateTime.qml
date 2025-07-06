@@ -10,7 +10,7 @@ pragma ComponentBehavior: Bound
  */
 Singleton {
     property string time: Qt.formatDateTime(clock.date, "h:mm AP")
-    property string date: Qt.formatDateTime(clock.date, "dddd, dd/MM")
+    property string date: Qt.formatDateTime(clock.date, "ddd, dd/MM")
     property string collapsedCalendarFormat: Qt.formatDateTime(clock.date, "dd MMMM yyyy")
     property string uptime: "0h, 0m"
 

@@ -68,8 +68,8 @@ Rectangle {
     
     // --- Appearance ---
     // Set the size and shape of the dock item
-    implicitWidth: dock.dockWidth - 10
-    implicitHeight: dock.dockWidth - 10
+    implicitWidth: dock.dockWidth - 6
+    implicitHeight: dock.dockWidth - 6
     radius: Appearance.rounding.full
     // Set the color based on state (active, hovered, pressed)
     color: mouseArea.pressed ? Appearance.colors.colLayer1Active : 
@@ -106,18 +106,14 @@ Rectangle {
 
     // --- Icon ---
     // The app icon, centered in the item
-    SystemIcon {
+    Image {
         id: iconItem
         anchors.centerIn: parent
-        iconSize: parent.width * 0.65
-        iconName: dockItem.icon
-        iconColor: root.isActive ? "#ffffff" : "transparent"
-        
-        Component.onCompleted: {
-            if (!dockItem.isPinned) {
-                // console.log("[UNPINNED APP ICON DEBUG] DockItem (unpinned) is setting up SystemIcon for iconName:", dockItem.icon);
-            }
-        }
+        width: parent.width * 0.75
+        height: parent.width * 0.75
+        source: "image://icon/" + dockItem.icon
+        fillMode: Image.PreserveAspectFit
+        smooth: true
     }
 
     // --- Tooltip (disabled) ---
@@ -341,18 +337,17 @@ Rectangle {
     }
     
     // --- Active Indicator ---
-    // A small dot below the icon to show if the app is active
+    // A small dot centered at the bottom to show if the app is active
     Rectangle {
         id: activeIndicator
         visible: isActive
-        width: parent.width * 0.5
-        height: 3
-        radius: 5
+        width: 6
+        height: 6
+        radius: 3
         color: Appearance.colors.colOnLayer1
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.topMargin: 10
-        anchors.bottomMargin: 1.5
+        anchors.bottomMargin: -2
     }
     
     // --- Drop Indicator ---

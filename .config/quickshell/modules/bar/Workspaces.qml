@@ -48,9 +48,9 @@ Item {
     }
 
     Layout.fillHeight: true
+    Layout.alignment: Qt.AlignVCenter
     implicitWidth: rowLayout.implicitWidth + rowLayout.spacing * 2
     implicitHeight: 40
-    Layout.topMargin: -1.5  // Move up by 1.5 pixels
 
     // Background
     Rectangle {

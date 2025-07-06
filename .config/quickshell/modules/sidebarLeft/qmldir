@@ -1,7 +1,0 @@
-module SidebarLeft
-SidebarLeft 1.0 SidebarLeft.qml
-SidebarLeftContent 1.0 SidebarLeftContent.qml
-AiChat 1.0 AiChat.qml
-Translator 1.0 Translator.qml
-Anime 1.0 Anime.qml
-ApiCommandButton 1.0 ApiCommandButton.qml 

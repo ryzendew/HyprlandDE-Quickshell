@@ -6,7 +6,7 @@ import "root:/modules/common"
 import "../"
 
 Item {
-    Layout.alignment: Qt.AlignVCenter
+    Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
     Layout.rightMargin: 4
     Layout.leftMargin: 4
     Layout.minimumWidth: 100
@@ -15,7 +15,7 @@ Item {
     
     Weather {
         id: weather
-        anchors.fill: parent
+        anchors.centerIn: parent
         weatherLocation: "Halifax, Nova Scotia, Canada"
     }
 } 

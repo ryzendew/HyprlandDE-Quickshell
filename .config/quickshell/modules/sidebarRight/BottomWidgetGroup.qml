@@ -16,6 +16,8 @@ Rectangle {
         Appearance.colors.colLayer1.b,
         0.55
     )
+    border.color: Qt.rgba(1, 1, 1, 0.12)
+    border.width: 1
     clip: true
     implicitHeight: calendarWidget.implicitHeight
     

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import "root:/modules/common"
+import "root:/services"
 
 Rectangle {
     id: archLogoContainer
@@ -23,7 +24,7 @@ Rectangle {
         anchors.centerIn: parent
         width: 22
         height: 22
-        source: "file://$HOME/.config/quickshell/logo/Arch-linux-logo.png"
+        source: SystemPaths.getLogoPath()
         fillMode: Image.PreserveAspectFit
     }
     

@@ -68,7 +68,7 @@ Singleton {
     }
 
     property bool silent: false
-    property var filePath: `${XdgDirectories.cache}/notifications/notifications.json`
+    property var filePath: Directories.notificationsPath
     property list<Notif> list: []
     property var popupList: list.filter((notif) => notif && notif.popup)
     property bool popupInhibited: (GlobalStates?.sidebarRightOpen ?? false) || silent
@@ -198,110 +198,79 @@ Singleton {
 
     function discardAllNotifications() {
         root.list = []
-        triggerListChange()
         saveNotifications()
-        notifServer.trackedNotifications.values.forEach((notif) => {
-            if (notif) notif.dismiss()
-        })
+        triggerListChange()
         root.discardAll();
     }
 
     function timeoutNotification(id) {
+        const index = root.list.findIndex((notif) => notif && notif.id === id);
+        if (index !== -1) {
+            root.list[index].popup = false;
+            root.list = [...root.list]; // Trigger update
+            saveNotifications()
+            triggerListChange()
+        }
         root.timeout(id);
     }
 
-    function timeoutAll() {
-        root.list.forEach((notif) => {
-            if (notif && notif.id) root.timeout(notif.id);
-        })
-    }
-
-    function attemptInvokeAction(id, notifIdentifier) {
-        const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif && notif.id + root.idOffset === id);
-        if (notifServerIndex !== -1) {
-            const notifServerNotif = notifServer.trackedNotifications.values[notifServerIndex];
-            if (notifServerNotif) {
-                const action = notifServerNotif.actions.find((action) => action && action.identifier === notifIdentifier);
-                if (action) action.invoke()
-            }
-        } 
-        root.discard(id);
-    }
-
     function triggerListChange() {
-        root.list = root.list.slice(0)
+        listChanged();
     }
 
-    function refresh() {
-        if (notifFileView.path) {
+    function saveNotifications() {
+        const dir = `${Directories.cache}/notifications`
+        Hyprland.dispatch(`exec mkdir -p '${dir}'`)
+        const content = stringifyList(root.list);
+        notifFileView.setText(content)
+    }
+
+    function loadNotifications() {
         notifFileView.reload()
-        }
-    }
-
-    Component.onCompleted: {
-        // Ensure the notifications directory exists
-        const dir = `${XdgDirectories.cache}/notifications`
-        const fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', root)
-        try {
-            fileView.path = dir
-            fileView.mkdir()
-        } catch (e) {
-            console.error("Error creating notifications directory:", e)
-        }
-        fileView.destroy()
-        refresh()
     }
 
     FileView {
         id: notifFileView
-        path: filePath
-        onLoaded: {
+        path: Qt.resolvedUrl(root.filePath)
+        onTextChanged: {
             try {
-                const fileContents = notifFileView.text()
-                if (fileContents) {
-                    // Parse the JSON and filter out any null entries
-                    let parsedList = JSON.parse(fileContents)
-                    if (Array.isArray(parsedList)) {
-                        // Filter out any null or invalid entries
-                        parsedList = parsedList.filter(item => item && typeof item === 'object' && item.id !== undefined)
-                        root.list = parsedList
-                        // Find largest id
-                        let maxId = 0
-                        root.list.forEach((notif) => {
-                            if (notif && notif.id) {
-                                maxId = Math.max(maxId, notif.id)
-                            }
-                        })
-                        root.idOffset = maxId
-                    } else {
-                        console.error("Invalid notifications format, expected array")
-                        root.list = []
-                    }
-                } else {
-                    root.list = []
+                const json = JSON.parse(text);
+                if (Array.isArray(json)) {
+                    const maxId = Math.max(...json.map(notif => notif.id || 0), 0);
+                    root.idOffset = maxId + 1;
+                    root.list = json.map(notifData => {
+                        const notif = notifComponent.createObject(root, {
+                            id: notifData.id || 0,
+                            actions: notifData.actions || [],
+                            appIcon: notifData.appIcon || "",
+                            appName: notifData.appName || "Unknown",
+                            body: notifData.body || "",
+                            image: notifData.image || "",
+                            summary: notifData.summary || "",
+                            time: notifData.time || Date.now(),
+                            urgency: notifData.urgency || "normal",
+                            popup: false // Don't show popups for loaded notifications
+                        });
+                        return notif;
+                    });
+                    root.initDone();
                 }
-                root.initDone()
             } catch (e) {
-                console.error("Error loading notifications:", e)
-                root.list = []
-                root.initDone()
+                console.error("Error loading notifications:", e);
             }
         }
         onLoadFailed: (error) => {
-            if(error == FileViewError.FileNotFound) {
-                root.list = []
-                if (notifFileView.path) {
-                    notifFileView.setText(JSON.stringify(root.list))
-                }
+            if (error == FileViewError.FileNotFound) {
+                root.list = [];
+                root.idOffset = 1;
+                root.initDone();
+            } else {
+                console.error("Error loading notifications file:", error);
             }
         }
     }
 
-    function saveNotifications() {
-        if (notifFileView.path) {
-            // Filter out any null entries before saving
-            const validList = root.list.filter(notif => notif != null)
-            notifFileView.setText(JSON.stringify(validList, null, 2))
-        }
+    Component.onCompleted: {
+        loadNotifications()
     }
 }

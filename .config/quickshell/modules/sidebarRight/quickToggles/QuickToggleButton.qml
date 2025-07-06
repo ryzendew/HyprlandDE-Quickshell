@@ -39,6 +39,10 @@ Button {
             (button.down ? Qt.rgba(Appearance.colors.colLayer1Active.r, Appearance.colors.colLayer1Active.g, Appearance.colors.colLayer1Active.b, 0.8) : 
              button.hovered ? Qt.rgba(Appearance.colors.colLayer1Hover.r, Appearance.colors.colLayer1Hover.g, Appearance.colors.colLayer1Hover.b, 0.8) : 
              Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.8))
+        
+        // Semi-transparent white border
+        border.color: Qt.rgba(1, 1, 1, 0.15)
+        border.width: 1
 
         Behavior on color {
             ColorAnimation {

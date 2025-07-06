@@ -16,6 +16,10 @@ Item {
     readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || qsTr("No media")
     property string latestCoverArtFile: ""
     property string artUrl: activePlayer?.trackArtUrl || ""
+    property string artDownloadLocation: Directories.coverArt
+    property string artFileName: Qt.md5(artUrl) + ".jpg"
+    property string artFilePath: `${artDownloadLocation}/${artFileName}`
+    property bool downloaded: false
 
     // Time formatting functions
     function formatTime(seconds) {
@@ -81,7 +85,7 @@ Item {
     }
 
     function updateLatestCoverArt() {
-        var dir = "/home/matt1909/.cache/Quickshell/media/coverart/";
+        var dir = Directories.coverArt;
         var files = Quickshell.Io.listFiles(dir);
         console.log("[BarMedia][DEBUG] Scanning cover art dir:", dir);
         if (files) {
@@ -101,6 +105,27 @@ Item {
 
     onLatestCoverArtFileChanged: {
         console.log("[BarMedia][DEBUG] latestCoverArtFile changed:", root.latestCoverArtFile);
+    }
+
+    onArtUrlChanged: {
+        if (root.artUrl.length == 0) {
+            root.downloaded = false
+            return;
+        }
+        root.downloaded = false
+        coverArtDownloader.running = true
+    }
+
+    Process { // Cover art downloader
+        id: coverArtDownloader
+        property string targetFile: root.artUrl
+        command: [ "bash", "-c", `mkdir -p '${artDownloadLocation}' && [ -f '${artFilePath}' ] || curl -sSL '${targetFile}' -o '${artFilePath}'` ]
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0) {
+                root.downloaded = true
+                updateLatestCoverArt()
+            }
+        }
     }
 
     Component.onCompleted: updateLatestCoverArt()
@@ -145,11 +170,11 @@ Item {
             layer.smooth: true
             Image {
                 anchors.fill: parent
-                source: root.artUrl.startsWith("file://") ? root.artUrl : ""
+                source: root.downloaded ? Qt.resolvedUrl(root.artFilePath) : ""
                 fillMode: Image.PreserveAspectCrop
                 cache: false
                 asynchronous: true
-                visible: root.artUrl.length > 0 && root.artUrl.startsWith("file://")
+                visible: root.downloaded
                 layer.enabled: true
                 layer.smooth: true
             }
@@ -159,7 +184,7 @@ Item {
                 text: "music_note"
                 iconSize: 16
                 color: Appearance.m3colors.m3onSecondaryContainer
-                visible: root.artUrl.length == 0 || !root.artUrl.startsWith("file://")
+                visible: !root.downloaded
             }
         }
 

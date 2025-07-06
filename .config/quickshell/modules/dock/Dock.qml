@@ -14,14 +14,13 @@ import "root:/services"
 import Qt.labs.platform
 import "root:/modules/bar"
 import "root:/modules/common/functions/icon_theme.js" as IconTheme
-import "root:/Data" as Data
 
 Scope {
     id: dock
 
     // Dock dimensions and appearance
-    readonly property int dockHeight: Appearance.sizes.barHeight * 1.5
-    readonly property int dockWidth: Appearance.sizes.barHeight * 1.5
+    readonly property int dockHeight: Appearance.sizes.barHeight * 1.6
+    readonly property int dockWidth: Appearance.sizes.barHeight * 1.6
     readonly property int dockSpacing: Appearance.sizes.elevationMargin
     
     // Color properties that update when Appearance changes
@@ -149,18 +148,8 @@ Scope {
         }
     }
     
-    // Watch for changes in icon theme
-    Connections {
-        target: IconTheme
-        function onIconThemeChanged() {
-            console.log("[DOCK DEBUG] Icon theme changed, reloading dock");
-            // Force a reload of the dock by toggling visibility
-            dockRoot.visible = false;
-            Qt.callLater(function() {
-                dockRoot.visible = true;
-            });
-        }
-    }
+    // Watch for changes in icon theme - removed non-existent signal
+    // The icon theme changes are handled by the FileView monitoring qt6ct.conf
     
     // FileView to monitor Qt6 theme settings changes
     FileView {
@@ -185,43 +174,36 @@ Scope {
                 
                 if (lastTheme === "") {
                     lastTheme = currentTheme;
-                    // console.log("[DOCK DEBUG] Initial Qt6 theme detected:", currentTheme);
+                    console.log("[DOCK DEBUG] Initial Qt6 theme detected:", currentTheme);
                     IconTheme.setCurrentTheme(currentTheme);
-                    // Refresh themes when we first load
-                    IconTheme.refreshThemes();
+                    // Initialize the icon theme system with home directory
+                    IconTheme.initializeIconTheme(StandardPaths.writableLocation(StandardPaths.HomeLocation));
                 } else if (lastTheme !== currentTheme) {
-                    // console.log("[DOCK DEBUG] Qt6 theme changed from", lastTheme, "to", currentTheme);
+                    console.log("[DOCK DEBUG] Qt6 theme changed from", lastTheme, "to", currentTheme);
                     lastTheme = currentTheme;
                     
                     // Update the theme in the icon system
                     IconTheme.setCurrentTheme(currentTheme);
                     
                     // Refresh the available themes
-                    IconTheme.refreshThemes();
+                    IconTheme.refreshThemes(StandardPaths.writableLocation(StandardPaths.HomeLocation));
                     
                     // Force complete refresh of all dock items
                     forceRefreshIcons();
                 }
             } catch (e) {
-                // console.log("[DOCK DEBUG] Error reading Qt6 theme settings:", e);
+                console.log("[DOCK DEBUG] Error reading Qt6 theme settings:", e);
             }
         }
     }
     
     // Timer to periodically check Qt6 theme changes
     Timer {
-        id: qt6ThemeCheckTimer
-        interval: 2000 // Check every 2 seconds for theme changes
-        repeat: true
+        interval: 5000 // Check every 5 seconds
         running: true
-        
+        repeat: true
         onTriggered: {
-            // Reload the Qt6 settings file to check for changes
-            try {
                 qt6SettingsView.reload();
-            } catch (e) {
-                // console.log("[DOCK DEBUG] Error reloading Qt6 settings:", e);
-            }
         }
     }
     
@@ -360,6 +342,7 @@ Scope {
         }
     }
     
+    // Initialize icon theme system on component completion
     Component.onCompleted: {
         // Load config when component is ready
         dockConfigView.reload()
@@ -367,6 +350,10 @@ Scope {
         // Apply initial blur settings
         Hyprland.dispatch(`keyword decoration:blur:passes ${AppearanceSettingsState.dockBlurPasses}`)
         Hyprland.dispatch(`keyword decoration:blur:size ${AppearanceSettingsState.dockBlurAmount}`)
+        
+        // Initialize icon theme system
+        console.log("[DOCK DEBUG] Initializing icon theme system");
+        IconTheme.initializeIconTheme(StandardPaths.writableLocation(StandardPaths.HomeLocation));
         
         // Debug: Show what's in pinnedApps
         // console.log("[DOCK DEBUG] Dock component completed")
@@ -404,10 +391,11 @@ Scope {
 
             mask: Region {
                 item: Rectangle {
-                    width: dockContent.width
-                    height: dockContent.height
-                    x: dockContent.x + (dockRoot.width - dockContent.width) / 2
-                    y: dockContent.y
+                    width: dockContent.width + 20
+                    height: dockContent.height + 10
+                    x: dockContent.x + (dockRoot.width - dockContent.width) / 2 - 10
+                    y: dockContent.y - 5
+                    radius: 30
                 }
             }
 
@@ -462,21 +450,20 @@ Scope {
             }
             
             function getIconForClass(windowClass) {
-                // Special handling for Affinity Designer and Affinity Photo
-                if (windowClass === 'designer.exe' || windowClass === 'Designer.exe') {
-                    windowClass = 'AffinityDesigner.desktop';
-                }
-                if (windowClass === 'photo.exe' || windowClass === 'Photo.exe') {
-                    windowClass = 'AffinityPhoto.desktop';
-                }
-                if (windowClass.endsWith('.desktop')) {
-                    // Try user applications first, then system applications
-                    var userPath = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications/" + windowClass
-                    var systemPath = "/usr/share/applications/" + windowClass
-                    var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', dock)
-                    var content = ""
+                // First try to find a .desktop file for this window class
+                var desktopPaths = [
+                    StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications",
+                    "/usr/share/applications",
+                    "/usr/local/share/applications"
+                ];
+                
+                for (var p = 0; p < desktopPaths.length; p++) {
+                    var systemPath = desktopPaths[p];
+                    var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
+                    var content = "";
+                    
                     try {
-                        fileView.path = userPath
+                        fileView.path = systemPath + "/" + windowClass + ".desktop"
                         content = fileView.text()
                     } catch (e) {
                         try {
@@ -494,16 +481,16 @@ Scope {
                         if (line.startsWith('Icon=')) {
                             var iconName = line.substring(5)
                             fileView.destroy()
-                            var resolvedIcon = IconTheme.getIconPath(iconName) || iconName
-                            // console.log('[DOCK DEBUG] getIconForClass:', windowClass, 'Icon entry:', iconName, 'Resolved icon:', resolvedIcon)
+                            var resolvedIcon = IconTheme.getIconPath(iconName, StandardPaths.writableLocation(StandardPaths.HomeLocation)) || iconName
+                            console.log('[DOCK DEBUG] getIconForClass:', windowClass, 'Icon entry:', iconName, 'Resolved icon:', resolvedIcon)
                             return resolvedIcon
                         }
                     }
                     fileView.destroy()
                     return windowClass.toLowerCase()
                 }
-                var resolvedIcon = IconTheme.getIconPath(windowClass) || windowClass.toLowerCase()
-                // console.log('[DOCK DEBUG] getIconForClass:', windowClass, 'Resolved icon:', resolvedIcon)
+                var resolvedIcon = IconTheme.getIconPath(windowClass, StandardPaths.writableLocation(StandardPaths.HomeLocation)) || windowClass.toLowerCase()
+                console.log('[DOCK DEBUG] getIconForClass:', windowClass, 'Resolved icon:', resolvedIcon)
                 return resolvedIcon
             }
             
@@ -590,7 +577,7 @@ Scope {
                         width: dockItemsLayout.width + (dockHeight * 0.5)
                         height: parent.height
                         anchors.centerIn: parent
-                        radius: 30
+                        radius: 25
                         color: Qt.rgba(
                             Appearance.colors.colLayer0.r,
                             Appearance.colors.colLayer0.g,
@@ -619,13 +606,25 @@ Scope {
                             }
                         }
 
-                        // Border
+                        // Smooth border - matching sidebar style
                         Rectangle {
                             anchors.fill: parent
                             color: "transparent"
-                            border.color: "black"
-                            border.width: 2.5
+                            border.color: Qt.rgba(1, 1, 1, 0.15)
+                            border.width: 1
                             radius: parent.radius
+                            antialiasing: true
+                        }
+                        
+                        // Inner highlight for smooth depth
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: 1
+                            color: "transparent"
+                            border.color: Qt.rgba(1, 1, 1, 0.05)
+                            border.width: 1
+                            radius: parent.radius - 1
+                            antialiasing: true
                         }
 
                         // Main dock layout
@@ -633,15 +632,15 @@ Scope {
                             id: dockItemsLayout
                             anchors.centerIn: dockContent
                             rowSpacing: 0
-                            columnSpacing: 4
+                            columnSpacing: 2
                             flow: GridLayout.LeftToRight
                             columns: -1
                             rows: 1
 
                             // Arch menu button (replacing the pin/unpin button)
                             Item {
-                                Layout.preferredWidth: dock.dockWidth - 10
-                                Layout.preferredHeight: dock.dockWidth - 10
+                                Layout.preferredWidth: dock.dockWidth - 6
+                                Layout.preferredHeight: dock.dockWidth - 6
                                 Layout.leftMargin: 0 // Remove left margin completely
                                 
                                 Rectangle {
@@ -663,8 +662,8 @@ Scope {
                                     Image {
                                         anchors.centerIn: parent
                                         source : StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/quickshell/logo/Arch-linux-logo.png"
-                                        width: parent.width * 0.65
-                                        height: parent.height * 0.65
+                                        width: parent.width * 0.75
+                                        height: parent.height * 0.75
                                         fillMode: Image.PreserveAspectFit
                                 }
                                 
@@ -891,81 +890,6 @@ Scope {
         }
     }
 
-    // Function to extract Exec command from desktop file
-    function getDesktopFileExecCommand(desktopFileName) {
-        try {
-            // Try user applications first, then system applications
-            var userPath = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications/" + desktopFileName
-            var systemPath = "/usr/share/applications/" + desktopFileName
-            
-            var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', dock)
-            
-            // Try user path first
-            fileView.path = userPath
-            var content = ""
-            try {
-                content = fileView.text()
-            } catch (e) {
-                // Try system path if user path fails
-                fileView.path = systemPath
-                content = fileView.text()
-            }
-            
-            // Parse the desktop file to find Exec line
-            var lines = content.split('\n')
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim()
-                if (line.startsWith('Exec=')) {
-                    var execCommand = line.substring(5) // Remove 'Exec=' prefix
-                    // console.log("[DOCK DEBUG] Found Exec command for", desktopFileName + ":", execCommand)
-                    fileView.destroy()
-                    return execCommand
-                }
-            }
-            
-            fileView.destroy()
-            // console.log("[DOCK DEBUG] No Exec command found in", desktopFileName)
-            return ""
-        } catch (e) {
-            // console.log("[DOCK DEBUG] Error reading desktop file", desktopFileName + ":", e)
-            return ""
-        }
-    }
-
-    // Manual function to force refresh all icons (useful for testing)
-    function forceRefreshIcons() {
-        // console.log("[DOCK DEBUG] Manually forcing icon refresh");
-        
-        // Refresh the theme discovery system
-        IconTheme.refreshThemes();
-        
-        // Clear and reload pinned apps with staggered timing
-        if (pinnedAppsRepeater) {
-            var oldModel = dock.pinnedApps.slice(); // Create a copy
-            pinnedAppsRepeater.model = [];
-            
-            // Wait for the UI to clear, then restore
-            Qt.callLater(function() {
-                // Force garbage collection
-                gc();
-                
-                // Wait a bit more then restore
-                Qt.callLater(function() {
-                    pinnedAppsRepeater.model = oldModel;
-                    // console.log("[DOCK DEBUG] Pinned apps model restored");
-                });
-            });
-        }
-        
-        // Refresh active windows which will refresh non-pinned apps
-        Qt.callLater(function() {
-            updateActiveWindows();
-            // console.log("[DOCK DEBUG] Active windows updated");
-        });
-        
-        // console.log("[DOCK DEBUG] Icon refresh initiated");
-    }
-
     // Background blur system - static blur approach inspired by Blur My Shell
     PanelWindow {
         id: dockBackgroundBlur
@@ -1023,13 +947,14 @@ Scope {
                 radius: parent.radius
             }
             
-            // Border to cover blur edge artifacts
+            // Smooth border to cover blur edge artifacts
             Rectangle {
                 anchors.fill: parent
                 color: "transparent"
-                border.width: 2.5
-                border.color: "black" // Or use Qt.rgba(0,0,0,0.5) for a softer look
+                border.width: 1
+                border.color: Qt.rgba(1, 1, 1, 0.15)
                 radius: parent.radius
+                antialiasing: true
                 z: 2
             }
         }
@@ -1037,14 +962,91 @@ Scope {
         // Mask to match dock shape
         mask: Region {
             item: Rectangle {
-                width: dockContent.width
-                height: dockContent.height
-                x: dockContent.x + (dockRoot.width - dockContent.width) / 2
-                y: dockContent.y
+                width: dockContent.width + 20
+                height: dockContent.height + 10
+                x: dockContent.x + (dockRoot.width - dockContent.width) / 2 - 10
+                y: dockContent.y - 5
                 radius: 30
             }
         }
     }
+
+    // Function to extract Exec command from desktop file
+    function getDesktopFileExecCommand(desktopFileName) {
+        try {
+            // Try user applications first, then system applications
+            var userPath = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications/" + desktopFileName
+            var systemPath = "/usr/share/applications/" + desktopFileName
+            
+            var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', dock)
+            
+            // Try user path first
+            fileView.path = userPath
+            var content = ""
+            try {
+                content = fileView.text()
+            } catch (e) {
+                // Try system path if user path fails
+                fileView.path = systemPath
+                content = fileView.text()
+            }
+            
+            // Parse the desktop file to find Exec line
+            var lines = content.split('\n')
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim()
+                if (line.startsWith('Exec=')) {
+                    var execCommand = line.substring(5) // Remove 'Exec=' prefix
+                    // console.log("[DOCK DEBUG] Found Exec command for", desktopFileName + ":", execCommand)
+                    fileView.destroy()
+                    return execCommand
+                }
+            }
+            
+            fileView.destroy()
+            // console.log("[DOCK DEBUG] No Exec command found in", desktopFileName)
+            return ""
+        } catch (e) {
+            // console.log("[DOCK DEBUG] Error reading desktop file", desktopFileName + ":", e)
+            return ""
+        }
+    }
+
+    // Manual function to force refresh all icons (useful for testing)
+    function forceRefreshIcons() {
+        // console.log("[DOCK DEBUG] Manually forcing icon refresh");
+        
+        // Refresh the theme discovery system
+        IconTheme.refreshThemes(StandardPaths.writableLocation(StandardPaths.HomeLocation));
+        
+        // Clear and reload pinned apps with staggered timing
+        if (pinnedAppsRepeater) {
+            var oldModel = dock.pinnedApps.slice(); // Create a copy
+            pinnedAppsRepeater.model = [];
+            
+            // Wait for the UI to clear, then restore
+            Qt.callLater(function() {
+                // Force garbage collection
+                gc();
+                
+                // Wait a bit more then restore
+                Qt.callLater(function() {
+                    pinnedAppsRepeater.model = oldModel;
+                    // console.log("[DOCK DEBUG] Pinned apps model restored");
+                });
+            });
+        }
+        
+        // Refresh active windows which will refresh non-pinned apps
+        Qt.callLater(function() {
+            updateActiveWindows();
+            // console.log("[DOCK DEBUG] Active windows updated");
+        });
+        
+        // console.log("[DOCK DEBUG] Icon refresh initiated");
+    }
+
+
 
     // Preview helper functions
     // (Removed showWindowPreviews, hideWindowPreviews, hideWindowPreviewsImmediately, and all windowPreview references)

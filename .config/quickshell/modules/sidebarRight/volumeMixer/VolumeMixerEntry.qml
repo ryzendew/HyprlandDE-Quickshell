@@ -79,6 +79,8 @@ Item {
             RowLayout {
                 StyledSlider {
                     id: slider
+                    from: 0
+                    to: 1.0
                     value: root.node.audio.volume
                     onValueChanged: root.node.audio.volume = value
                     opacity: 0

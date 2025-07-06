@@ -1,5 +1,6 @@
 import "root:/modules/common"
 import "root:/modules/common/widgets"
+import "root:/modules/sidebarRight/quickToggles"
 import "root:/services"
 import Qt5Compat.GraphicalEffects
 import QtQuick
@@ -30,116 +31,405 @@ Item {
         }
     }
 
+    // Track audio objects
+    PwObjectTracker {
+        objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource]
+    }
+
     ColumnLayout {
         anchors.fill: parent
-        Item {
+        spacing: 8
+        
+        // Main Audio Controls Section
+        Rectangle {
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            Flickable {
-                id: flickable
+            Layout.preferredHeight: 100
+            radius: Appearance.rounding.large
+            color: Qt.rgba(
+                Appearance.colors.colLayer1.r,
+                Appearance.colors.colLayer1.g,
+                Appearance.colors.colLayer1.b,
+                0.3
+            )
+            border.color: Qt.rgba(1, 1, 1, 0.1)
+            border.width: 1
+            
+            RowLayout {
                 anchors.fill: parent
-                contentHeight: volumeMixerColumnLayout.height
-
-                clip: true
-                layer.enabled: true
-                layer.effect: OpacityMask {
-                    maskSource: Rectangle {
-                        width: flickable.width
-                        height: flickable.height
-                        radius: Appearance.rounding.normal
-                    }
-                }
-
+                anchors.margins: 12
+                spacing: 12
+                
+                // Output Control
                 ColumnLayout {
-                    id: volumeMixerColumnLayout
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.margins: 10
-                    spacing: 10
-
-                    // Get a list of nodes that output to the default sink
-                    PwNodeLinkTracker {
-                        id: linkTracker
-                        node: Pipewire.defaultAudioSink
-                    }
-
-                    Repeater {
-                        model: linkTracker.linkGroups
-
-                        VolumeMixerEntry {
-                            Layout.fillWidth: true
-                            // Get links to the default sinnk
-                            required property PwLinkGroup modelData
-                            // Consider sources that output to the default sink
-                            node: modelData.source
-                            opacity: 0
-                            visible: opacity > 0
-
-                            Behavior on opacity {
-                                NumberAnimation {
-                                    duration: Appearance.animation.elementMoveFast.duration
-                                    easing.type: Appearance.animation.elementMoveFast.type
-                                    easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                    Layout.fillWidth: true
+                    spacing: 6
+                    
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        
+                        MaterialSymbol {
+                            text: "speaker"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        
+                        StyledText {
+                            text: qsTr("Output")
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        
+                        Item { Layout.fillWidth: true }
+                        
+                        // Device selector button for output
+                        Rectangle {
+                            Layout.preferredWidth: 20
+                            Layout.preferredHeight: 20
+                            radius: 10
+                            color: outputCogMouseArea.containsMouse ? 
+                                   Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.1) : 
+                                   "transparent"
+                            
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: "settings"
+                                iconSize: Appearance.font.pixelSize.small
+                                color: Appearance.colors.colOnLayer1
+                                opacity: 0.7
+                            }
+                            
+                            MouseArea {
+                                id: outputCogMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    root.showDeviceSelectorDialog(false) // false = output device
                                 }
                             }
-
-                            Component.onCompleted: {
-                                opacity = 1
+                        }
+                        
+                        StyledText {
+                            text: Math.round((Pipewire.defaultAudioSink?.audio.volume ?? 0) * 100) + "%"
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            color: Appearance.colors.colOnLayer1
+                            opacity: 0.7
+                        }
+                    }
+                    
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        
+                        StyledSlider {
+                            Layout.fillWidth: true
+                            from: 0
+                            to: 1.0
+                            value: Pipewire.defaultAudioSink?.audio.volume ?? 0
+                            enabled: !(Pipewire.defaultAudioSink?.audio.muted ?? false)
+                            opacity: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 0.5 : 1.0
+                            onValueChanged: {
+                                if (Pipewire.defaultAudioSink?.audio) {
+                                    Pipewire.defaultAudioSink.audio.volume = value
+                                }
+                            }
+                        }
+                        
+                        Rectangle {
+                            Layout.preferredWidth: 32
+                            Layout.preferredHeight: 32
+                            radius: 16
+                            color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 
+                                   "#e74c3c" : 
+                                   Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.1)
+                            border.color: Qt.rgba(1, 1, 1, 0.15)
+                            border.width: 1
+                            
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "volume_off" : "volume_up"
+                                iconSize: Appearance.font.pixelSize.small
+                                color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 
+                                       "white" : 
+                                       Appearance.colors.colOnLayer1
+                            }
+                            
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    if (Pipewire.defaultAudioSink?.audio) {
+                                        Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Separator
+                Rectangle {
+                    Layout.preferredWidth: 1
+                    Layout.fillHeight: true
+                    color: Qt.rgba(1, 1, 1, 0.08)
+                }
+                
+                // Input Control
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        
+                        MaterialSymbol {
+                            text: "mic"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        
+                        StyledText {
+                            text: qsTr("Input")
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        
+                        Item { Layout.fillWidth: true }
+                        
+                        // Device selector button for input
+                        Rectangle {
+                            Layout.preferredWidth: 20
+                            Layout.preferredHeight: 20
+                            radius: 10
+                            color: inputCogMouseArea.containsMouse ? 
+                                   Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.1) : 
+                                   "transparent"
+                            
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: "settings"
+                                iconSize: Appearance.font.pixelSize.small
+                                color: Appearance.colors.colOnLayer1
+                                opacity: 0.7
+                            }
+                            
+                            MouseArea {
+                                id: inputCogMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    root.showDeviceSelectorDialog(true) // true = input device
+                                }
+                            }
+                        }
+                        
+                        StyledText {
+                            text: Math.round((Pipewire.defaultAudioSource?.audio?.volume ?? 0) * 100) + "%"
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            color: Appearance.colors.colOnLayer1
+                            opacity: 0.7
+                        }
+                    }
+                    
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        
+                        StyledSlider {
+                            Layout.fillWidth: true
+                            from: 0
+                            to: 1.0
+                            value: Pipewire.defaultAudioSource?.audio?.volume ?? 0
+                            enabled: !(Pipewire.defaultAudioSource?.audio?.muted ?? false)
+                            opacity: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 0.5 : 1.0
+                            onValueChanged: {
+                                if (Pipewire.defaultAudioSource?.audio) {
+                                    Pipewire.defaultAudioSource.audio.volume = value
+                                }
+                            }
+                        }
+                        
+                        Rectangle {
+                            Layout.preferredWidth: 32
+                            Layout.preferredHeight: 32
+                            radius: 16
+                            color: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 
+                                   "#e74c3c" : 
+                                   Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.1)
+                            border.color: Qt.rgba(1, 1, 1, 0.15)
+                            border.width: 1
+                            
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? "mic_off" : "mic"
+                                iconSize: Appearance.font.pixelSize.small
+                                color: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 
+                                       "white" : 
+                                       Appearance.colors.colOnLayer1
+                            }
+                            
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    if (Pipewire.defaultAudioSource?.audio) {
+                                        Pipewire.defaultAudioSource.audio.muted = !Pipewire.defaultAudioSource.audio.muted
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-
-            // Placeholder when list is empty
-            Item {
-                anchors.fill: flickable
-
-                visible: opacity > 0
-                opacity: (linkTracker.linkGroups.length === 0) ? 1 : 0
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: Appearance.animation.menuDecel.duration
-                        easing.type: Appearance.animation.menuDecel.type
-                    }
-                }
-
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 5
-
-                    MaterialSymbol {
-                        Layout.alignment: Qt.AlignHCenter
-                        iconSize: 55
-                        color: Appearance.m3colors.m3outline
-                        text: "brand_awareness"
-                    }
-                    StyledText {
-                        Layout.alignment: Qt.AlignHCenter
-                        font.pixelSize: Appearance.font.pixelSize.normal
-                        color: Appearance.m3colors.m3outline
-                        horizontalAlignment: Text.AlignHCenter
-                        text: qsTr("No audio source")
-                    }
-                }
-            }
         }
-        // Device selector
-        RowLayout {
-            id: deviceSelectorRowLayout
+        
+        // Application Volume Mixer Section
+        Rectangle {
             Layout.fillWidth: true
-            Layout.fillHeight: false
-            AudioDeviceSelectorButton {
-                Layout.fillWidth: true
-                input: false
-                onClicked: root.showDeviceSelectorDialog(input)
-            }
-            AudioDeviceSelectorButton {
-                Layout.fillWidth: true
-                input: true
-                onClicked: root.showDeviceSelectorDialog(input)
+            Layout.fillHeight: true
+            radius: Appearance.rounding.large
+            color: Qt.rgba(
+                Appearance.colors.colLayer1.r,
+                Appearance.colors.colLayer1.g,
+                Appearance.colors.colLayer1.b,
+                0.3
+            )
+            border.color: Qt.rgba(1, 1, 1, 0.1)
+            border.width: 1
+            
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 6
+                
+                // Header
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    
+                    MaterialSymbol {
+                        text: "tune"
+                        iconSize: Appearance.font.pixelSize.normal
+                        color: Appearance.colors.colOnLayer1
+                    }
+                    
+                    StyledText {
+                        text: qsTr("Application Volume")
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        font.weight: Font.Medium
+                        color: Appearance.colors.colOnLayer1
+                    }
+                    
+                    Item { Layout.fillWidth: true }
+                }
+                
+                // Scrollable content
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    
+                    Flickable {
+                        id: flickable
+                        anchors.fill: parent
+                        contentHeight: volumeMixerColumnLayout.height
+                        clip: true
+                        
+                        layer.enabled: true
+                        layer.effect: OpacityMask {
+                            maskSource: Rectangle {
+                                width: flickable.width
+                                height: flickable.height
+                                radius: Appearance.rounding.large
+                            }
+                        }
+
+                        ColumnLayout {
+                            id: volumeMixerColumnLayout
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.margins: 6
+                            spacing: 6
+
+                            // Get a list of nodes that output to the default sink
+                            PwNodeLinkTracker {
+                                id: linkTracker
+                                node: Pipewire.defaultAudioSink
+                            }
+
+                            Repeater {
+                                model: linkTracker.linkGroups
+
+                                VolumeMixerEntry {
+                                    Layout.fillWidth: true
+                                    // Get links to the default sink
+                                    required property PwLinkGroup modelData
+                                    // Consider sources that output to the default sink
+                                    node: modelData.source
+                                    opacity: 0
+                                    visible: opacity > 0
+
+                                    Behavior on opacity {
+                                        NumberAnimation {
+                                            duration: Appearance.animation.elementMoveFast.duration
+                                            easing.type: Appearance.animation.elementMoveFast.type
+                                            easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                                        }
+                                    }
+
+                                    Component.onCompleted: {
+                                        opacity = 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Placeholder when list is empty
+                    Item {
+                        anchors.fill: flickable
+                        visible: opacity > 0
+                        opacity: linkTracker.linkGroups.length === 0 ? 1 : 0
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: Appearance.animation.elementMoveFast.duration
+                                easing.type: Appearance.animation.elementMoveFast.type
+                                easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+                            }
+                        }
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 10
+
+                            MaterialSymbol {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "volume_up"
+                                iconSize: 48
+                                color: Appearance.colors.colOnLayer1
+                                opacity: 0.3
+                            }
+
+                            StyledText {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: qsTr("No audio applications")
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                color: Appearance.colors.colOnLayer1
+                                opacity: 0.6
+                            }
+
+                            StyledText {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: qsTr("Start playing audio to see volume controls")
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Appearance.colors.colOnLayer1
+                                opacity: 0.4
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -175,7 +465,7 @@ Item {
         Rectangle { // The dialog
             id: dialog
             color: Appearance.m3colors.m3surfaceContainerHigh
-            radius: Appearance.rounding.normal
+            radius: Appearance.rounding.large
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter

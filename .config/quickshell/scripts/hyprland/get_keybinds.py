@@ -3,22 +3,23 @@ import argparse
 import re
 import os
 from os.path import expandvars as os_expandvars
+import json
 from typing import Dict, List
 
-TITLE_REGEX = "#+!"
-HIDE_COMMENT = "[hidden]"
-MOD_SEPARATORS = ['+', ' ']
+# Constants
+MOD_SEPARATORS = ["+", " ", "_"]
+TITLE_REGEX = r"^(!+).*$"
 COMMENT_BIND_PATTERN = "#/#"
 
-parser = argparse.ArgumentParser(description='Hyprland keybind reader')
-parser.add_argument('--path', type=str, default="$HOME/.config/hypr/hyprland.conf", help='path to keybind file (sourcing isn\'t supported)')
-args = parser.parse_args()
+def get_default_config_path():
+    """Get the default hyprland config path using XDG_CONFIG_HOME"""
+    xdg_config_home = os.environ.get('XDG_CONFIG_HOME', os.path.expanduser('~/.config'))
+    return os.path.join(xdg_config_home, 'hypr', 'hyprland.conf')
+
+# Global variables
 content_lines = []
 reading_line = 0
-
-# Little Parser made for hyprland keybindings conf file
 Variables: Dict[str, str] = {}
-
 
 class KeyBinding(dict):
     def __init__(self, mods, key, dispatcher, params, comment) -> None:
@@ -34,20 +35,16 @@ class Section(dict):
         self["keybinds"] = keybinds
         self["name"] = name
 
-
 def read_content(path: str) -> str:
     if (not os.access(os.path.expanduser(os.path.expandvars(path)), os.R_OK)):
         return ("error")
     with open(os.path.expanduser(os.path.expandvars(path)), "r") as file:
         return file.read()
 
-
 def autogenerate_comment(dispatcher: str, params: str = "") -> str:
     match dispatcher:
-
         case "resizewindow":
             return "Resize window"
-
         case "movewindow":
             if(params == ""):
                 return "Move window"
@@ -58,22 +55,16 @@ def autogenerate_comment(dispatcher: str, params: str = "") -> str:
                     "u": "up",
                     "d": "down",
                 }.get(params, "null"))
-
         case "pin":
             return "Window: pin (show on all workspaces)"
-
         case "splitratio":
             return "Window split ratio {}".format(params)
-
         case "togglefloating":
             return "Float/unfloat window"
-
         case "resizeactive":
             return "Resize window by {}".format(params)
-
         case "killactive":
             return "Close window"
-
         case "fullscreen":
             return "Toggle {}".format(
                 {
@@ -82,17 +73,14 @@ def autogenerate_comment(dispatcher: str, params: str = "") -> str:
                     "2": "fullscreen on Hyprland's side",
                 }.get(params, "null")
             )
-
         case "fakefullscreen":
             return "Toggle fake fullscreen"
-
         case "workspace":
             if params == "+1":
                 return "Workspace: focus right"
             elif params == "-1":
                 return "Workspace: focus left"
             return "Focus workspace {}".format(params)
-
         case "movefocus":
             return "Window: move focus {}".format(
                 {
@@ -102,7 +90,6 @@ def autogenerate_comment(dispatcher: str, params: str = "") -> str:
                     "d": "down",
                 }.get(params, "null")
             )
-
         case "swapwindow":
             return "Window: swap in {} direction".format(
                 {
@@ -112,27 +99,22 @@ def autogenerate_comment(dispatcher: str, params: str = "") -> str:
                     "d": "down",
                 }.get(params, "null")
             )
-
         case "movetoworkspace":
             if params == "+1":
                 return "Window: move to right workspace (non-silent)"
             elif params == "-1":
                 return "Window: move to left workspace (non-silent)"
             return "Window: move to workspace {} (non-silent)".format(params)
-
         case "movetoworkspacesilent":
             if params == "+1":
                 return "Window: move to right workspace"
             elif params == "-1":
                 return "Window: move to right workspace"
             return "Window: move to workspace {}".format(params)
-
         case "togglespecialworkspace":
             return "Workspace: toggle special"
-
         case "exec":
             return "Execute: {}".format(params)
-
         case _:
             return ""
 
@@ -214,9 +196,10 @@ def parse_keys(path: str) -> Dict[str, List[KeyBinding]]:
         return "error"
     return get_binds_recursive(Section([], [], ""), 0)
 
-
 if __name__ == "__main__":
-    import json
-
+    parser = argparse.ArgumentParser(description='Parse Hyprland keybinds')
+    parser.add_argument('--path', type=str, default=get_default_config_path(), help='path to keybind file (sourcing isn\'t supported)')
+    args = parser.parse_args()
+    
     ParsedKeys = parse_keys(args.path)
     print(json.dumps(ParsedKeys))

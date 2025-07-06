@@ -7,7 +7,7 @@ import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
-// import Qt5Compat.GraphicalEffects
+import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -17,85 +17,156 @@ Item {
     property bool rotateIcon: false
     property bool scaleIcon: false
 
-    property real valueIndicatorVerticalPadding: 9
-    property real valueIndicatorLeftPadding: 10
-    property real valueIndicatorRightPadding: 20 // An icon is circle ish, a column isn't, hence the extra padding
-
     Layout.margins: Appearance.sizes.elevationMargin
-    implicitWidth: Appearance.sizes.osdWidth
-    implicitHeight: valueIndicator.implicitHeight
+    implicitWidth: 280
+    implicitHeight: 80
 
-    StyledRectangularShadow {
-        target: valueIndicator
-    }
-    WrapperRectangle {
-        id: valueIndicator
+    // Modern glass effect background
+    Rectangle {
+        id: backgroundBlur
         anchors.fill: parent
-        radius: Appearance.rounding.full
-        color: Appearance.colors.colLayer0
-        implicitWidth: valueRow.implicitWidth
+        radius: 20
+        color: Qt.rgba(0, 0, 0, 0.6)
+        border.color: Qt.rgba(1, 1, 1, 0.2)
+        border.width: 1
+        
+        // Subtle shadow
+        layer.enabled: true
+        layer.effect: DropShadow {
+            horizontalOffset: 0
+            verticalOffset: 4
+            radius: 16
+            samples: 33
+            color: Qt.rgba(0, 0, 0, 0.4)
+        }
+    }
 
-        RowLayout { // Icon on the left, stuff on the right
-            id: valueRow
-            Layout.margins: 10
+    // Glass overlay effect
+    Rectangle {
+        anchors.fill: parent
+        radius: 20
+        color: "transparent"
+        border.color: Qt.rgba(1, 1, 1, 0.1)
+        border.width: 1
+        
+        // Subtle inner glow
+        Rectangle {
             anchors.fill: parent
-            spacing: 10
+            anchors.margins: 1
+            radius: 19
+            color: "transparent"
+            border.color: Qt.rgba(1, 1, 1, 0.05)
+            border.width: 1
+        }
+    }
 
-            Item {
-                implicitWidth: 30
-                implicitHeight: 30
-                Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: valueIndicatorLeftPadding
-                Layout.topMargin: valueIndicatorVerticalPadding
-                Layout.bottomMargin: valueIndicatorVerticalPadding
-                MaterialSymbol { // Icon
-                    anchors.centerIn: parent
-                    color: Appearance.colors.colOnLayer0
-                    renderType: Text.QtRendering
+    RowLayout {
+        anchors.fill: parent
+        anchors.margins: 20
+        spacing: 16
 
-                    text: root.icon
-                    iconSize: 20 + 10 * (root.scaleIcon ? value : 1)
-                    rotation: 180 * (root.rotateIcon ? value : 0)
-
-                    Behavior on iconSize {
-                        animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
-                    }
-                    Behavior on rotation {
-                        animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
-                    }
+        // Icon section
+        Rectangle {
+            Layout.preferredWidth: 40
+            Layout.preferredHeight: 40
+            Layout.alignment: Qt.AlignVCenter
+            color: Qt.rgba(1, 1, 1, 0.1)
+            radius: 12
+            
+            MaterialSymbol {
+                anchors.centerIn: parent
+                color: "#ffffff"
+                text: root.icon
+                iconSize: 24
                 
-                }
-            }
-            ColumnLayout { // Stuff
-                Layout.alignment: Qt.AlignVCenter
-                Layout.rightMargin: valueIndicatorRightPadding
-                spacing: 5
-
-                RowLayout { // Name fill left, value on the right end
-                    Layout.leftMargin: valueProgressBar.height / 2 // Align text with progressbar radius curve's left end
-                    Layout.rightMargin: valueProgressBar.height / 2 // Align text with progressbar radius curve's left end
-
-                    StyledText {
-                        color: Appearance.colors.colOnLayer0
-                        font.pixelSize: Appearance.font.pixelSize.small
-                        Layout.fillWidth: true
-                        text: root.name
+                Behavior on iconSize {
+                    NumberAnimation {
+                        duration: 200
+                        easing.type: Easing.OutQuad
                     }
-
-                    StyledText {
-                        color: Appearance.colors.colOnLayer0
-                        font.pixelSize: Appearance.font.pixelSize.small
-                        Layout.fillWidth: false
-                        text: Math.round(root.value * 100)
-                    }
-                }
-                
-                StyledProgressBar {
-                    id: valueProgressBar
-                    Layout.fillWidth: true
-                    value: root.value
                 }
             }
         }
+
+        // Content section
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            spacing: 8
+
+            // Title and percentage row
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 0
+
+                Text {
+                    text: root.name
+                    color: "#ffffff"
+                    font.pixelSize: 16
+                    font.weight: Font.Medium
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 12
+                }
+
+                Text {
+                    text: Math.round(root.value * 100) + "%"
+                    color: "#ffffff"
+                    font.pixelSize: 16
+                    font.weight: Font.Bold
+                    horizontalAlignment: Text.AlignRight
+                }
+            }
+
+            // Modern progress bar
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 6
+                color: Qt.rgba(1, 1, 1, 0.2)
+                radius: 3
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width * root.value
+                    height: parent.height
+                    color: "#ffffff"
+                    radius: 3
+                    
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: 300
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Entrance animation
+    NumberAnimation on opacity {
+        id: entranceAnimation
+        running: false
+        from: 0
+        to: 1
+        duration: 250
+        easing.type: Easing.OutQuad
+    }
+    
+    NumberAnimation on scale {
+        id: scaleAnimation
+        running: false
+        from: 0.8
+        to: 1.0
+        duration: 250
+        easing.type: Easing.OutBack
+    }
+    
+    Component.onCompleted: {
+        entranceAnimation.start()
+        scaleAnimation.start()
     }
 }

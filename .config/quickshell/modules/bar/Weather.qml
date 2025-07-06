@@ -9,11 +9,11 @@ Item {
     width: weatherRow.width
     height: parent.height
 
-    property string weatherLocation: "Halifax, Nova Scotia, Canada"
+    property string weatherLocation: "Halifax"
     property var weatherData: ({
         currentTemp: "",
         feelsLike: "",
-        currentEmoji: "❓"
+        currentEmoji: "☀️"
     })
     property int cacheDurationMs: 15 * 60 * 1000 // 15 minutes
     Settings {
@@ -39,19 +39,14 @@ Item {
 
     RowLayout {
         id: weatherRow
-        height: parent.height
         spacing: 8
-        anchors {
-            centerIn: parent
-            verticalCenter: parent.verticalCenter
-            verticalCenterOffset: -18
-        }
+        anchors.centerIn: parent
 
         // Weather icon container - supports both SVG and emoji
         Item {
             Layout.preferredWidth: 32
             Layout.preferredHeight: 32
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
 
             // SVG for fog
             Image {
@@ -68,7 +63,7 @@ Item {
         Text {
             id: weatherIcon
                 anchors.centerIn: parent
-                text: isFogCondition(weatherData.currentCondition) ? "" : (weatherData.currentEmoji || "❓")
+                text: isFogCondition(weatherData.currentCondition) ? "" : (weatherData.currentEmoji || "☀️")
             font.pixelSize: Appearance.font.pixelSize.larger
             color: Appearance.colors.colOnLayer0
                 visible: !isFogCondition(weatherData.currentCondition)
@@ -77,14 +72,14 @@ Item {
 
         RowLayout {
             spacing: 4
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
 
             Text {
                 id: temperature
                 text: weatherData.currentTemp || "?"
                 font.pixelSize: Appearance.font.pixelSize.normal
                 color: Appearance.colors.colOnLayer0
-                Layout.alignment: Qt.AlignVCenter
+                Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
             }
 
             Text {
@@ -93,7 +88,7 @@ Item {
                 font.pixelSize: Appearance.font.pixelSize.normal
                 color: Appearance.colors.colOnLayer0
                 opacity: 0.8
-                Layout.alignment: Qt.AlignVCenter
+                Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
                 visible: weatherData.feelsLike !== ""
             }
         }
@@ -116,7 +111,7 @@ Item {
     }
 
     function getWeatherEmoji(condition) {
-        if (!condition) return "❓"
+        if (!condition) return "☀️"
         condition = condition.toLowerCase()
 
         if (condition.includes("clear")) return "☀️"
@@ -130,7 +125,7 @@ Item {
         if (condition.includes("snow") || condition.includes("snow grains") || condition.includes("snow showers")) return "❄️"
         if (condition.includes("thunderstorm")) return "⛈️"
         if (condition.includes("wind")) return "🌬️"
-        return "❓"
+        return "☀️"
     }
 
     function mapWeatherCode(code) {
@@ -187,12 +182,18 @@ Item {
                         weatherCache.lastLocation = locationKey;
                         parseWeather(data);
                     } catch (e) {
-                        fallbackWeatherData("Parse error");
+                        console.log("[WEATHER DEBUG] Parse error:", e);
+                        fallbackWeatherData("Parse error: " + e.message);
                     }
                 } else {
-                    fallbackWeatherData("Request error");
+                    console.log("[WEATHER DEBUG] Request failed with status:", xhr.status);
+                    fallbackWeatherData("Request error: " + xhr.status);
                 }
             }
+        };
+        xhr.onerror = function() {
+            console.log("[WEATHER DEBUG] Network error occurred");
+            fallbackWeatherData("Network error");
         };
         xhr.open("GET", url);
         xhr.setRequestHeader("User-Agent", "Mozilla/5.0 (compatible; quickshell-weather/1.0)");
@@ -200,12 +201,14 @@ Item {
     }
 
     function parseWeather(data) {
+        console.log("[WEATHER DEBUG] Parsing weather data:", JSON.stringify(data, null, 2));
         // Parse wttr.in JSON for current conditions
         if (data.current_condition && data.current_condition[0]) {
             var current = data.current_condition[0];
             var tempC = current.temp_C;
             var feelsLikeC = current.FeelsLikeC;
             var condition = current.weatherDesc[0]?.value || "";
+            console.log("[WEATHER DEBUG] Parsed values - temp:", tempC, "feelsLike:", feelsLikeC, "condition:", condition);
             weatherData = {
                 currentTemp: tempC + "°C",
                 feelsLike: feelsLikeC + "°C",
@@ -213,6 +216,7 @@ Item {
                 currentCondition: condition
             };
         } else {
+            console.log("[WEATHER DEBUG] No current_condition data found");
             fallbackWeatherData("No data");
         }
     }
@@ -221,7 +225,7 @@ Item {
         weatherData = {
             currentTemp: "?",
             feelsLike: "",
-            currentEmoji: "❓",
+            currentEmoji: "☀️",
             currentCondition: message
         };
     }

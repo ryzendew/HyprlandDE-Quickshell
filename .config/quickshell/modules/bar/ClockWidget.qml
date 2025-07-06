@@ -9,7 +9,6 @@ Rectangle {
     implicitWidth: colLayout.implicitWidth + 2.1
     implicitHeight: 28
     color: "transparent"
-    transform: Translate { y: -1.5; x: 12 }  // Move up by 1.5px and right by 12px
 
     ColumnLayout {
         id: colLayout
@@ -21,7 +20,7 @@ Rectangle {
             color: Appearance.colors.colOnLayer0
             text: DateTime.time
             horizontalAlignment: Text.AlignHCenter
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         }
 
         StyledText {
@@ -29,7 +28,7 @@ Rectangle {
             color: Appearance.colors.colOnLayer0
             text: DateTime.date
             horizontalAlignment: Text.AlignHCenter
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         }
     }
 }

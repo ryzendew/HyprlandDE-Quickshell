@@ -35,22 +35,33 @@ Scope {
 			id: popup
 
 			anchors.top: true
-			margins.top: 0
+			margins.top: 50
 
-			implicitWidth: rect.width + shadow.radius * 2
-			implicitHeight: rect.height + shadow.radius * 2
+			implicitWidth: modernRect.width
+			implicitHeight: modernRect.height
 
-			// color blending is a bit odd as detailed in the type reference.
 			color: "transparent"
 
+			// Modern glass effect background
 			Rectangle {
-				id: rect
+				id: modernRect
 				anchors.centerIn: parent
-				color: failed ?  "#ffe99195" : "#ffD1E8D5"
-
-				implicitHeight: layout.implicitHeight + 30
-				implicitWidth: layout.implicitWidth + 30
-				radius: 12
+				width: Math.max(320, layout.implicitWidth + 60)
+				height: layout.implicitHeight + 40
+				radius: 20
+				color: failed ? Qt.rgba(0.8, 0.2, 0.2, 0.6) : Qt.rgba(0.2, 0.6, 0.3, 0.6)
+				border.color: failed ? Qt.rgba(1, 0.4, 0.4, 0.3) : Qt.rgba(0.4, 1, 0.6, 0.3)
+				border.width: 1
+				
+				// Subtle shadow
+				layer.enabled: true
+				layer.effect: DropShadow {
+					horizontalOffset: 0
+					verticalOffset: 4
+					radius: 16
+					samples: 33
+					color: Qt.rgba(0, 0, 0, 0.4)
+				}
 
 				// Fills the whole area of the rectangle, making any clicks go to it,
 				// which dismiss the popup.
@@ -66,91 +77,152 @@ Scope {
 					hoverEnabled: true
 				}
 
-				ColumnLayout {
+				RowLayout {
 					id: layout
-					spacing: 10
-					anchors {
-						top: parent.top
-						topMargin: 10
-						horizontalCenter: parent.horizontalCenter
+					spacing: 16
+					anchors.centerIn: parent
+					anchors.margins: 20
+
+					// Icon section
+					Rectangle {
+						Layout.preferredWidth: 48
+						Layout.preferredHeight: 48
+						Layout.alignment: Qt.AlignTop
+						color: Qt.rgba(1, 1, 1, 0.1)
+						radius: 12
+						
+						Text {
+							anchors.centerIn: parent
+							text: failed ? "⚠" : "✓"
+							font.pixelSize: 24
+							color: "#ffffff"
+							font.weight: Font.Bold
+						}
 					}
 
-					Text {
-						renderType: Text.NativeRendering
-						font.family: "Rubik"
-						font.pointSize: 14
-						text: root.failed ? "Quickshell: Reload failed" : "Quickshell reloaded"
-						color: failed ? "#ff93000A" : "#ff0C1F13"
-					}
+					// Content section
+					ColumnLayout {
+						Layout.fillWidth: true
+						Layout.alignment: Qt.AlignVCenter
+						spacing: 8
 
-					Text {
-						renderType: Text.NativeRendering
-						font.family: "JetBrains Mono NF"
-						font.pointSize: 11
-						text: root.errorString
-						color: failed ? "#ff93000A" : "#ff0C1F13"
-						// When visible is false, it also takes up no space.
-						visible: root.errorString != ""
+						Text {
+							text: root.failed ? "Quickshell: Reload failed" : "Quickshell reloaded"
+							color: "#ffffff"
+							font.pixelSize: 16
+							font.weight: Font.Medium
+							Layout.fillWidth: true
+						}
+
+						Text {
+							text: root.errorString
+							color: "#ffffff"
+							font.pixelSize: 12
+							font.family: "JetBrains Mono NF"
+							opacity: 0.9
+							wrapMode: Text.WordWrap
+							Layout.fillWidth: true
+							Layout.maximumWidth: 250
+							visible: root.errorString != ""
+						}
+					}
+				}
+
+				// Modern progress bar at the bottom
+				Rectangle {
+					anchors.bottom: parent.bottom
+					anchors.left: parent.left
+					anchors.right: parent.right
+					anchors.margins: 1
+					height: 4
+					radius: 2
+					color: Qt.rgba(1, 1, 1, 0.2)
+
+					Rectangle {
+						id: progressBar
+						anchors.left: parent.left
+						anchors.top: parent.top
+						anchors.bottom: parent.bottom
+						width: parent.width
+						radius: 2
+						color: "#ffffff"
+
+						PropertyAnimation {
+							id: anim
+							target: progressBar
+							property: "width"
+							from: modernRect.width - 2
+							to: 0
+							duration: failed ? 10000 : 1000
+							onFinished: popupLoader.active = false
+
+							// Pause the animation when the mouse is hovering over the popup,
+							// so it stays onscreen while reading. This updates reactively
+							// when the mouse moves on and off the popup.
+							paused: mouseArea.containsMouse
+						}
 					}
 				}
 
-				// A progress bar on the bottom of the screen, showing how long until the
-				// popup is removed.
-				Rectangle {
-					z: 2
-					id: bar
-					color: failed ? "#ff93000A" : "#ff0C1F13"
-					anchors.bottom: parent.bottom
-					anchors.left: parent.left
-					anchors.margins: 10
-					height: 5
-					radius: 9999
-
-					PropertyAnimation {
-						id: anim
-						target: bar
-						property: "width"
-						from: rect.width - bar.anchors.margins * 2
-						to: 0
-						duration: failed ? 10000 : 1000
-						onFinished: popupLoader.active = false
-
-						// Pause the animation when the mouse is hovering over the popup,
-						// so it stays onscreen while reading. This updates reactively
-						// when the mouse moves on and off the popup.
-						paused: mouseArea.containsMouse
-					}
+				// Entrance animation
+				NumberAnimation on opacity {
+					id: entranceAnimation
+					running: false
+					from: 0
+					to: 1
+					duration: 250
+					easing.type: Easing.OutQuad
 				}
-				// Its bg
-				Rectangle {
-					z: 1
-					id: bar_bg
-					color: failed ? "#30af1b25" : "#4027643e"
-					anchors.bottom: parent.bottom
-					anchors.left: parent.left
-					anchors.margins: 10
-					height: 5
-					radius: 9999
-					width: rect.width - bar.anchors.margins * 2
+				
+				NumberAnimation on scale {
+					id: scaleAnimation
+					running: false
+					from: 0.8
+					to: 1.0
+					duration: 250
+					easing.type: Easing.OutBack
 				}
 
 				// We could set `running: true` inside the animation, but the width of the
 				// rectangle might not be calculated yet, due to the layout.
 				// In the `Component.onCompleted` event handler, all of the component's
 				// properties and children have been initialized.
-				Component.onCompleted: anim.start()
+				Component.onCompleted: {
+					entranceAnimation.start()
+					scaleAnimation.start()
+					anim.start()
+					forceCloseTimer.start()
+				}
+				
+				// Force close timer to prevent popup from getting stuck
+				Timer {
+					id: forceCloseTimer
+					interval: failed ? 15000 : 5000  // 15s for errors, 5s for success
+					repeat: false
+					onTriggered: {
+						popupLoader.active = false
+					}
+				}
 			}
 
-			DropShadow {
-				id: shadow
-                anchors.fill: rect
-                horizontalOffset: 0
-                verticalOffset: 2
-                radius: 6
-                samples: radius * 2 + 1 // Ideally should be 2 * radius + 1, see qt docs
-                color: "#44000000"
-                source: rect
-            }
+			// Glass overlay effect
+			Rectangle {
+				anchors.fill: modernRect
+				radius: 20
+				color: "transparent"
+				border.color: Qt.rgba(1, 1, 1, 0.1)
+				border.width: 1
+				
+				// Subtle inner glow
+				Rectangle {
+					anchors.fill: parent
+					anchors.margins: 1
+					radius: 19
+					color: "transparent"
+					border.color: Qt.rgba(1, 1, 1, 0.05)
+					border.width: 1
+				}
+			}
 		}
 	}
 }
