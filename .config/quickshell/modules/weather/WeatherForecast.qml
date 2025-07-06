@@ -9,7 +9,7 @@ Item {
     width: forecastGrid.width
     height: forecastGrid.height
 
-    property string weatherLocation: "Halifax, Nova Scotia, Canada"
+    property string weatherLocation: "Halifax"
     property var forecastData: []
     property string locationDisplay: ""
     property string currentTemp: ""

@@ -4,7 +4,7 @@
     "debug": false,
     "info": false,
     "warning": false,
-    "error": true,
+    "error": false,
     "suppressIconWarnings": true,
     "suppressQmlWarnings": true,
     "suppressHyprlandWarnings": true

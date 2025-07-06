@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.settings 1.1
-import "root:/Data" as Data
 
 // Weather service (Open-Meteo API)
 Item {
@@ -13,7 +12,8 @@ Item {
     // Public properties
     property bool loading: false
     property var weatherData: null
-    property string location: Data.Settings.weatherLocation || "Halifax, Nova Scotia, Canada"
+    property string location: "auto" // "auto" for IP-based detection, or specify a location
+    property var detectedLocation: null
     property int cacheDurationMs: 15 * 60 * 1000 // 15 minutes
     
     // Private properties
@@ -54,7 +54,7 @@ Item {
     function loadWeather() {
         console.log("Loading weather for location:", location)
         var now = Date.now();
-        var locationKey = location ? location.trim().toLowerCase() : "halifax, nova scotia, canada";
+        var locationKey = location ? location.trim().toLowerCase() : "auto";
         
         // Use cached data if available and fresh
         if (weatherCache.lastWeatherJson && 
@@ -71,14 +71,78 @@ Item {
         
         loading = true;
         
-        // Get coordinates from Open-Meteo geocoding API
+        // Auto-detect location using IP or use specified location
+        if (location === "auto") {
+            detectLocationFromIP();
+        } else {
+            geocodeLocation(location);
+        }
+    }
+    
+    function detectLocationFromIP() {
+        console.log("Auto-detecting location from IP address...")
+        if (_geoXhr) {
+            _geoXhr.abort();
+        }
+        
+        _geoXhr = new XMLHttpRequest();
+        // Using ipapi.co for IP-based geolocation (free, no API key required)
+        var ipUrl = "https://ipapi.co/json/";
+        
+        _geoXhr.onreadystatechange = function() {
+            if (_geoXhr.readyState === XMLHttpRequest.DONE) {
+                if (_geoXhr.status === 200) {
+                    try {
+                        var ipData = JSON.parse(_geoXhr.responseText);
+                        console.log("IP geolocation response:", JSON.stringify(ipData, null, 2));
+                        
+                        if (ipData.latitude && ipData.longitude) {
+                            var lat = parseFloat(ipData.latitude);
+                            var lon = parseFloat(ipData.longitude);
+                            var locationDisplay = [ipData.city, ipData.region, ipData.country_name].filter(x => x).join(", ");
+                            
+                            detectedLocation = {
+                                latitude: lat,
+                                longitude: lon,
+                                city: ipData.city || "",
+                                region: ipData.region || "",
+                                country: ipData.country_name || "",
+                                display: locationDisplay
+                            };
+                            
+                            console.log("Auto-detected location:", locationDisplay, "at", lat, lon);
+                            fetchWeatherData(lat, lon, locationDisplay);
+                        } else {
+                            console.log("IP geolocation failed, no location data available");
+                            loading = false;
+                            createDefaultWeatherData();
+                        }
+                    } catch (e) {
+                        console.error("Error parsing IP geolocation response:", e);
+                        loading = false;
+                        createDefaultWeatherData();
+                    }
+                } else {
+                    console.error("IP geolocation request failed with status:", _geoXhr.status);
+                    loading = false;
+                    createDefaultWeatherData();
+                }
+            }
+        };
+        
+        _geoXhr.open("GET", ipUrl);
+        _geoXhr.send();
+    }
+    
+    function geocodeLocation(locationName) {
+        console.log("Geocoding location:", locationName);
         if (_geoXhr) {
             _geoXhr.abort();
         }
         
         _geoXhr = new XMLHttpRequest();
         var geoUrl = "https://geocoding-api.open-meteo.com/v1/search?name=" + 
-                    encodeURIComponent(locationKey) + 
+                    encodeURIComponent(locationName) + 
                     "&count=1&language=en&format=json";
                     
         console.log("Fetching geocoding data from:", geoUrl)
@@ -88,12 +152,11 @@ Item {
                 if (_geoXhr.status === 200) {
                     try {
                         var geoData = JSON.parse(_geoXhr.responseText);
-                        var lat = 44.65; // Halifax default
-                        var lon = -63.57;
+                        console.log("Geocoding API response:", JSON.stringify(geoData, null, 2));
                         
                         if (geoData.results && geoData.results.length > 0) {
-                            lat = geoData.results[0].latitude;
-                            lon = geoData.results[0].longitude;
+                            var lat = geoData.results[0].latitude;
+                            var lon = geoData.results[0].longitude;
                             
                             // Update location display with full name
                             var locationParts = [];
@@ -107,10 +170,8 @@ Item {
                             // Get weather data for these coordinates
                             fetchWeatherData(lat, lon, locationDisplay);
                         } else {
-                            console.error("No location found for:", location);
+                            console.log("No geocoding results found for location:", locationName);
                             loading = false;
-                            
-                            // Create default weather data
                             createDefaultWeatherData();
                         }
                     } catch (e) {
@@ -132,13 +193,13 @@ Item {
     
     function createDefaultWeatherData() {
         weatherData = {
-            locationDisplay: location || "Halifax, Nova Scotia",
-            currentTemp: "15°C",
-            feelsLike: "15°C",
-            currentCondition: "Clear sky",
+            locationDisplay: "Location unavailable",
+            currentTemp: "?",
+            feelsLike: "?",
+            currentCondition: "No location data",
             forecast: [
-                { date: "Today", condition: "Clear sky", temp: "15° / 10°", emoji: "☀️" },
-                { date: "Tomorrow", condition: "Partly cloudy", temp: "17° / 12°", emoji: "⛅" }
+                { date: "Today", condition: "No data", temp: "? / ?", emoji: "❓" },
+                { date: "Tomorrow", condition: "No data", temp: "? / ?", emoji: "❓" }
             ]
         };
     }

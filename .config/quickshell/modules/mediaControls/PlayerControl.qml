@@ -21,10 +21,42 @@ Item { // Player instance
     required property MprisPlayer player
     property var artUrl: player?.trackArtUrl
     property string artDownloadLocation: Directories.coverArt
-    property string artFileName: Qt.md5(artUrl) + ".jpg"
-    property string artFilePath: `${artDownloadLocation}/${artFileName}`
+    property string artFileName: artUrl ? Qt.md5(artUrl) + ".jpg" : ""
+    property string artFilePath: artFileName ? `${artDownloadLocation}/${artFileName}` : ""
     property color artDominantColor: colorQuantizer?.colors[0] || Appearance.m3colors.m3secondaryContainer
     property bool downloaded: false
+
+    // Function to get application icon from MPRIS player
+    function getPlayerIcon() {
+        if (!player?.dbusName) return "music_note"
+        
+        // Extract app name from dbus name (e.g., "org.mpris.MediaPlayer2.cider" -> "cider")
+        const dbusName = player.dbusName
+        const parts = dbusName.split('.')
+        const appName = parts[parts.length - 1]
+        
+        // Common media player icons
+        const playerIcons = {
+            "cider": "apple-music",
+            "spotify": "spotify",
+            "vlc": "vlc",
+            "rhythmbox": "rhythmbox",
+            "amarok": "amarok",
+            "clementine": "clementine",
+            "audacious": "audacious",
+            "mpv": "mpv",
+            "firefox": "firefox",
+            "chromium": "chromium",
+            "chrome": "google-chrome",
+            "brave": "brave-browser",
+            "discord": "discord",
+            "telegram": "telegram",
+            "youtube": "youtube",
+            "soundcloud": "soundcloud"
+        }
+        
+        return playerIcons[appName.toLowerCase()] || appName.toLowerCase() || "music_note"
+    }
 
     implicitWidth: widgetWidth
     implicitHeight: widgetHeight
@@ -60,29 +92,93 @@ Item { // Player instance
         }
     }
 
+    // Timer to retry album art download if it's missing
+    Timer {
+        id: artRetryTimer
+        running: playerController.player && !playerController.downloaded && playerController.artUrl && playerController.artUrl.length > 0
+        interval: 2000  // Check every 2 seconds
+        repeat: true
+        onTriggered: {
+            console.log("[PlayerControl] Retrying album art download for:", playerController.artUrl)
+            if (playerController.artUrl && playerController.artUrl.length > 0 && playerController.artFilePath && playerController.artFilePath.length > 0) {
+                coverArtDownloader.running = true
+            }
+        }
+    }
+
     onArtUrlChanged: {
         if (playerController.artUrl.length == 0) {
             playerController.artDominantColor = Appearance.m3colors.m3secondaryContainer
+            playerController.downloaded = false
             return;
         }
-        // console.log("PlayerControl: Art URL changed to", playerController.artUrl)
-        // console.log("Download cmd:", coverArtDownloader.command.join(" "))
+        console.log("[PlayerControl] Art URL changed to:", playerController.artUrl)
         playerController.downloaded = false
-        coverArtDownloader.running = true
+        
+        // Check if file already exists before downloading
+        var fileExistsCmd = [ "bash", "-c", `[ -f '${playerController.artFilePath}' ] && [ -s '${playerController.artFilePath}' ] && echo "exists" || echo "missing"` ]
+        var fileChecker = Qt.createQmlObject('import Quickshell.Io; Process { }', playerController)
+        fileChecker.command = fileExistsCmd
+        fileChecker.onExited.connect(function(exitCode, exitStatus) {
+            if (exitCode === 0) {
+                var output = fileChecker.stdout ? fileChecker.stdout.trim() : ""
+                if (output === "exists") {
+                    playerController.downloaded = true
+                } else {
+                    coverArtDownloader.running = true
+                }
+            } else {
+                coverArtDownloader.running = true
+            }
+            fileChecker.destroy()
+        })
+        fileChecker.running = true
+    }
+
+    // Add connections to handle metadata updates
+    Connections {
+        target: playerController.player
+        function onTrackArtUrlChanged() { 
+            console.log("[PlayerControl] Track art URL changed via signal:", playerController.player?.trackArtUrl)
+            playerController.artUrl = playerController.player?.trackArtUrl || ""
+        }
+        function onTrackTitleChanged() { 
+            // Reset download state for new track
+            playerController.downloaded = false
+        }
+        function onTrackAlbumChanged() {
+            // Sometimes album art URL is updated when album info changes
+            console.log("[PlayerControl] Track album changed, checking for art URL updates")
+            if (playerController.player?.trackArtUrl && playerController.player.trackArtUrl !== playerController.artUrl) {
+                playerController.artUrl = playerController.player.trackArtUrl
+            }
+        }
+        function onTrackArtistChanged() {
+            // Sometimes album art URL is updated when artist info changes
+            console.log("[PlayerControl] Track artist changed, checking for art URL updates")
+            if (playerController.player?.trackArtUrl && playerController.player.trackArtUrl !== playerController.artUrl) {
+                playerController.artUrl = playerController.player.trackArtUrl
+            }
+        }
     }
 
     Process { // Cover art downloader
         id: coverArtDownloader
         property string targetFile: playerController.artUrl
-        command: [ "bash", "-c", `[ -f ${artFilePath} ] || curl -sSL '${targetFile}' -o '${artFilePath}'` ]
+        command: [ "bash", "-c", `mkdir -p '${playerController.artDownloadLocation}' && curl -sSL --max-time 10 --retry 2 '${playerController.artUrl}' -o '${playerController.artFilePath}' && [ -s '${playerController.artFilePath}' ]` ]
         onExited: (exitCode, exitStatus) => {
-            playerController.downloaded = true
+            if (exitCode === 0) {
+                playerController.downloaded = true
+            } else {
+                console.log("[PlayerControl] Failed to download album art for:", playerController.artUrl)
+                playerController.downloaded = false
+            }
         }
     }
 
     ColorQuantizer {
         id: colorQuantizer
-        source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
+        source: playerController.downloaded ? Qt.resolvedUrl(playerController.artFilePath) : ""
         depth: 0 // 2^0 = 1 color
         rescaleSize: 1 // Rescale to 1x1 pixel for faster processing
     }
@@ -126,7 +222,7 @@ Item { // Player instance
         Image {
             id: blurredArt
             anchors.fill: parent
-            source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
+            source: playerController.downloaded ? Qt.resolvedUrl(playerController.artFilePath) : ""
             sourceSize.width: background.width
             sourceSize.height: background.height
             fillMode: Image.PreserveAspectCrop
@@ -141,6 +237,12 @@ Item { // Player instance
                 blurEnabled: true
                 blurMax: 100
                 blur: 1
+            }
+            
+            onStatusChanged: {
+                if (status === Image.Error) {
+                    console.log("[PlayerControl] Blurred art load error for:", source)
+                }
             }
 
             Rectangle {
@@ -186,7 +288,7 @@ Item { // Player instance
                     property int size: parent.height
                     anchors.fill: parent
 
-                    source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
+                    source: playerController.downloaded ? Qt.resolvedUrl(playerController.artFilePath) : ""
                     fillMode: Image.PreserveAspectCrop
                     cache: false
                     antialiasing: true
@@ -196,6 +298,24 @@ Item { // Player instance
                     height: size
                     sourceSize.width: size
                     sourceSize.height: size
+                    
+                    onStatusChanged: {
+                        if (status === Image.Error) {
+                            console.log("[PlayerControl] Image load error for:", source)
+                            playerController.downloaded = false
+                        } else if (status === Image.Ready) {
+                            console.log("[PlayerControl] Successfully loaded album art:", source)
+                        }
+                    }
+                }
+
+                // Show player icon when no album art is available
+                SystemIcon {
+                    anchors.centerIn: parent
+                    iconName: playerController.getPlayerIcon()
+                    iconSize: 48
+                    iconColor: blendedColors.colOnSecondaryContainer
+                    visible: !playerController.downloaded || mediaArt.status !== Image.Ready
                 }
             }
 

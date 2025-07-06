@@ -9,7 +9,7 @@ Item {
     width: weatherRow.width
     height: parent.height
 
-    property string weatherLocation: "Halifax"
+    property string weatherLocation: "auto"
     property var weatherData: ({
         currentTemp: "",
         feelsLike: "",
@@ -167,60 +167,116 @@ Item {
         var locationKey = weatherLocation.trim().toLowerCase();
         if (weatherCache.lastWeatherJson && weatherCache.lastLocation === locationKey && (now - weatherCache.lastWeatherTimestamp) < cacheDurationMs) {
             // Use cached data
-            parseWeather(JSON.parse(weatherCache.lastWeatherJson));
+            parseWeatherOpenMeteo(JSON.parse(weatherCache.lastWeatherJson));
             return;
         }
-        var xhr = new XMLHttpRequest();
-        var url = "https://wttr.in/" + encodeURIComponent(weatherLocation) + "?format=j1";
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                if (xhr.status === 200) {
+        
+        // Auto-detect location or use specified location
+        if (weatherLocation === "auto") {
+            detectLocationFromIP();
+        } else {
+            geocodeLocation(weatherLocation);
+        }
+    }
+    
+    function detectLocationFromIP() {
+        console.log("[BAR WEATHER] Auto-detecting location from IP address...")
+        var geoXhr = new XMLHttpRequest();
+        var ipUrl = "https://ipapi.co/json/";
+        
+        geoXhr.onreadystatechange = function() {
+            if (geoXhr.readyState === XMLHttpRequest.DONE) {
+                if (geoXhr.status === 200) {
                     try {
-                        var data = JSON.parse(xhr.responseText);
-                        weatherCache.lastWeatherJson = xhr.responseText;
-                        weatherCache.lastWeatherTimestamp = now;
-                        weatherCache.lastLocation = locationKey;
-                        parseWeather(data);
+                        var ipData = JSON.parse(geoXhr.responseText);
+                        console.log("[BAR WEATHER] IP geolocation response:", JSON.stringify(ipData, null, 2));
+                        
+                        if (ipData.latitude && ipData.longitude) {
+                            var lat = parseFloat(ipData.latitude);
+                            var lon = parseFloat(ipData.longitude);
+                            console.log("[BAR WEATHER] Auto-detected location at", lat, lon);
+                            fetchWeatherData(lat, lon);
+                        } else {
+                            console.log("[BAR WEATHER] IP geolocation failed, no location data available");
+                            fallbackWeatherData("Location unavailable");
+                        }
                     } catch (e) {
-                        console.log("[WEATHER DEBUG] Parse error:", e);
-                        fallbackWeatherData("Parse error: " + e.message);
+                        console.error("[BAR WEATHER] Error parsing IP geolocation response:", e);
+                        fallbackWeatherData("Location error");
                     }
                 } else {
-                    console.log("[WEATHER DEBUG] Request failed with status:", xhr.status);
-                    fallbackWeatherData("Request error: " + xhr.status);
+                    console.error("[BAR WEATHER] IP geolocation request failed with status:", geoXhr.status);
+                    fallbackWeatherData("Location error");
                 }
             }
         };
-        xhr.onerror = function() {
-            console.log("[WEATHER DEBUG] Network error occurred");
-            fallbackWeatherData("Network error");
+        
+        geoXhr.open("GET", ipUrl);
+        geoXhr.send();
+    }
+    
+    function geocodeLocation(locationName) {
+        console.log("[BAR WEATHER] Geocoding location:", locationName);
+        var geoXhr = new XMLHttpRequest();
+        var geoUrl = "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(locationName) + "&count=1&language=en&format=json";
+        geoXhr.onreadystatechange = function() {
+            if (geoXhr.readyState === XMLHttpRequest.DONE) {
+                if (geoXhr.status === 200) {
+                    try {
+                        var geoData = JSON.parse(geoXhr.responseText);
+                        var lat = 44.65; // Halifax default
+                        var lon = -63.57;
+                        
+                        if (geoData.results && geoData.results.length > 0) {
+                            lat = geoData.results[0].latitude;
+                            lon = geoData.results[0].longitude;
+                        }
+                        
+                        // Get weather data from Open-Meteo
+                        var xhr = new XMLHttpRequest();
+                        var weatherUrl = "https://api.open-meteo.com/v1/forecast?" +
+                                        "latitude=" + lat +
+                                        "&longitude=" + lon +
+                                        "&current=temperature_2m,apparent_temperature,weather_code" +
+                                        "&timezone=auto" +
+                                        "&forecast_days=1";
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState === XMLHttpRequest.DONE) {
+                                if (xhr.status === 200) {
+                                    try {
+                                        var data = JSON.parse(xhr.responseText);
+                                        var now = Date.now();
+                                        var locationKey = weatherLocation.trim().toLowerCase();
+                                        weatherCache.lastWeatherJson = xhr.responseText;
+                                        weatherCache.lastWeatherTimestamp = now;
+                                        weatherCache.lastLocation = locationKey;
+                                        parseWeatherOpenMeteo(data);
+                                    } catch (e) {
+                                        console.log("[BAR WEATHER] Parse error:", e);
+                                        fallbackWeatherData("Parse error");
+                                    }
+                                } else {
+                                    console.log("[BAR WEATHER] Weather request failed with status:", xhr.status);
+                                    fallbackWeatherData("Request error");
+                                }
+                            }
+                        };
+                        xhr.open("GET", weatherUrl);
+                        xhr.send();
+                    } catch (e) {
+                        console.log("[BAR WEATHER] Geocoding parse error:", e);
+                        fallbackWeatherData("Geocoding error");
+                    }
+                } else {
+                    console.log("[BAR WEATHER] Geocoding request failed");
+                    fallbackWeatherData("Geocoding failed");
+                }
+            }
         };
-        xhr.open("GET", url);
-        xhr.setRequestHeader("User-Agent", "Mozilla/5.0 (compatible; quickshell-weather/1.0)");
-        xhr.send();
+        geoXhr.open("GET", geoUrl);
+        geoXhr.send();
     }
-
-    function parseWeather(data) {
-        console.log("[WEATHER DEBUG] Parsing weather data:", JSON.stringify(data, null, 2));
-        // Parse wttr.in JSON for current conditions
-        if (data.current_condition && data.current_condition[0]) {
-            var current = data.current_condition[0];
-            var tempC = current.temp_C;
-            var feelsLikeC = current.FeelsLikeC;
-            var condition = current.weatherDesc[0]?.value || "";
-            console.log("[WEATHER DEBUG] Parsed values - temp:", tempC, "feelsLike:", feelsLikeC, "condition:", condition);
-            weatherData = {
-                currentTemp: tempC + "°C",
-                feelsLike: feelsLikeC + "°C",
-                currentEmoji: getWeatherEmoji(condition),
-                currentCondition: condition
-            };
-        } else {
-            console.log("[WEATHER DEBUG] No current_condition data found");
-            fallbackWeatherData("No data");
-        }
-    }
-
+    
     function fallbackWeatherData(message) {
         weatherData = {
             currentTemp: "?",
@@ -229,4 +285,78 @@ Item {
             currentCondition: message
         };
     }
+        
+    function fetchWeatherData(lat, lon) {
+        var xhr = new XMLHttpRequest();
+        var weatherUrl = "https://api.open-meteo.com/v1/forecast?" +
+                        "latitude=" + lat +
+                        "&longitude=" + lon +
+                        "&current=temperature_2m,apparent_temperature,weather_code" +
+                        "&timezone=auto" +
+                        "&forecast_days=1";
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        var now = Date.now();
+                        var locationKey = weatherLocation.trim().toLowerCase();
+                        weatherCache.lastWeatherJson = xhr.responseText;
+                        weatherCache.lastWeatherTimestamp = now;
+                        weatherCache.lastLocation = locationKey;
+                        parseWeatherOpenMeteo(data);
+                    } catch (e) {
+                        console.log("[BAR WEATHER] Parse error:", e);
+                        fallbackWeatherData("Parse error");
+                    }
+                } else {
+                    console.log("[BAR WEATHER] Weather request failed with status:", xhr.status);
+                    fallbackWeatherData("Request error");
+                }
+            }
+        };
+        xhr.open("GET", weatherUrl);
+        xhr.send();
+    }
+
+    function parseWeatherOpenMeteo(data) {
+        console.log("[BAR WEATHER] Parsing Open-Meteo weather data:", JSON.stringify(data, null, 2));
+        if (data && data.current) {
+            var tempC = Math.round(data.current.temperature_2m);
+            var feelsLikeC = Math.round(data.current.apparent_temperature);
+            var condition = mapWeatherCode(data.current.weather_code);
+            console.log("[BAR WEATHER] Parsed values - temp:", tempC, "feelsLike:", feelsLikeC, "condition:", condition);
+            weatherData = {
+                currentTemp: tempC + "°C",
+                feelsLike: feelsLikeC + "°C",
+                currentEmoji: getWeatherEmoji(condition),
+                currentCondition: condition
+            };
+        } else {
+            console.log("[BAR WEATHER] No current weather data found");
+            fallbackWeatherData("No data");
+        }
+    }
+
+    function parseWeather(data) {
+        console.log("[BAR WEATHER] Parsing wttr.in weather data:", JSON.stringify(data, null, 2));
+        // Parse wttr.in JSON for current conditions (fallback)
+        if (data.current_condition && data.current_condition[0]) {
+            var current = data.current_condition[0];
+            var tempC = current.temp_C;
+            var feelsLikeC = current.FeelsLikeC;
+            var condition = current.weatherDesc[0]?.value || "";
+            console.log("[BAR WEATHER] Parsed values - temp:", tempC, "feelsLike:", feelsLikeC, "condition:", condition);
+            weatherData = {
+                currentTemp: tempC + "°C",
+                feelsLike: feelsLikeC + "°C",
+                currentEmoji: getWeatherEmoji(condition),
+                currentCondition: condition
+            };
+        } else {
+            console.log("[BAR WEATHER] No current_condition data found");
+            fallbackWeatherData("No data");
+        }
+    }
+
 } 

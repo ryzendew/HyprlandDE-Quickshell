@@ -16,6 +16,6 @@ Item {
     Weather {
         id: weather
         anchors.centerIn: parent
-        weatherLocation: "Halifax, Nova Scotia, Canada"
+        weatherLocation: "auto"
     }
 } 

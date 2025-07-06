@@ -83,8 +83,15 @@ Singleton {
     }
 
     function stringifyList(list) {
-        if (!list) return "[]";
-        return JSON.stringify(list.filter(notif => notif != null).map((notif) => notifToJSON(notif)), null, 2);
+        if (!list || list.length === 0) return "[]";
+        try {
+            const validNotifications = list.filter(notif => notif != null);
+            const jsonData = validNotifications.map((notif) => notifToJSON(notif));
+            return JSON.stringify(jsonData, null, 2);
+        } catch (e) {
+            console.error("[Notifications] Error stringifying notifications:", e);
+            return "[]";
+        }
     }
     
     onListChanged: {
@@ -260,10 +267,15 @@ Singleton {
     }
 
     function saveNotifications() {
-        const dir = `${Directories.cache}/notifications`
-        Hyprland.dispatch(`exec mkdir -p '${dir}'`)
-        const content = stringifyList(root.list);
-        notifFileView.setText(content)
+        try {
+            const dir = `${Directories.cache}/notifications`
+            Hyprland.dispatch(`exec mkdir -p '${dir}'`)
+            const content = stringifyList(root.list);
+            console.log("[Notifications] Saving", root.list.length, "notifications to file");
+            notifFileView.setText(content)
+        } catch (e) {
+            console.error("[Notifications] Error saving notifications:", e);
+        }
     }
 
     function loadNotifications() {
@@ -275,7 +287,19 @@ Singleton {
         path: Qt.resolvedUrl(root.filePath)
         onTextChanged: {
             try {
-                const json = JSON.parse(text);
+                // Get the actual text content by calling the text() method
+                const fileContent = notifFileView.text();
+                
+                // Check if text is empty or whitespace only
+                if (!fileContent || fileContent.trim() === "") {
+                    console.log("[Notifications] Empty notifications file, initializing with empty list");
+                    root.list = [];
+                    root.idOffset = 1;
+                    root.initDone();
+                    return;
+                }
+                
+                const json = JSON.parse(fileContent);
                 if (Array.isArray(json)) {
                     const maxId = Math.max(...json.map(notif => notif.id || 0), 0);
                     root.idOffset = maxId + 1;
@@ -294,10 +318,21 @@ Singleton {
                         });
                         return notif;
                     });
+                    console.log("[Notifications] Loaded", root.list.length, "notifications from file");
+                    root.initDone();
+                } else {
+                    console.warn("[Notifications] JSON is not an array, initializing with empty list");
+                    root.list = [];
+                    root.idOffset = 1;
                     root.initDone();
                 }
             } catch (e) {
-                console.error("Error loading notifications:", e);
+                console.error("[Notifications] Error parsing JSON:", e);
+                console.error("[Notifications] File content was:", notifFileView.text());
+                // Initialize with empty list on parse error
+                root.list = [];
+                root.idOffset = 1;
+                root.initDone();
             }
         }
         onLoadFailed: (error) => {

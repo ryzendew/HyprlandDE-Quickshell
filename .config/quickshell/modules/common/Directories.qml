@@ -34,7 +34,10 @@ Singleton {
     Component.onCompleted: {
         Hyprland.dispatch(`exec mkdir -p '${shellConfig}'`)
         Hyprland.dispatch(`exec mkdir -p '${favicons}'`)
-        Hyprland.dispatch(`exec rm -rf '${coverArt}'; mkdir -p '${coverArt}'`)
+        // Don't clear coverArt directory to preserve cached album art
+        Hyprland.dispatch(`exec mkdir -p '${coverArt}'`)
+        // Clean up old/corrupted cover art files (empty files)
+        Hyprland.dispatch(`exec find '${coverArt}' -type f -empty -delete 2>/dev/null || true`)
         Hyprland.dispatch(`exec rm -rf '${booruPreviews}'; mkdir -p '${booruPreviews}'`)
         Hyprland.dispatch(`exec mkdir -p '${booruDownloads}' && mkdir -p '${booruDownloadsNsfw}'`)
         Hyprland.dispatch(`exec rm -rf '${latexOutput}'; mkdir -p '${latexOutput}'`)

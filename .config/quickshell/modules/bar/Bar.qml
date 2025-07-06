@@ -568,7 +568,7 @@ Scope {
                                 Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
                                 BarComponents.Weather {
                                     anchors.centerIn: parent
-                                    weatherLocation: "Halifax, Nova Scotia, Canada"
+                                    weatherLocation: "Halifax"
                                 }
                             }
 

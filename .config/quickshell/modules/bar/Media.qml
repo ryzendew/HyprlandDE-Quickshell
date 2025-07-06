@@ -17,9 +17,41 @@ Item {
 
     property string artUrl: activePlayer?.trackArtUrl || ""
     property string artDownloadLocation: Directories.coverArt
-    property string artFileName: Qt.md5(artUrl) + ".jpg"
-    property string artFilePath: `${artDownloadLocation}/${artFileName}`
+    property string artFileName: artUrl ? Qt.md5(artUrl) + ".jpg" : ""
+    property string artFilePath: artFileName ? `${artDownloadLocation}/${artFileName}` : ""
     property bool downloaded: false
+
+    // Function to get application icon from MPRIS player
+    function getPlayerIcon() {
+        if (!activePlayer?.dbusName) return "music_note"
+        
+        // Extract app name from dbus name (e.g., "org.mpris.MediaPlayer2.cider" -> "cider")
+        const dbusName = activePlayer.dbusName
+        const parts = dbusName.split('.')
+        const appName = parts[parts.length - 1]
+        
+        // Common media player icons
+        const playerIcons = {
+            "cider": "apple-music",
+            "spotify": "spotify",
+            "vlc": "vlc",
+            "rhythmbox": "rhythmbox",
+            "amarok": "amarok",
+            "clementine": "clementine",
+            "audacious": "audacious",
+            "mpv": "mpv",
+            "firefox": "firefox",
+            "chromium": "chromium",
+            "chrome": "google-chrome",
+            "brave": "brave-browser",
+            "discord": "discord",
+            "telegram": "telegram",
+            "youtube": "youtube",
+            "soundcloud": "soundcloud"
+        }
+        
+        return playerIcons[appName.toLowerCase()] || appName.toLowerCase() || "music_note"
+    }
 
     // Time formatting functions
     function formatTime(seconds) {
@@ -49,6 +81,20 @@ Item {
         interval: 1000
         repeat: true
         onTriggered: activePlayer.positionChanged()
+    }
+
+    // Timer to retry album art download if it's missing
+    Timer {
+        id: artRetryTimer
+        running: activePlayer && !root.downloaded && root.artUrl && root.artUrl.length > 0
+        interval: 2000  // Check every 2 seconds
+        repeat: true
+        onTriggered: {
+            console.log("[BarMedia] Retrying album art download for:", root.artUrl)
+            if (root.artUrl && root.artUrl.length > 0 && root.artFilePath && root.artFilePath.length > 0) {
+                coverArtDownloader.running = true
+            }
+        }
     }
 
     MouseArea {
@@ -84,24 +130,32 @@ Item {
         radius: Appearance.rounding.small
     }
 
-
-
     onArtUrlChanged: {
-        if (root.artUrl && root.artUrl.length > 0) {
+        console.log("[BarMedia] Art URL changed to:", root.artUrl)
+        if (root.artUrl && root.artUrl.length > 0 && root.artFilePath && root.artFilePath.length > 0) {
             root.downloaded = false
+            console.log("[BarMedia] Starting download for:", root.artUrl)
+            console.log("[BarMedia] File path will be:", root.artFilePath)
             coverArtDownloader.running = true
         } else {
             root.downloaded = false
+            console.log("[BarMedia] No art URL provided or invalid file path")
         }
     }
 
-    Process { // Cover art downloader - simplified
+    Process { // Cover art downloader - simplified for debugging
         id: coverArtDownloader
         property string targetFile: root.artUrl
-        command: [ "bash", "-c", `mkdir -p '${artDownloadLocation}' && curl -sSL '${targetFile}' -o '${artFilePath}' 2>/dev/null || true` ]
+        command: [ "bash", "-c", `mkdir -p '${root.artDownloadLocation}' && curl -sSL --max-time 10 --retry 2 '${root.artUrl}' -o '${root.artFilePath}' && [ -s '${root.artFilePath}' ]` ]
         onExited: (exitCode, exitStatus) => {
-            // Always try to set downloaded to true - let the Image component handle errors
+            console.log("[BarMedia] Download process exited with code:", exitCode)
+            if (exitCode === 0) {
+                console.log("[BarMedia] Download successful, setting downloaded = true")
                 root.downloaded = true
+            } else {
+                console.log("[BarMedia] Download failed for:", root.artUrl)
+                root.downloaded = false
+            }
         }
     }
 
@@ -137,10 +191,29 @@ Item {
 
     Connections {
         target: activePlayer
-        function onTrackArtUrlChanged() { root.artUrl = activePlayer?.trackArtUrl || "" }
+        function onTrackArtUrlChanged() { 
+            console.log("[BarMedia] Track art URL changed via signal:", activePlayer?.trackArtUrl)
+            root.artUrl = activePlayer?.trackArtUrl || "" 
+        }
         function onTrackTitleChanged() { 
             // Reset position when track changes
             displayPosition = 0
+            // Also reset download state for new track
+            root.downloaded = false
+        }
+        function onTrackAlbumChanged() {
+            // Sometimes album art URL is updated when album info changes
+            console.log("[BarMedia] Track album changed, checking for art URL updates")
+            if (activePlayer?.trackArtUrl && activePlayer.trackArtUrl !== root.artUrl) {
+                root.artUrl = activePlayer.trackArtUrl
+            }
+        }
+        function onTrackArtistChanged() {
+            // Sometimes album art URL is updated when artist info changes
+            console.log("[BarMedia] Track artist changed, checking for art URL updates")
+            if (activePlayer?.trackArtUrl && activePlayer.trackArtUrl !== root.artUrl) {
+                root.artUrl = activePlayer.trackArtUrl
+            }
         }
     }
 
@@ -193,16 +266,20 @@ Item {
                 onStatusChanged: {
                     if (status === Image.Error) {
                         console.log("[BarMedia] Image load error for:", source)
+                        // Mark as not downloaded so the fallback icon shows
+                        root.downloaded = false
+                    } else if (status === Image.Ready) {
+                        console.log("[BarMedia] Successfully loaded album art:", source)
                     }
                 }
             }
             
-            MaterialSymbol {
+            // Show player icon when no album art is available
+            SystemIcon {
                 anchors.centerIn: parent
-                fill: 1
-                text: "music_note"
-                iconSize: 16
-                color: Appearance.m3colors.m3onSecondaryContainer
+                iconName: root.getPlayerIcon()
+                iconSize: 20
+                iconColor: Appearance.m3colors.m3onSecondaryContainer
                 visible: !root.downloaded || albumArtContainer.children[0].status !== Image.Ready
             }
         }
