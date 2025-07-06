@@ -9,26 +9,47 @@ import Quickshell.Widgets
 
 Item {
     id: root
-    property Component notifComponent: NotificationWidget {}
     property list<NotificationWidget> notificationWidgetList: []
 
     // Signal handlers to add/remove notifications
     Connections {
         target: Notifications
         function onInitDone() {
+            console.log("[NotificationList] onInitDone called, notifications count:", Notifications.list.length)
             // Filter out any null notifications before processing
             const validNotifications = Notifications.list.filter(notification => notification != null);
+            console.log("[NotificationList] Valid notifications count:", validNotifications.length)
             validNotifications.slice().reverse().forEach((notification) => {
                 if (!notification) return; // Skip null notifications
-                const notif = root.notifComponent.createObject(columnLayout, { notificationObject: notification });
-                notificationWidgetList.push(notif)
+                console.log("[NotificationList] Creating widget for notification:", notification.summary)
+                try {
+                    const notif = notificationComponent.createObject(columnLayout, { notificationObject: notification });
+                    if (notif) {
+                        notificationWidgetList.push(notif)
+                        console.log("[NotificationList] Successfully created widget, total widgets:", notificationWidgetList.length)
+                    } else {
+                        console.error("[NotificationList] Failed to create notification widget - createObject returned null")
+                    }
+                } catch (error) {
+                    console.error("[NotificationList] Error creating notification widget:", error)
+                }
             })
         }
 
         function onNotify(notification) {
             if (!notification) return; // Skip null notifications
-            const notif = root.notifComponent.createObject(columnLayout, { notificationObject: notification });
-            notificationWidgetList.unshift(notif)
+            console.log("[NotificationList] onNotify called for:", notification.summary)
+            try {
+                const notif = notificationComponent.createObject(columnLayout, { notificationObject: notification });
+                if (notif) {
+                    notificationWidgetList.unshift(notif)
+                    console.log("[NotificationList] Successfully created widget for new notification, total widgets:", notificationWidgetList.length)
+                } else {
+                    console.error("[NotificationList] Failed to create notification widget for new notification - createObject returned null")
+                }
+            } catch (error) {
+                console.error("[NotificationList] Error creating notification widget for new notification:", error)
+            }
 
             // Remove stuff from the column, add back
             for (let i = 0; i < notificationWidgetList.length; i++) {
@@ -46,17 +67,20 @@ Item {
         }
 
         function onDiscard(id) {
+            console.log("[NotificationList] onDiscard called for ID:", id)
             for (let i = notificationWidgetList.length - 1; i >= 0; i--) {
                 const widget = notificationWidgetList[i];
                 if (widget && widget.notificationObject && widget.notificationObject.id === id) {
                     widget.destroyWithAnimation();
                     notificationWidgetList.splice(i, 1);
+                    console.log("[NotificationList] Discarded notification, remaining widgets:", notificationWidgetList.length)
                     break;
                 }
             }
         }
 
         function onDiscardAll() {
+            console.log("[NotificationList] onDiscardAll called")
             for (let i = notificationWidgetList.length - 1; i >= 0; i--) {
                 const widget = notificationWidgetList[i];
                 if (widget) {
@@ -64,18 +88,30 @@ Item {
                 }
             }
             notificationWidgetList = [];
+            console.log("[NotificationList] All notifications discarded")
         }
 
         function onTimeout(id) {
+            console.log("[NotificationList] onTimeout called for ID:", id)
             for (let i = notificationWidgetList.length - 1; i >= 0; i--) {
                 const widget = notificationWidgetList[i];
                 if (widget && widget.notificationObject && widget.notificationObject.id === id) {
                     widget.destroyWithAnimation();
                     notificationWidgetList.splice(i, 1);
+                    console.log("[NotificationList] Timed out notification, remaining widgets:", notificationWidgetList.length)
                     break;
                 }
             }
         }
+    }
+
+    Component {
+        id: notificationComponent
+        NotificationWidget {}
+    }
+
+    Component.onCompleted: {
+        console.log("[NotificationList] Component completed, notificationComponent valid:", notificationComponent ? "yes" : "no")
     }
 
     Flickable { // Scrollable window

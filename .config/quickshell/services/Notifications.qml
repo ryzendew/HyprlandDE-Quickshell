@@ -158,7 +158,8 @@ Singleton {
 
         onNotification: (notification) => {
             if (!notification) return;
-            console.log("Received notification:", notification.appName || "Unknown", notification.summary || "No summary")
+            console.log("[Notifications] Received notification:", notification.appName || "Unknown", notification.summary || "No summary")
+            console.log("[Notifications] Notification details - ID:", notification.id, "Body:", notification.body)
             notification.tracked = true
             const newNotifObject = {
                 "id": (notification.id || 0) + root.idOffset,
@@ -176,8 +177,11 @@ Singleton {
                 "time": Date.now(),
                 "urgency": notification.urgency?.toString() || "normal",
             }
+            console.log("[Notifications] Created notification object:", JSON.stringify(newNotifObject))
 			root.list = [...root.list, newNotifObject];
+            console.log("[Notifications] Total notifications in list:", root.list.length)
             root.notify(newNotifObject);
+            console.log("[Notifications] Emitted notify signal")
             saveNotifications()
         }
     }
