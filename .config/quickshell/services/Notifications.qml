@@ -6,6 +6,7 @@ import "root:/"
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Services.Notifications
 import Qt.labs.platform
 

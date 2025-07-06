@@ -32,7 +32,7 @@ Scope {
     )
     
     // Auto-hide properties
-    property bool autoHide: false
+    property bool autoHide: ConfigOptions.dock.hoverToReveal
     property int hideDelay: 200 // Hide timer interval
     property int showDelay: 50 // Show timer interval
     property int animationDuration: Appearance.animation.elementMoveFast.duration // Animation speed for dock sliding
@@ -354,6 +354,11 @@ Scope {
         // Initialize icon theme system
         console.log("[DOCK DEBUG] Initializing icon theme system");
         IconTheme.initializeIconTheme(StandardPaths.writableLocation(StandardPaths.HomeLocation));
+        
+        // If pinnedOnStartup is true, set autoHide to false
+        if (ConfigOptions.dock.pinnedOnStartup) {
+            autoHide = false
+        }
         
         // Debug: Show what's in pinnedApps
         // console.log("[DOCK DEBUG] Dock component completed")

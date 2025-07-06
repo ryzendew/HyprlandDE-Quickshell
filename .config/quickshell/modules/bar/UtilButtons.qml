@@ -23,6 +23,7 @@ Rectangle {
 
         CircleUtilButton {
             Layout.alignment: Qt.AlignVCenter
+            visible: ConfigOptions.bar.utilButtons.showScreenSnip
             onClicked: Hyprland.dispatch("exec hyprshot --freeze --clipboard-only --mode region --silent")
 
             MaterialSymbol {
@@ -35,28 +36,60 @@ Rectangle {
 
         }
 
-        // CircleUtilButton {
-        //     Layout.alignment: Qt.AlignVCenter
-        //     onClicked: Hyprland.dispatch("exec hyprpicker -a")
+        CircleUtilButton {
+            Layout.alignment: Qt.AlignVCenter
+            visible: ConfigOptions.bar.utilButtons.showColorPicker
+            onClicked: Hyprland.dispatch("exec hyprpicker -a")
 
-        //     MaterialSymbol {
-        //         horizontalAlignment: Qt.AlignHCenter
-        //         fill: 1
-        //         text: "colorize"
-        //         iconSize: Appearance.font.pixelSize.large
-        //         color: Appearance.colors.colOnLayer2
-        //     }
+            MaterialSymbol {
+                horizontalAlignment: Qt.AlignHCenter
+                fill: 1
+                text: "colorize"
+                iconSize: Appearance.font.pixelSize.large
+                color: Appearance.colors.colOnLayer2
+            }
 
-        // }
+        }
 
         CircleUtilButton {
             Layout.alignment: Qt.AlignVCenter
+            visible: ConfigOptions.bar.utilButtons.showKeyboardToggle
             onClicked: Hyprland.dispatch("global quickshell:oskToggle")
 
             MaterialSymbol {
                 horizontalAlignment: Qt.AlignHCenter
                 fill: 0
                 text: "keyboard"
+                iconSize: Appearance.font.pixelSize.large
+                color: Appearance.colors.colOnLayer2
+            }
+
+        }
+
+        CircleUtilButton {
+            Layout.alignment: Qt.AlignVCenter
+            visible: ConfigOptions.bar.utilButtons.showMicToggle
+            onClicked: Hyprland.dispatch("global quickshell:micToggle")
+
+            MaterialSymbol {
+                horizontalAlignment: Qt.AlignHCenter
+                fill: 0
+                text: "mic"
+                iconSize: Appearance.font.pixelSize.large
+                color: Appearance.colors.colOnLayer2
+            }
+
+        }
+
+        CircleUtilButton {
+            Layout.alignment: Qt.AlignVCenter
+            visible: ConfigOptions.bar.utilButtons.showDarkModeToggle
+            onClicked: Hyprland.dispatch("global quickshell:toggleDarkMode")
+
+            MaterialSymbol {
+                horizontalAlignment: Qt.AlignHCenter
+                fill: 0
+                text: "dark_mode"
                 iconSize: Appearance.font.pixelSize.large
                 color: Appearance.colors.colOnLayer2
             }

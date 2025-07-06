@@ -244,6 +244,17 @@ Scope {
                             
                             QuickToggleButton {
                                 toggled: false
+                                buttonIcon: "settings"
+                                onClicked: {
+                                    Hyprland.dispatch("global quickshell:settingsOpen")
+                                }
+                                StyledToolTip {
+                                    content: qsTr("Settings")
+                                }
+                            }
+                            
+                            QuickToggleButton {
+                                toggled: false
                                 buttonIcon: "power_settings_new"
                                 onClicked: {
                                     Hyprland.dispatch("global quickshell:sessionOpen")

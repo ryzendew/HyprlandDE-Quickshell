@@ -30,10 +30,13 @@ Button {
     property var parentGroup: root.parent
     property int clickIndex: parentGroup?.clickIndex ?? -1
 
-    Layout.fillWidth: (clickIndex - 1 <= parentGroup.children.indexOf(root) && parentGroup.children.indexOf(root) <= clickIndex + 1)
-    Layout.fillHeight: (clickIndex - 1 <= parentGroup.children.indexOf(root) && parentGroup.children.indexOf(root) <= clickIndex + 1)
-    implicitWidth: (root.down && bounce) ? clickedWidth : baseWidth
-    implicitHeight: (root.down && bounce) ? clickedHeight : baseHeight
+    // --- Button sizing ---
+    property int horizontalTextPadding: 12
+    property int verticalTextPadding: 8
+    implicitWidth: contentItem.implicitWidth + horizontalTextPadding * 2
+    implicitHeight: contentItem.implicitHeight + verticalTextPadding * 2
+    Layout.fillWidth: false
+    Layout.fillHeight: false
     
     Behavior on implicitWidth {
         animation: Appearance.animation.clickBounce.numberAnimation.createObject(this)
@@ -47,14 +50,17 @@ Button {
         animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
     }
 
-    property color colBackground: Qt.rgba(Appearance?.colors.colLayer1Hover.r, Appearance?.colors.colLayer1Hover.g, Appearance?.colors.colLayer1Hover.b, 0.6) || "transparent"
-    property color colBackgroundHover: Qt.rgba(Appearance?.colors.colLayer1Hover.r, Appearance?.colors.colLayer1Hover.g, Appearance?.colors.colLayer1Hover.b, 0.8) ?? "#E5DFED"
-    property color colBackgroundActive: Qt.rgba(Appearance?.colors.colLayer1Active.r, Appearance?.colors.colLayer1Active.g, Appearance?.colors.colLayer1Active.b, 0.8) ?? "#D6CEE2"
-    property color colBackgroundToggled: Qt.rgba(Appearance?.colors.colPrimary.r, Appearance?.colors.colPrimary.g, Appearance?.colors.colPrimary.b, 0.8) ?? "#65558F"
-    property color colBackgroundToggledHover: Qt.rgba(Appearance?.colors.colPrimaryHover.r, Appearance?.colors.colPrimaryHover.g, Appearance?.colors.colPrimaryHover.b, 0.8) ?? "#77699C"
-    property color colBackgroundToggledActive: Qt.rgba(Appearance?.colors.colPrimaryActive.r, Appearance?.colors.colPrimaryActive.g, Appearance?.colors.colPrimaryActive.b, 0.8) ?? "#D6CEE2"
+    // Material 4 (Material You) color logic
+    property color colBackground: Appearance.m3colors.m3surfaceContainerLow
+    property color colBackgroundHover: Appearance.m3colors.m3surfaceVariant
+    property color colBackgroundActive: Appearance.m3colors.m3surfaceVariant
+    property color colBackgroundToggled: Appearance.m3colors.m3primaryContainer
+    property color colBackgroundToggledHover: Appearance.m3colors.m3primaryContainer
+    property color colBackgroundToggledActive: Appearance.m3colors.m3primaryContainer
 
-    property real radius: root.down ? root.buttonRadiusPressed : root.buttonRadius
+    property color borderColor: root.toggled ? Appearance.m3colors.m3primary : (root.hovered ? Appearance.m3colors.m3outline : Appearance.m3colors.m3outlineVariant)
+    property real borderWidth: root.toggled ? 2 : 1
+    property real radius: 12
     property color color: root.enabled ? (root.toggled ? 
         (root.down ? colBackgroundToggledActive : 
             root.hovered ? colBackgroundToggledHover : 
@@ -98,18 +104,53 @@ Button {
         }
     }
 
+    // Modern pill button background
     background: Rectangle {
         id: buttonBackground
+        anchors.fill: parent
         radius: root.radius
-        implicitHeight: 50
-
         color: root.color
-        Behavior on color {
-            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+        border.color: root.borderColor
+        border.width: root.borderWidth
+        layer.enabled: root.toggled
+        layer.effect: DropShadow {
+            anchors.fill: parent
+            horizontalOffset: 0
+            verticalOffset: 2
+            radius: 12
+            samples: 32
+            color: Qt.rgba(Appearance.m3colors.m3shadow.r, Appearance.m3colors.m3shadow.g, Appearance.m3colors.m3shadow.b, root.toggled ? 0.18 : 0.0)
         }
+        Behavior on color { animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this) }
+        Behavior on border.color { animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this) }
+        Behavior on border.width { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
     }
 
     contentItem: StyledText {
         text: root.buttonText
+        font.pixelSize: Appearance.font.pixelSize.normal + 2
+        font.weight: Font.DemiBold
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color: root.toggled ? Appearance.m3colors.m3onPrimaryContainer : Appearance.m3colors.m3onSurfaceVariant
+    }
+
+    // Ripple effect on press
+    TapHandler {
+        acceptedButtons: Qt.LeftButton
+        onTapped: root.clicked()
+        onPressedChanged: if (pressed) ripple.start()
+    }
+    Rectangle {
+        id: ripple
+        anchors.fill: parent
+        radius: parent.radius
+        color: Qt.rgba(Appearance.m3colors.m3primary.r, Appearance.m3colors.m3primary.g, Appearance.m3colors.m3primary.b, 0.08)
+        opacity: 0
+        Behavior on opacity { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
+        function start() {
+            opacity = 0.5
+            Qt.callLater(() => opacity = 0)
+        }
     }
 }

@@ -22,7 +22,6 @@ Scope {
     readonly property int barHeight: Appearance.sizes.barHeight - 4
     readonly property int barCenterSideModuleWidth: Appearance.sizes.barCenterSideModuleWidth
     readonly property int osdHideMouseMoveThreshold: 20
-    property bool showBarBackground: ConfigOptions.bar.showBackground
     property bool hyprlandAvailable: true
 
     // Helper function to safely dispatch Hyprland commands
@@ -103,6 +102,8 @@ Scope {
 
         PanelWindow {
             id: barRoot
+            implicitHeight: barHeight
+            exclusiveZone: barHeight
 
             property ShellScreen modelData
             property var brightnessMonitor: Brightness.getMonitorForScreen(modelData)
@@ -114,8 +115,6 @@ Scope {
                     Appearance.sizes.barCenterSideModuleWidth
 
             screen: modelData
-            implicitHeight: barHeight
-            exclusiveZone: showBarBackground ? barHeight : (barHeight -4)
             mask: Region {
                 item: barContent
             }
@@ -135,12 +134,15 @@ Scope {
                 anchors.top: parent.top
                 height: barHeight
                 radius: 0
-                color: showBarBackground ? Qt.rgba(
+                color: Qt.rgba(
                     Appearance.colors.colLayer0.r,
                     Appearance.colors.colLayer0.g,
                     Appearance.colors.colLayer0.b,
                     0.55
-                ) : "transparent"
+                )
+                anchors.margins: 0
+                layer.enabled: true
+                layer.smooth: true
                     
                 Behavior on color {
                     ColorAnimation {
@@ -156,6 +158,8 @@ Scope {
                     anchors.bottom: parent.bottom
                     height: 1
                     color: Qt.rgba(1, 1, 1, 0.12)
+                    layer.enabled: true
+                    layer.smooth: true
                 }
                 
                 MouseArea {
@@ -225,6 +229,7 @@ Scope {
                                     height: 22
                                     source: "root:/logo/Arch-linux-logo.png"
                                     fillMode: Image.PreserveAspectFit
+                                    smooth: true
                                 }
                                 
                                 MouseArea {
@@ -566,6 +571,7 @@ Scope {
                             Item {
                                 width: 120 // Reserve more space for weather
                                 Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
+                                visible: ConfigOptions.bar.weather.enable
                                 BarComponents.Weather {
                                     anchors.centerIn: parent
                                     weatherLocation: "Halifax"

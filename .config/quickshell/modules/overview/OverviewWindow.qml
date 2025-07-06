@@ -107,5 +107,27 @@ Item { // Window
                 }
             }
         }
+
+        // Xwayland indicator
+        Rectangle {
+            visible: root.indicateXWayland
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 4
+            width: 12
+            height: 12
+            radius: 6
+            color: Appearance.colors.colPrimary
+            border.width: 1
+            border.color: Appearance.colors.colOnLayer1
+
+            StyledText {
+                anchors.centerIn: parent
+                text: "X"
+                font.pixelSize: 8
+                font.weight: Font.Bold
+                color: Appearance.colors.colOnLayer1
+            }
+        }
     }
 }

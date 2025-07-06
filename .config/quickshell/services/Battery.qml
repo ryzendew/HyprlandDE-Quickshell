@@ -101,6 +101,16 @@ Singleton {
         }
     }
     
+    // Automatic suspend functionality
+    onIsSuspendingChanged: {
+        if (available && isSuspending && !isCharging && ConfigOptions.battery.automaticSuspend) {
+            console.log(`[BATTERY] Automatic suspend triggered at ${Math.round(percentage * 100)}%`)
+            Hyprland.dispatch(`exec notify-send "Automatic suspend" "Battery at ${Math.round(percentage * 100)}% - suspending system" -u critical -a "Shell"`)
+            // Trigger system suspend
+            Hyprland.dispatch(`exec systemctl suspend`)
+        }
+    }
+    
     // Monitor battery health
     onBatteryHealthChanged: {
         if (batteryHealth < 80 && available) {

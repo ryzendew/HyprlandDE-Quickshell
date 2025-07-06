@@ -12,6 +12,7 @@ import "./modules/onScreenDisplay/"
 import "./modules/onScreenKeyboard/"
 import "./modules/overview/"
 import "./modules/session/"
+import "./modules/settings/"
 import "./modules/sidebarRight/"
 import "./modules/hyprmenu/"
 import QtQuick
@@ -21,6 +22,8 @@ import QtQuick.Window
 import Quickshell
 import "./services/"
 
+// AI DISABLED - User requested complete removal of AI functionality
+
 ShellRoot {
     id: root
     
@@ -28,7 +31,7 @@ ShellRoot {
     // no unnecessary stuff will take up memory if you decide to only use, say, the overview.
     property bool enableBar: true
     property bool enableCheatsheet: true
-    property bool enableDock: true
+    property bool enableDock: ConfigOptions.dock.enable
     property bool enableMediaControls: true
     property bool enableNotificationPopup: true
     property bool enableOnScreenDisplayBrightness: true
@@ -38,6 +41,7 @@ ShellRoot {
     property bool enableOverview: true
     property bool enableReloadPopup: true
     property bool enableSession: true
+    property bool enableSettings: true
     property bool enableSidebarRight: true
     property bool enableHyprMenu: true
 
@@ -71,6 +75,7 @@ ShellRoot {
     Loader { active: enableOverview; sourceComponent: Overview {} }
     Loader { active: enableReloadPopup; sourceComponent: ReloadPopup {} }
     Loader { active: enableSession; sourceComponent: Session {} }
+    Loader { active: enableSettings; sourceComponent: Settings {} }
     Loader { active: enableSidebarRight; sourceComponent: SidebarRight {} }
     Loader { active: enableHyprMenu; sourceComponent: HyprMenu {} }
 }

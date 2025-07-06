@@ -16,10 +16,8 @@ Singleton {
     property string syntaxHighlightingTheme
 
     // [!] Enabling transparency can affect readability when using light theme.
-    property real transparency: 0
-    property real contentTransparency: 0
-    // property real transparency: 0.15
-    // property real contentTransparency: 0.5
+    property real transparency: ConfigOptions?.appearance?.transparency ? (m3colors.darkmode ? 0.1 : 0.07) : 0
+    property real contentTransparency: ConfigOptions?.appearance?.transparency ? 0.55 : 0
 
     m3colors: QtObject {
         property bool darkmode: true
@@ -143,6 +141,7 @@ Singleton {
 
     rounding: QtObject {
         property int unsharpen: 2
+        property int unsharpenmore: 6
         property int verysmall: 8
         property int small: 12
         property int normal: 17

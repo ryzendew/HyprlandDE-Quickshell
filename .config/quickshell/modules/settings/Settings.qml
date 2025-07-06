@@ -1,0 +1,453 @@
+import "root:/modules/common"
+import "root:/modules/common/widgets"
+import "root:/modules/common/functions/color_utils.js" as ColorUtils
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+// import QtQuick.Effects
+import Quickshell
+import Quickshell.Io
+import Quickshell.Widgets
+import Quickshell.Wayland
+import Quickshell.Hyprland
+
+Scope {
+    id: root
+    property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
+
+    Loader {
+        id: settingsLoader
+        active: false
+
+        sourceComponent: PanelWindow {
+            id: settingsRoot
+            visible: settingsLoader.active
+            
+            function hide() {
+                settingsLoader.active = false
+            }
+
+            exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.namespace: "quickshell:settings"
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+            color: "transparent"
+
+            anchors {
+                top: true
+                left: true
+                right: true
+            }
+
+            implicitWidth: root.focusedScreen?.width ?? 0
+            implicitHeight: root.focusedScreen?.height ?? 0
+
+            // Backdrop blur effect
+            Rectangle {
+                anchors.fill: parent
+                color: ColorUtils.transparentize(Appearance.m3colors.m3scrim, 0.4)
+                
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: settingsRoot.hide()
+                }
+            }
+
+            // Main settings window
+            Rectangle {
+                id: settingsWindow
+                anchors.centerIn: parent
+                width: Math.min(parent.width - 80, 1400)
+                height: Math.min(parent.height - 80, 900)
+                
+                radius: Appearance.rounding.verylarge
+                color: Appearance.colors.colLayer0
+                
+                // Modern elevation with subtle shadow
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: -4
+                    radius: parent.radius + 2
+                    color: ColorUtils.transparentize(Appearance.m3colors.m3shadow, 0.08)
+                    z: -1
+                }
+
+                // Subtle border
+                border.width: 1
+                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.1)
+
+                Keys.onPressed: (event) => {
+                    if (event.key === Qt.Key_Escape) {
+                        settingsRoot.hide();
+                    }
+                }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 0
+                    spacing: 0
+
+                    // Sidebar navigation
+                    Rectangle {
+                        Layout.preferredWidth: 300
+                        Layout.fillHeight: true
+                        color: ColorUtils.mix(Appearance.colors.colLayer0, Appearance.colors.colLayer1, 0.3)
+                        radius: Appearance.rounding.verylarge
+                        
+                        Rectangle {
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: parent.radius
+                            color: parent.color
+                        }
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 32
+                            spacing: 24
+
+                            // Header
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+
+                                StyledText {
+                                    text: "QuickShell Settings"
+                                    font.family: Appearance.font.family.title
+                                    font.pixelSize: 26
+                                    font.weight: Font.Bold
+                                    color: Appearance.colors.colOnLayer0
+                                }
+
+                                StyledText {
+                                    text: "Customize your desktop experience"
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    color: Appearance.colors.colSubtext
+                                    opacity: 0.9
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 1
+                                color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.2)
+                            }
+
+                            // Navigation items
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+
+                                Repeater {
+                                    model: [
+                                        {
+                                            "id": "interface",
+                                            "icon": "tune",
+                                            "title": "Interface",
+                                            "subtitle": "Bar, dock, workspaces & layout",
+                                            "index": 0
+                                        },
+                                        {
+                                            "id": "appearance", 
+                                            "icon": "palette",
+                                            "title": "Appearance",
+                                            "subtitle": "Colors, themes & visual effects",
+                                            "index": 1
+                                        },
+                                        {
+                                            "id": "system",
+                                            "icon": "settings",
+                                            "title": "System",
+                                            "subtitle": "Audio, battery & networking",
+                                            "index": 2
+                                        },
+                                        {
+                                            "id": "about",
+                                            "icon": "info",
+                                            "title": "About",
+                                            "subtitle": "System info & documentation",
+                                            "index": 3
+                                        }
+                                    ]
+
+                                    delegate: Rectangle {
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 80
+                                        radius: Appearance.rounding.normal
+                                        color: settingsWindow.selectedTab === modelData.index ? 
+                                               Appearance.colors.colPrimaryContainer :
+                                               navMouseArea.containsMouse ? 
+                                               Appearance.colors.colLayer1Hover : 
+                                               "transparent"
+                                        
+                                        border.width: settingsWindow.selectedTab === modelData.index ? 2 : 0
+                                        border.color: Appearance.colors.colPrimary
+
+                                        MouseArea {
+                                            id: navMouseArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            onClicked: settingsWindow.selectedTab = modelData.index
+                                        }
+
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.margins: 20
+                                            spacing: 16
+
+                                            Rectangle {
+                                                Layout.preferredWidth: 44
+                                                Layout.preferredHeight: 44
+                                                radius: Appearance.rounding.normal
+                                                color: settingsWindow.selectedTab === modelData.index ?
+                                                       Appearance.colors.colPrimary :
+                                                       ColorUtils.transparentize(Appearance.colors.colPrimary, 0.1)
+
+                                                MaterialSymbol {
+                                                    anchors.centerIn: parent
+                                                    text: modelData.icon
+                                                    iconSize: 22
+                                                    color: "#000"
+                                                }
+                                            }
+
+                                            ColumnLayout {
+                                                Layout.fillWidth: true
+                                                spacing: 4
+
+                                                StyledText {
+                                                    text: modelData.title
+                                                    font.pixelSize: Appearance.font.pixelSize.normal
+                                                    font.weight: Font.Medium
+                                                    color: settingsWindow.selectedTab === modelData.index ?
+                                                           Appearance.colors.colPrimary :
+                                                           Appearance.colors.colOnLayer0
+                                                }
+
+                                                StyledText {
+                                                    text: modelData.subtitle
+                                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                                    color: Appearance.colors.colSubtext
+                                                    opacity: 0.9
+                                                    wrapMode: Text.WordWrap
+                                                    Layout.fillWidth: true
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item { Layout.fillHeight: true }
+
+                            // Footer with close button
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 56
+                                radius: Appearance.rounding.normal
+                                color: closeMouseArea.containsMouse ? 
+                                       Appearance.colors.colLayer2Hover : 
+                                       Appearance.colors.colLayer2
+                                border.width: 1
+                                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.2)
+
+                                MouseArea {
+                                    id: closeMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: settingsRoot.hide()
+                                }
+
+                                RowLayout {
+                                    anchors.centerIn: parent
+                                    spacing: 12
+
+                                    MaterialSymbol {
+                                        text: "close"
+                                        iconSize: 20
+                                        color: Appearance.colors.colOnLayer0
+                                    }
+
+                                    StyledText {
+                                        text: "Close Settings"
+                                        font.pixelSize: Appearance.font.pixelSize.normal
+                                        font.weight: Font.Medium
+                                        color: Appearance.colors.colOnLayer0
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Content area
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: "transparent"
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 40
+                            spacing: 32
+
+                            // Page header
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 20
+
+                                Rectangle {
+                                    Layout.preferredWidth: 56
+                                    Layout.preferredHeight: 56
+                                    radius: Appearance.rounding.normal
+                                    color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.1)
+
+                                    MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        text: {
+                                            switch(settingsWindow.selectedTab) {
+                                                case 0: return "tune";
+                                                case 1: return "palette";
+                                                case 2: return "settings";
+                                                case 3: return "info";
+                                                default: return "tune";
+                                            }
+                                        }
+                                        iconSize: 28
+                                        color: Appearance.colors.colPrimary
+                                    }
+                                }
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 6
+
+                                    StyledText {
+                                        text: {
+                                            switch(settingsWindow.selectedTab) {
+                                                case 0: return "Interface Settings";
+                                                case 1: return "Appearance Settings";
+                                                case 2: return "System Settings";
+                                                case 3: return "About QuickShell";
+                                                default: return "Interface Settings";
+                                            }
+                                        }
+                                        font.family: Appearance.font.family.title
+                                        font.pixelSize: 32
+                                        font.weight: Font.Bold
+                                        color: Appearance.colors.colOnLayer0
+                                    }
+
+                                    StyledText {
+                                        text: {
+                                            switch(settingsWindow.selectedTab) {
+                                                case 0: return "Configure your desktop interface and behavior";
+                                                case 1: return "Customize colors, themes and visual effects";
+                                                case 2: return "Manage system services and hardware settings";
+                                                case 3: return "System information and help resources";
+                                                default: return "Configure your desktop interface and behavior";
+                                            }
+                                        }
+                                        font.pixelSize: Appearance.font.pixelSize.normal
+                                        color: Appearance.colors.colSubtext
+                                        opacity: 0.9
+                                    }
+                                }
+                            }
+
+                            // Content area with modern scroll view
+                            ScrollView {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                contentWidth: availableWidth
+                                clip: true
+
+                                ScrollBar.vertical: ScrollBar {
+                                    policy: ScrollBar.AsNeeded
+                                    width: 12
+                                    background: Rectangle {
+                                        color: "transparent"
+                                        radius: 6
+                                    }
+                                    contentItem: Rectangle {
+                                        radius: 6
+                                        color: parent.pressed ? 
+                                               Appearance.colors.colPrimary :
+                                               ColorUtils.transparentize(Appearance.colors.colSubtext, 0.4)
+                                    }
+                                }
+
+                                Loader {
+                                    width: parent.width
+                                    sourceComponent: {
+                                        switch(settingsWindow.selectedTab) {
+                                            case 0: return interfaceConfigComponent;
+                                            case 1: return styleConfigComponent;
+                                            case 2: return servicesConfigComponent;
+                                            case 3: return aboutComponent;
+                                            default: return interfaceConfigComponent;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                property int selectedTab: 0
+            }
+
+            // Components for each settings page
+            Component { 
+                id: interfaceConfigComponent
+                InterfaceConfig {}
+            }
+            Component { 
+                id: styleConfigComponent
+                StyleConfig {}
+            }
+            Component { 
+                id: servicesConfigComponent
+                ServicesConfig {}
+            }
+            Component { 
+                id: aboutComponent
+                About {}
+            }
+        }
+    }
+
+    IpcHandler {
+        target: "settings"
+
+        function toggle(): void {
+            settingsLoader.active = !settingsLoader.active;
+        }
+
+        function close(): void {
+            settingsLoader.active = false;
+        }
+
+        function open(): void {
+            settingsLoader.active = true;
+        }
+    }
+
+    GlobalShortcut {
+        name: "settingsToggle"
+        description: qsTr("Toggles settings dialog on press")
+
+        onPressed: {
+            settingsLoader.active = !settingsLoader.active;
+        }
+    }
+
+    GlobalShortcut {
+        name: "settingsOpen"
+        description: qsTr("Opens settings dialog on press")
+
+        onPressed: {
+            settingsLoader.active = true;
+        }
+    }
+} 

@@ -76,11 +76,140 @@ Item {
     implicitWidth: rowLayout.implicitWidth + rowLayout.spacing * 2
     implicitHeight: 40
 
+
+
+    // Enhanced position tracking with fallbacks
+    property real displayPosition: 0
+    property real displayLength: 0
+    property string currentTrackId: ""
+    property real lastValidPosition: 0
+    property real positionStartTime: 0
+    
+    // Track current song to detect changes
+    function updateTrackId() {
+        var newTrackId = (activePlayer?.trackTitle || "") + "|" + (activePlayer?.trackArtist || "")
+        if (newTrackId !== currentTrackId) {
+            currentTrackId = newTrackId
+            displayPosition = 0
+            lastValidPosition = 0
+            positionStartTime = Date.now()
+            console.log("[BarMedia] New track detected, resetting position")
+        }
+    }
+    
+    // Enhanced position update timer with fallbacks
     Timer {
+        id: positionTracker
         running: activePlayer?.playbackState == MprisPlaybackState.Playing
-        interval: 1000
+        interval: 100
         repeat: true
-        onTriggered: activePlayer.positionChanged()
+        onTriggered: {
+            if (!activePlayer) return
+            
+            updateTrackId()
+            
+            var mprisPosition = activePlayer.position || 0
+            var mprisLength = activePlayer.length || 0
+            var currentTime = Date.now()
+            
+            // Update display length with fallback
+            displayLength = mprisLength > 0 ? mprisLength : displayLength
+            
+            // Fallback position calculation if MPRIS position is invalid
+            var calculatedPosition = mprisPosition
+            
+            // Check if MPRIS position is valid and different from our current display
+            var positionDifference = Math.abs(mprisPosition - displayPosition)
+            var isValidPosition = mprisPosition >= 0 && (mprisLength <= 0 || mprisPosition <= mprisLength)
+            
+            if (isValidPosition && positionDifference > 1) {
+                // MPRIS position is valid and significantly different - likely seeking
+                calculatedPosition = mprisPosition
+                lastValidPosition = mprisPosition
+                positionStartTime = currentTime
+            } else if (mprisPosition <= 0 || mprisPosition > mprisLength) {
+                // MPRIS position seems invalid, calculate from elapsed time
+                var elapsedSeconds = (currentTime - positionStartTime) / 1000
+                calculatedPosition = lastValidPosition + elapsedSeconds
+            } else if (isValidPosition) {
+                // MPRIS position is valid but close to current - update fallback tracking
+                lastValidPosition = mprisPosition
+                positionStartTime = currentTime
+                calculatedPosition = mprisPosition
+            }
+            
+            // Ensure position is within bounds
+            calculatedPosition = Math.max(0, calculatedPosition)
+            if (displayLength > 0) {
+                calculatedPosition = Math.min(calculatedPosition, displayLength)
+            }
+            
+            // Reset to 0 if we're at the end or beyond
+            if (displayLength > 0 && calculatedPosition >= displayLength - 0.5) {
+                calculatedPosition = 0
+                lastValidPosition = 0
+                positionStartTime = currentTime
+            }
+            
+            displayPosition = calculatedPosition
+        }
+    }
+    
+    // Additional aggressive position polling timer for seeking detection
+    Timer {
+        id: seekingDetector
+        running: activePlayer != null
+        interval: 50  // Very fast polling for seeking detection
+        repeat: true
+        onTriggered: {
+            if (!activePlayer) return
+            
+            // Force MPRIS position update to trigger onPositionChanged
+            activePlayer.positionChanged()
+            
+            var currentMprisPosition = activePlayer.position || 0
+            var trackLength = activePlayer.length || 0
+            
+            // Check for significant position jumps that indicate seeking
+            var positionJump = Math.abs(currentMprisPosition - lastValidPosition)
+            var isValidJump = currentMprisPosition >= 0 && (trackLength <= 0 || currentMprisPosition <= trackLength)
+            
+            // If we detect a jump of more than 3 seconds, it's likely seeking
+            if (isValidJump && positionJump > 3) {
+                console.log("[BarMedia] Seeking detected! Jump from", lastValidPosition, "to", currentMprisPosition)
+                displayPosition = Math.max(0, currentMprisPosition)
+                lastValidPosition = currentMprisPosition
+                positionStartTime = Date.now()
+            }
+        }
+    }
+    
+    // Reset position when playback state changes
+    Connections {
+        target: activePlayer
+        function onPlaybackStateChanged() {
+            if (activePlayer?.playbackState == MprisPlaybackState.Playing) {
+                positionStartTime = Date.now()
+            }
+        }
+        function onPositionChanged() {
+            // Update our fallback tracking when we get valid MPRIS position
+            var newPosition = activePlayer?.position || 0
+            var trackLength = activePlayer?.length || 0
+            
+            // Check if this is a significant position change (seeking)
+            var positionDifference = Math.abs(newPosition - displayPosition)
+            var isValidPosition = newPosition >= 0 && (trackLength <= 0 || newPosition <= trackLength)
+            
+            // Be more sensitive to position changes - even 1 second could be seeking
+            if (isValidPosition && (positionDifference > 0.5 || newPosition != lastValidPosition)) {
+                // Immediately update display position for any significant change
+                displayPosition = Math.max(0, newPosition)
+                lastValidPosition = newPosition
+                positionStartTime = Date.now()
+                // console.log("[BarMedia] Position changed - updated to:", displayPosition, "diff:", positionDifference)
+            }
+        }
     }
 
     // Timer to retry album art download if it's missing
@@ -159,35 +288,7 @@ Item {
         }
     }
 
-    // Track the current song to detect changes
-    property string currentTrackId: activePlayer ? (activePlayer.trackTitle + "|" + activePlayer.trackArtist) : ""
-    property real displayPosition: 0
-    
-    onCurrentTrackIdChanged: {
-        // Reset display position when song changes
-        displayPosition = 0
-    }
-    
-    // Update display position, but reset to 0 when song changes or ends
-    Timer {
-        id: positionUpdateTimer
-        running: activePlayer?.playbackState == MprisPlaybackState.Playing
-        interval: 100
-        repeat: true
-        onTriggered: {
-            if (activePlayer) {
-                var actualPosition = activePlayer.position || 0
-                var trackLength = activePlayer.length || 0
-                
-                // If position is very close to end or greater than length, reset to 0
-                if (actualPosition >= trackLength - 1 || actualPosition >= trackLength) {
-                    displayPosition = 0
-                } else {
-                    displayPosition = actualPosition
-                }
-            }
-        }
-    }
+
 
     Connections {
         target: activePlayer
@@ -200,6 +301,9 @@ Item {
             displayPosition = 0
             // Also reset download state for new track
             root.downloaded = false
+            // Reset position tracking
+            lastValidPosition = 0
+            positionStartTime = Date.now()
         }
         function onTrackAlbumChanged() {
             // Sometimes album art URL is updated when album info changes
@@ -213,6 +317,12 @@ Item {
             console.log("[BarMedia] Track artist changed, checking for art URL updates")
             if (activePlayer?.trackArtUrl && activePlayer.trackArtUrl !== root.artUrl) {
                 root.artUrl = activePlayer.trackArtUrl
+            }
+        }
+        function onLengthChanged() {
+            // Update display length when we get valid length data
+            if (activePlayer?.length > 0) {
+                displayLength = activePlayer.length
             }
         }
     }
@@ -329,7 +439,11 @@ Item {
                     id: timeDisplay
                 color: Appearance.colors.colOnLayer1
                     opacity: 0.6
-                    text: formatTime(displayPosition) + " / " + formatTime(Math.max(0, (activePlayer?.length || 0) - 1))
+                    text: {
+                        var currentTime = formatTime(Math.max(0, displayPosition))
+                        var totalTime = formatTime(Math.max(0, displayLength))
+                        return currentTime + " / " + totalTime
+                    }
                 font.pixelSize: Appearance.font.pixelSize.smaller
                     visible: root.activePlayer
                 }
@@ -355,7 +469,7 @@ Item {
                     id: progressBarFill
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width * Math.max(0, Math.min(1, displayPosition / Math.max(1, activePlayer?.length || 1)))
+                    width: parent.width * Math.max(0, Math.min(1, displayPosition / Math.max(1, displayLength)))
                     height: parent.height
                     radius: parent.radius
                     color: Appearance.m3colors.m3primary

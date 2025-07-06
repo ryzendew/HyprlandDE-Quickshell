@@ -4,12 +4,21 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 Singleton {
-    property QtObject ai: QtObject {
-        property string systemPrompt: qsTr("Use casual tone. No user knowledge is to be assumed except basic Linux literacy. Be brief and concise: When explaining concepts, use bullet points (prefer minus sign (-) over asterisk (*)) and highlight keywords in bold to pinpoint the main concepts instead of long paragraphs. You are also encouraged to split your response with h2 headers, each header title beginning with an emoji, like `## 🐧 Linux`. When making changes to the user's config, you must get the config to know what values there are before setting.")
+    property QtObject policies: QtObject {
+        property int weeb: 0 // 0: No | 1: Yes | 2: Closet  
+    }
+
+    property QtObject windows: QtObject {
+        property bool showTitlebar: true
+        property bool centerTitle: false
     }
 
     property QtObject appearance: QtObject {
-        property int fakeScreenRounding: 2 // 0: None | 1: Always | 2: When not fullscreen
+        property int fakeScreenRounding: 0 // 0: None | 1: Always | 2: When not fullscreen
+        property bool transparency: false
+        property QtObject palette: QtObject {
+            property string type: "auto"
+        }
     }
 
     property QtObject audio: QtObject { // Values in %
@@ -34,13 +43,11 @@ Singleton {
         property int low: 20
         property int critical: 5
         property int suspend: 2
+        property bool automaticSuspend: false
     }
 
     property QtObject bar: QtObject {
         property bool bottom: false // Instead of top
-        property bool borderless: false // true for no grouping of items
-        property string topLeftIcon: "spark" // Options: distro, spark
-        property bool showBackground: true
         property QtObject resources: QtObject {
             property bool alwaysShowSwap: true
             property bool alwaysShowCpu: false
@@ -49,6 +56,17 @@ Singleton {
             property int shown: 10
             property bool alwaysShowNumbers: false
             property int showNumberDelay: 150 // milliseconds
+            property bool showAppIcons: true
+        }
+        property QtObject utilButtons: QtObject {
+            property bool showScreenSnip: true
+            property bool showColorPicker: true
+            property bool showMicToggle: true
+            property bool showKeyboardToggle: true
+            property bool showDarkModeToggle: true
+        }
+        property QtObject weather: QtObject {
+            property bool enable: true
         }
     }
 
@@ -57,6 +75,7 @@ Singleton {
         property real hoverRegionHeight: 3
         property bool pinnedOnStartup: false
         property bool hoverToReveal: false // When false, only reveals on empty workspace
+        property bool enable: true
         property list<string> pinnedApps: [ // IDs of pinned entries
             "org.kde.dolphin",
             "kitty",
@@ -88,6 +107,8 @@ Singleton {
         property real scale: 0.18 // Relative to screen size
         property real numOfRows: 2
         property real numOfCols: 5
+        property real rows: 2 // Alias for settings compatibility
+        property real columns: 5 // Alias for settings compatibility
         property bool showXwaylandIndicator: true
     }
 
@@ -135,11 +156,12 @@ Singleton {
         property bool enabled: false // Master switch for all logging
         property bool debug: false
         property bool info: false
-        property bool warning: false
-        property bool error: false // Disable all logs including errors
+        property bool warning: true // Keep warnings for important issues
+        property bool error: true // Keep errors for debugging
         property bool suppressIconWarnings: true // Suppress icon loading warnings
         property bool suppressQmlWarnings: true // Suppress QML warnings
         property bool suppressHyprlandWarnings: true // Suppress Hyprland dispatch warnings
+        property bool suppressMediaDebug: true // Suppress media player debug spam
     }
 
 }
