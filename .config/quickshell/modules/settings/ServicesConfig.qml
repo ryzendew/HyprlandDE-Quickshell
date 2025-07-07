@@ -71,9 +71,9 @@ ColumnLayout {
         ConfigSwitch {
                     text: ""
             checked: Config.options.audio.protection.enable
-                            onCheckedChanged: {
+            onCheckedChanged: {
                         ConfigLoader.setConfigValue("audio.protection.enable", checked);
-                    }
+            }
                 }
 
                 StyledText {
@@ -438,9 +438,9 @@ ColumnLayout {
             from: 100
             to: 10000
             stepSize: 100
-                            onValueChanged: {
+            onValueChanged: {
                         ConfigLoader.setConfigValue("resources.updateInterval", value);
-                }
+            }
         }
 
                 StyledText {

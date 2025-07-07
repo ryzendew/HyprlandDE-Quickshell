@@ -22,7 +22,7 @@ Singleton {
     property bool firstLoad: true
     property bool preventNextLoad: false
     property var preventNextNotification: false
-    
+
     // Pending changes tracking for manual save
     property var pendingChanges: ({})
     property bool hasPendingChanges: false

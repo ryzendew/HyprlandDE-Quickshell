@@ -4,7 +4,6 @@
 
 import "./modules/common/"
 import "./modules/bar/"
-import "./modules/cheatsheet/"
 import "./modules/dock/"
 import "./modules/mediaControls/"
 import "./modules/notificationPopup/"
@@ -15,6 +14,7 @@ import "./modules/session/"
 import "./modules/settings/"
 import "./modules/sidebarRight/"
 import "./modules/hyprmenu/"
+import "./modules/cheatsheet/"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -32,7 +32,8 @@ ShellRoot {
     property bool enableBar: true
     property bool enableCheatsheet: true
     property bool enableDock: ConfigOptions.dock.enable
-    property bool enableMediaControls: true
+    property bool enableMediaControls: false
+    property bool enableSimpleMediaPlayer: true
     property bool enableNotificationPopup: true
     property bool enableOnScreenDisplayBrightness: true
     property bool enableOnScreenDisplayVolume: true
@@ -67,6 +68,7 @@ ShellRoot {
     Loader { active: enableCheatsheet; sourceComponent: Cheatsheet {} }
     Loader { active: enableDock; sourceComponent: Dock {} }
     Loader { active: enableMediaControls; sourceComponent: MediaControls {} }
+    Loader { active: enableSimpleMediaPlayer; sourceComponent: SimpleMediaPlayer {} }
     Loader { active: enableNotificationPopup; sourceComponent: NotificationPopup {} }
     Loader { active: enableOnScreenDisplayBrightness; sourceComponent: OnScreenDisplayBrightness {} }
     Loader { active: enableOnScreenDisplayVolume; sourceComponent: OnScreenDisplayVolume {} }

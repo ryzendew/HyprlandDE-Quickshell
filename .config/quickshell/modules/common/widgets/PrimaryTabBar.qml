@@ -21,6 +21,7 @@ ColumnLayout {
 
     TabBar {
         id: tabBar
+        clip: true
         Layout.fillWidth: true
         currentIndex: root.externalTrackedTab
         onCurrentIndexChanged: {

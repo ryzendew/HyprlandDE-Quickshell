@@ -14,7 +14,7 @@ COMMENT_BIND_PATTERN = "#/#"
 def get_default_config_path():
     """Get the default hyprland config path using XDG_CONFIG_HOME"""
     xdg_config_home = os.environ.get('XDG_CONFIG_HOME', os.path.expanduser('~/.config'))
-    return os.path.join(xdg_config_home, 'hypr', 'hyprland.conf')
+    return os.path.join(xdg_config_home, 'hypr', 'hyprland', 'keybinds.conf')
 
 # Global variables
 content_lines = []

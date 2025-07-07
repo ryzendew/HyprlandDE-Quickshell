@@ -2,136 +2,83 @@ import "root:/"
 import "root:/services"
 import "root:/modules/common"
 import "root:/modules/common/widgets"
-import "root:/modules/common/functions/color_utils.js" as ColorUtils
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts
-import Quickshell.Io
 import Quickshell
-import Quickshell.Widgets
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
-Scope { // Scope
-    id: root
-
-    Loader {
-        id: cheatsheetLoader
-        active: false
+Scope {
+    id: cheatsheetScope
+    
+    Variants {
+        id: cheatsheetVariants
+        model: Quickshell.screens
         
-        sourceComponent: PanelWindow { // Window
-            id: cheatsheetRoot
-            visible: cheatsheetLoader.active
+        PanelWindow {
+            id: root
+            required property var modelData
+            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.screen)
+            property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor.id)
+            screen: modelData
+            visible: GlobalStates.cheatsheetOpen
 
-            anchors {
-                top: true
-                bottom: true
-                left: true
-                right: true
-            }
-
-            function hide() {
-                cheatsheetLoader.active = false
-            }
-            exclusiveZone: 0
-            implicitWidth: cheatsheetBackground.width + Appearance.sizes.elevationMargin * 2
-            implicitHeight: cheatsheetBackground.height + Appearance.sizes.elevationMargin * 2
             WlrLayershell.namespace: "quickshell:cheatsheet"
-            // Hyprland 0.49: Focus is always exclusive and setting this breaks mouse focus grab
-            // WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+            WlrLayershell.layer: WlrLayer.Overlay
             color: "transparent"
 
             mask: Region {
-                item: cheatsheetBackground
+                item: GlobalStates.cheatsheetOpen ? cheatsheetContent : null
+            }
+            HyprlandWindow.visibleMask: Region {
+                item: GlobalStates.cheatsheetOpen ? cheatsheetContent : null
             }
 
-            HyprlandFocusGrab { // Click outside to close
-                id: grab
-                windows: [ cheatsheetRoot ]
-                active: cheatsheetRoot.visible
-                onCleared: () => {
-                    if (!active) cheatsheetRoot.hide()
-                }
+            anchors {
+                top: true
+                left: true
+                right: true
+                bottom: true
             }
 
+            // No focus grab - let it stay open until manually closed
 
-            // Background
-            StyledRectangularShadow {
-                target: cheatsheetBackground
-            }
-            Rectangle {
-                id: cheatsheetBackground
+            implicitWidth: cheatsheetContent.implicitWidth
+            implicitHeight: cheatsheetContent.implicitHeight
+
+            Item {
+                id: cheatsheetContent
+                visible: GlobalStates.cheatsheetOpen
                 anchors.centerIn: parent
-                color: Appearance.colors.colLayer0
-                radius: Appearance.rounding.windowRounding
-                property real padding: 30
-                implicitWidth: cheatsheetColumnLayout.implicitWidth + padding * 2
-                implicitHeight: cheatsheetColumnLayout.implicitHeight + padding * 2
+                width: Math.min(parent.width - 48, 1400)
+                height: Math.min(parent.height - 48, 800)
 
-                Keys.onPressed: (event) => { // Esc to close
+                Keys.onPressed: (event) => {
                     if (event.key === Qt.Key_Escape) {
-                        cheatsheetRoot.hide()
+                        GlobalStates.cheatsheetOpen = false;
                     }
                 }
 
-                RippleButton { // Close button
-                    id: closeButton
-                    focus: cheatsheetRoot.visible
-                    implicitWidth: 40
-                    implicitHeight: 40
-                    buttonRadius: Appearance.rounding.full
-                    anchors {
-                        top: parent.top
-                        right: parent.right
-                        topMargin: 20
-                        rightMargin: 20
-                    }
-
-                    onClicked: {
-                        cheatsheetRoot.hide()
-                    }
-
-                    contentItem: MaterialSymbol {
-                        anchors.centerIn: parent
-                        horizontalAlignment: Text.AlignHCenter
-                        font.pixelSize: Appearance.font.pixelSize.title
-                        text: "close"
-                    }
-                }
-
-                ColumnLayout { // Real content
-                    id: cheatsheetColumnLayout
-                    anchors.centerIn: parent
-                    spacing: 20
-
-                    StyledText {
-                        id: cheatsheetTitle
-                        Layout.alignment: Qt.AlignHCenter
-                        font.family: Appearance.font.family.title
-                        font.pixelSize: Appearance.font.pixelSize.title
-                        text: qsTr("Cheat sheet")
-                    }
-                    CheatsheetKeybinds {}
+                CheatsheetKeybinds {
+                    anchors.fill: parent
                 }
             }
-
         }
     }
 
     IpcHandler {
         target: "cheatsheet"
 
-        function toggle(): void {
-            cheatsheetLoader.active = !cheatsheetLoader.active
+        function toggle() {
+            GlobalStates.cheatsheetOpen = !GlobalStates.cheatsheetOpen
         }
-
-        function close(): void {
-            cheatsheetLoader.active = false
+        function close() {
+            GlobalStates.cheatsheetOpen = false
         }
-
-        function open(): void {
-            cheatsheetLoader.active = true
+        function open() {
+            GlobalStates.cheatsheetOpen = true
         }
     }
 
@@ -140,26 +87,7 @@ Scope { // Scope
         description: qsTr("Toggles cheatsheet on press")
 
         onPressed: {
-            cheatsheetLoader.active = !cheatsheetLoader.active;
+            GlobalStates.cheatsheetOpen = !GlobalStates.cheatsheetOpen   
         }
     }
-
-    GlobalShortcut {
-        name: "cheatsheetOpen"
-        description: qsTr("Opens cheatsheet on press")
-
-        onPressed: {
-            cheatsheetLoader.active = true;
-        }
-    }
-
-    GlobalShortcut {
-        name: "cheatsheetClose"
-        description: qsTr("Closes cheatsheet on press")
-
-        onPressed: {
-            cheatsheetLoader.active = false;
-        }
-    }
-
 }

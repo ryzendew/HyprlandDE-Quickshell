@@ -114,31 +114,132 @@ Item {
         console.log("[NotificationList] Component completed, notificationComponent valid:", notificationComponent ? "yes" : "no")
     }
 
-    Flickable { // Scrollable window
-        id: flickable
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: statusRow.top
-        contentHeight: columnLayout.height
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 8
 
-        clip: true
-        layer.enabled: true
-        layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: flickable.width
-                height: flickable.height
-                radius: Appearance.rounding.normal
+        // Notifications Section (50% height)
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: parent.height * 0.5
+            Layout.fillHeight: false
+            radius: Appearance.rounding.large
+            color: Qt.rgba(
+                Appearance.colors.colLayer1.r,
+                Appearance.colors.colLayer1.g,
+                Appearance.colors.colLayer1.b,
+                0.3
+            )
+            border.color: Qt.rgba(1, 1, 1, 0.1)
+            border.width: 1
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 6
+
+                // Header
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Item { Layout.fillWidth: true }
+
+                    StyledText {
+                        text: `${notificationWidgetList.length} notification${notificationWidgetList.length > 1 ? "s" : ""}`
+                        font.pixelSize: Appearance.font.pixelSize.tiny
+                        color: Appearance.colors.colOnLayer1
+                        opacity: 0.7
+                        visible: notificationWidgetList.length > 0
+                    }
+
+                    NotificationStatusButton {
+                        buttonIcon: "clear_all"
+                        buttonText: qsTr("Clear")
+                        onClicked: () => {
+                            Notifications.discardAllNotifications()
+                        }
+                    }
+                }
+
+                // Scrollable notifications content
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Flickable {
+                        id: flickable
+                        anchors.fill: parent
+                        contentHeight: columnLayout.height
+                        clip: true
+
+                        layer.enabled: true
+                        layer.effect: OpacityMask {
+                            maskSource: Rectangle {
+                                width: flickable.width
+                                height: flickable.height
+                                radius: Appearance.rounding.large
+                            }
+                        }
+
+                        ColumnLayout {
+                            id: columnLayout
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            spacing: 0
+
+                            // Notifications are added by the above signal handlers
+                        }
+                    }
+
+                    // Placeholder when list is empty
+                    Item {
+                        anchors.fill: flickable
+                        visible: opacity > 0
+                        opacity: (root.notificationWidgetList.length === 0) ? 1 : 0
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: Appearance.animation.menuDecel.duration
+                                easing.type: Appearance.animation.menuDecel.type
+                            }
+                        }
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 5
+
+                            // Removed MaterialSymbol icon to avoid duplicate large bell
+                            StyledText {
+                                Layout.alignment: Qt.AlignHCenter
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                color: "#FFFFFF"
+                                horizontalAlignment: Text.AlignHCenter
+                                text: qsTr("No notifications")
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        ColumnLayout { // Scrollable window content
-            id: columnLayout
-            anchors.left: parent.left
-            anchors.right: parent.right
-            spacing: 0 // The widgets themselves have margins for spacing
+        // Media Player Section (50% height)
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.fillHeight: true // Fills remaining space
+            radius: Appearance.rounding.large
+            color: Qt.rgba(
+                Appearance.colors.colLayer1.r,
+                Appearance.colors.colLayer1.g,
+                Appearance.colors.colLayer1.b,
+                0.3
+            )
+            border.color: Qt.rgba(1, 1, 1, 0.1)
+            border.width: 1
 
-            // Notifications are added by the above signal handlers
+            SimpleMediaPlayerSidebar {
+                anchors.fill: parent
+            }
         }
     }
 
@@ -156,57 +257,9 @@ Item {
             }
         }
 
-        ColumnLayout {
-            anchors.centerIn: parent
-            spacing: 5
-
-            MaterialSymbol {
-                Layout.alignment: Qt.AlignHCenter
-                iconSize: 55
-                color: "#FFFFFF"
-                text: "notifications_active"
-            }
-            StyledText {
-                Layout.alignment: Qt.AlignHCenter
-                font.pixelSize: Appearance.font.pixelSize.normal
-                color: "#FFFFFF"
-                horizontalAlignment: Text.AlignHCenter
-                text: qsTr("No notifications")
-            }
-        }
+        
+        
     }
 
-    RowLayout {
-        id: statusRow
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        StyledText {
-            Layout.margins: 10
-            Layout.bottomMargin: 5
-            Layout.alignment: Qt.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            text: `${notificationWidgetList.length} notification${notificationWidgetList.length > 1 ? "s" : ""}`
 
-            opacity: notificationWidgetList.length > 0 ? 1 : 0
-            visible: opacity > 0
-            Behavior on opacity {
-                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-            }
-        }
-
-        Item { Layout.fillWidth: true }
-
-        NotificationStatusButton {
-            Layout.alignment: Qt.AlignVCenter
-            Layout.margins: 5
-            Layout.topMargin: 10
-            buttonIcon: "clear_all"
-            buttonText: qsTr("Clear")
-            onClicked: () => {
-                Notifications.discardAllNotifications()
-            }
-        }
-    }
 }

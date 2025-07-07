@@ -322,17 +322,17 @@ Scope {
                                 Rectangle {
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: 48
-                                    radius: Appearance.rounding.normal
-                                    color: closeMouseArea.containsMouse ? 
-                                           Appearance.colors.colLayer2Hover : 
-                                           Appearance.colors.colLayer2
-                                    border.width: 1
-                                    border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.2)
+                                radius: Appearance.rounding.normal
+                                color: closeMouseArea.containsMouse ? 
+                                       Appearance.colors.colLayer2Hover : 
+                                       Appearance.colors.colLayer2
+                                border.width: 1
+                                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.2)
 
-                                    MouseArea {
-                                        id: closeMouseArea
-                                        anchors.fill: parent
-                                        hoverEnabled: true
+                                MouseArea {
+                                    id: closeMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
                                         onClicked: {
                                             console.log("[Settings] Close button clicked");
                                             console.log("[Settings] Has pending changes:", ConfigLoader.hasPendingChanges);
@@ -348,23 +348,23 @@ Scope {
                                             }
                                             settingsRoot.hide();
                                         }
+                                }
+
+                                RowLayout {
+                                    anchors.centerIn: parent
+                                    spacing: 12
+
+                                    MaterialSymbol {
+                                        text: "close"
+                                        iconSize: 20
+                                        color: Appearance.colors.colOnLayer0
                                     }
 
-                                    RowLayout {
-                                        anchors.centerIn: parent
-                                        spacing: 12
-
-                                        MaterialSymbol {
-                                            text: "close"
-                                            iconSize: 20
-                                            color: Appearance.colors.colOnLayer0
-                                        }
-
-                                        StyledText {
-                                            text: "Close Settings"
-                                            font.pixelSize: Appearance.font.pixelSize.normal
-                                            font.weight: Font.Medium
-                                            color: Appearance.colors.colOnLayer0
+                                    StyledText {
+                                        text: "Close Settings"
+                                        font.pixelSize: Appearance.font.pixelSize.normal
+                                        font.weight: Font.Medium
+                                        color: Appearance.colors.colOnLayer0
                                         }
                                     }
                                 }

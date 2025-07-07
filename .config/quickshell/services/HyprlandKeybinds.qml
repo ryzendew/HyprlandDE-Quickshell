@@ -21,10 +21,9 @@ Singleton {
     property var defaultKeybinds: {"children": []}
     property var userKeybinds: {"children": []}
     property var keybinds: ({
-        children: [
-            ...(defaultKeybinds.children ?? []),
-            ...(userKeybinds.children ?? []),
-        ]
+        children: (defaultKeybinds && defaultKeybinds.children ? defaultKeybinds.children : []).concat(
+            userKeybinds && userKeybinds.children ? userKeybinds.children : []
+        )
     })
 
     Connections {
