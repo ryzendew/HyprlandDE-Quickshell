@@ -62,7 +62,7 @@ Scope {
                 height: Math.min(parent.height - 80, 900)
                 
                 radius: Appearance.rounding.verylarge
-                color: Appearance.colors.colLayer0
+                color: "transparent"
                 
                 // Modern elevation with subtle shadow
                 Rectangle {
@@ -88,6 +88,13 @@ Scope {
                     }
                 }
 
+                // Background for content (allows blur to show through)
+                Rectangle {
+                    anchors.fill: parent
+                    color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.9)
+                    radius: parent.radius
+                }
+
                 RowLayout {
                     anchors.fill: parent
                     anchors.margins: 0
@@ -97,7 +104,7 @@ Scope {
                     Rectangle {
                         Layout.preferredWidth: 300
                         Layout.fillHeight: true
-                        color: ColorUtils.mix(Appearance.colors.colLayer0, Appearance.colors.colLayer1, 0.3)
+                        color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.95)
                         radius: Appearance.rounding.verylarge
                         
                         Rectangle {
@@ -376,7 +383,7 @@ Scope {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        color: "transparent"
+                        color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.95)
 
                         ColumnLayout {
                             anchors.fill: parent

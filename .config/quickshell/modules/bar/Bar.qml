@@ -181,6 +181,10 @@ Scope {
                                 barRoot.brightnessMonitor.setBrightness(barRoot.brightnessMonitor.brightness - 0.05);
                             else if (event.angleDelta.y > 0)
                                 barRoot.brightnessMonitor.setBrightness(barRoot.brightnessMonitor.brightness + 0.05);
+                            
+                            // Trigger brightness OSD
+                            safeDispatch('global quickshell:osdBrightness:trigger');
+                            
                             barLeftSideMouseArea.lastScrollX = event.x;
                             barLeftSideMouseArea.lastScrollY = event.y;
                             barLeftSideMouseArea.trackingScroll = true;
@@ -544,6 +548,54 @@ Scope {
                                                     console.log("No mic")
                                         }
                                     }
+                                        }
+                                    }
+                                    
+                                    // Brightness indicator
+                                    MaterialSymbol {
+                                        Layout.rightMargin: 4
+                                        text: "light_mode"
+                                        iconSize: Appearance.font.pixelSize.huge
+                                        color: rightSidebarButton.colText
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                            onClicked: (mouse) => {
+                                                if (mouse.button === Qt.LeftButton) {
+                                                    // Left-click toggles brightness OSD
+                                                    safeDispatch('global quickshell:osdBrightness:toggle')
+                                                } else if (mouse.button === Qt.RightButton) {
+                                                    // Right-click opens brightness settings or sidebar
+                                                    safeDispatch('global quickshell:sidebarRightOpen')
+                                                }
+                                            }
+                                            
+                                            onWheel: function(wheel) {
+                                                console.log("Brightness scroll detected:", wheel.angleDelta.y)
+                                                if (barRoot.brightnessMonitor?.ready) {
+                                                    var currentBrightness = barRoot.brightnessMonitor.brightness;
+                                                    console.log("Current brightness before change:", currentBrightness)
+                                                    
+                                                    var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05  // 5% steps
+                                                    var newBrightness = Math.max(0.01, Math.min(1, currentBrightness + delta))
+                                                    
+                                                    console.log("Calculated new brightness:", newBrightness)
+                                                    console.log("Setting brightness to:", newBrightness)
+                                                    
+                                                    barRoot.brightnessMonitor.setBrightness(newBrightness)
+                                                    
+                                                    // Trigger brightness OSD
+                                                    safeDispatch('global quickshell:osdBrightness:trigger')
+                                                    
+                                                    // Check if it actually changed
+                                                    Qt.callLater(() => {
+                                                        console.log("Brightness after setting:", barRoot.brightnessMonitor.brightness)
+                                                    })
+                                                } else {
+                                                    console.log("No brightness monitor available")
+                                                }
+                                            }
                                         }
                                     }
                                     
