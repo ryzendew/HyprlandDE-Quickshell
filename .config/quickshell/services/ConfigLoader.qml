@@ -22,6 +22,15 @@ Singleton {
     property bool firstLoad: true
     property bool preventNextLoad: false
     property var preventNextNotification: false
+    
+    // Pending changes tracking for manual save
+    property var pendingChanges: ({})
+    property bool hasPendingChanges: false
+    
+    onPendingChangesChanged: {
+        root.hasPendingChanges = Object.keys(root.pendingChanges).length > 0;
+        console.log("[ConfigLoader] Pending changes updated, hasPendingChanges:", root.hasPendingChanges);
+    }
 
     onPreventNextNotificationChanged: {
         console.log("HMM: preventNextNotification:", root.preventNextNotification);
@@ -89,14 +98,68 @@ Singleton {
 
     function saveConfig() {
         const plainConfig = ObjectUtils.toPlainObject(ConfigOptions)
+        console.log("[ConfigLoader] Saving config to:", root.filePath)
+        console.log("[ConfigLoader] Config content:", JSON.stringify(plainConfig, null, 2))
         Hyprland.dispatch(`exec echo '${StringUtils.shellSingleQuoteEscape(JSON.stringify(plainConfig, null, 2))}' > '${root.filePath}'`)
+        console.log("[ConfigLoader] Save command dispatched")
     }
 
     function setConfigValueAndSave(nestedKey, value, preventNextNotification = true) {
+        console.log("[ConfigLoader] setConfigValueAndSave called with:", nestedKey, "=", value)
         setLiveConfigValue(nestedKey, value);
         root.preventNextNotification = preventNextNotification;
         console.log("SETTING: preventNextNotification:", root.preventNextNotification);
         saveConfig();
+        console.log("[ConfigLoader] setConfigValueAndSave completed")
+    }
+
+    // New functions for manual save system
+    function setConfigValue(nestedKey, value) {
+        console.log("[ConfigLoader] setConfigValue called with:", nestedKey, "=", value)
+        setLiveConfigValue(nestedKey, value);
+        
+        // Track pending changes - use Object.assign to trigger property change
+        root.pendingChanges = Object.assign({}, root.pendingChanges, {[nestedKey]: value});
+        
+        console.log("[ConfigLoader] Pending changes:", root.pendingChanges);
+        console.log("[ConfigLoader] Has pending changes:", root.hasPendingChanges);
+    }
+
+    function savePendingChanges() {
+        console.log("[ConfigLoader] savePendingChanges called");
+        console.log("[ConfigLoader] hasPendingChanges:", root.hasPendingChanges);
+        console.log("[ConfigLoader] pendingChanges:", root.pendingChanges);
+        
+        if (!root.hasPendingChanges) {
+            console.log("[ConfigLoader] No pending changes to save");
+            return false;
+        }
+        
+        console.log("[ConfigLoader] Saving pending changes:", root.pendingChanges);
+        root.preventNextNotification = true;
+        saveConfig();
+        
+        // Clear pending changes after successful save
+        root.pendingChanges = {};
+        
+        console.log("[ConfigLoader] Pending changes saved and cleared");
+        return true;
+    }
+
+    function discardPendingChanges() {
+        console.log("[ConfigLoader] Discarding pending changes:", root.pendingChanges);
+        
+        // Reload config from file to discard changes
+        loadConfig();
+        
+        // Clear pending changes
+        root.pendingChanges = {};
+        
+        console.log("[ConfigLoader] Pending changes discarded");
+    }
+
+    function getPendingChangesCount() {
+        return Object.keys(root.pendingChanges).length;
     }
 
     Timer {

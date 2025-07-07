@@ -102,21 +102,21 @@ ColumnLayout {
                 }
 
                 RowLayout {
-                    Layout.fillWidth: true
+            Layout.fillWidth: true
                     spacing: 8
 
-                    LightDarkPreferenceButton {
-                        dark: false
+            LightDarkPreferenceButton {
+                dark: false
                         Layout.fillWidth: true
-                    }
-                    LightDarkPreferenceButton {
-                        dark: true
-                        Layout.fillWidth: true
-                    }
-                }
             }
+            LightDarkPreferenceButton {
+                dark: true
+                        Layout.fillWidth: true
+                    }
+            }
+        }
 
-            // Material palette selection
+        // Material palette selection
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 12
@@ -141,28 +141,28 @@ ColumnLayout {
                     }
                 }
 
-                ConfigSelectionArray {
+            ConfigSelectionArray {
                     Layout.fillWidth: true
-                    currentValue: Config.options.appearance.palette.type
-                    configOptionName: "appearance.palette.type"
-                    onSelected: (newValue) => {
-                        Config.options.appearance.palette.type = newValue;
+                currentValue: Config.options.appearance.palette.type
+                configOptionName: "appearance.palette.type"
+                onSelected: (newValue) => {
+                        ConfigLoader.setConfigValue("appearance.palette.type", newValue);
                         // Trigger theme regeneration when palette type changes
                         MaterialThemeLoader.reapplyTheme();
-                    }
-                    options: [
-                        {"value": "auto", "displayName": "Auto"},
-                        {"value": "scheme-content", "displayName": "Content"},
-                        {"value": "scheme-expressive", "displayName": "Expressive"},
-                        {"value": "scheme-fidelity", "displayName": "Fidelity"},
-                        {"value": "scheme-fruit-salad", "displayName": "Fruit Salad"},
-                        {"value": "scheme-monochrome", "displayName": "Monochrome"},
-                        {"value": "scheme-neutral", "displayName": "Neutral"},
-                        {"value": "scheme-rainbow", "displayName": "Rainbow"},
-                        {"value": "scheme-tonal-spot", "displayName": "Tonal Spot"}
-                    ]
                 }
+                options: [
+                    {"value": "auto", "displayName": "Auto"},
+                    {"value": "scheme-content", "displayName": "Content"},
+                    {"value": "scheme-expressive", "displayName": "Expressive"},
+                    {"value": "scheme-fidelity", "displayName": "Fidelity"},
+                    {"value": "scheme-fruit-salad", "displayName": "Fruit Salad"},
+                    {"value": "scheme-monochrome", "displayName": "Monochrome"},
+                    {"value": "scheme-neutral", "displayName": "Neutral"},
+                    {"value": "scheme-rainbow", "displayName": "Rainbow"},
+                    {"value": "scheme-tonal-spot", "displayName": "Tonal Spot"}
+                ]
             }
+        }
 
             // Transparency setting
             ColumnLayout {
@@ -185,7 +185,7 @@ ColumnLayout {
                         text: ""
                         checked: Config.options.appearance.transparency
                         onCheckedChanged: {
-                            Config.options.appearance.transparency = checked;
+                            ConfigLoader.setConfigValue("appearance.transparency", checked);
                         }
                     }
                 }
@@ -274,10 +274,10 @@ ColumnLayout {
                         id: rndWallMouseArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: {
-                            console.log(konachanWallProc.command.join(" "))
-                            konachanWallProc.running = true;
-                        }
+                    onClicked: {
+                        console.log(konachanWallProc.command.join(" "))
+                        konachanWallProc.running = true;
+                    }
                     }
 
                     RowLayout {
@@ -308,8 +308,8 @@ ColumnLayout {
                                 text: "Get a random anime wallpaper from Konachan"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: Appearance.colors.colSubtext
-                            }
-                        }
+                    }
+                }
 
                         Rectangle {
                             Layout.preferredWidth: 16
@@ -347,13 +347,13 @@ ColumnLayout {
                         id: chooseWallMouseArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: {
-                            Quickshell.execDetached(`${Directories.wallpaperSwitchScriptPath}`)
+                    onClicked: {
+                        Quickshell.execDetached(`${Directories.wallpaperSwitchScriptPath}`)
                             // Note: Theme regeneration will be handled by the wallpaper script
                         }
                     }
 
-                    RowLayout {
+                        RowLayout {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
@@ -384,23 +384,23 @@ ColumnLayout {
                             }
                         }
 
-                        RowLayout {
+                            RowLayout {
                             spacing: 4
-                            KeyboardKey {
-                                key: "Ctrl"
-                            }
-                            StyledText {
-                                text: "+"
+                                KeyboardKey {
+                                    key: "Ctrl"
+                                }
+                                StyledText {
+                                    text: "+"
                                 color: Appearance.colors.colSubtext
                                 font.pixelSize: Appearance.font.pixelSize.small
-                            }
-                            KeyboardKey {
-                                key: "T"
+                                }
+                                KeyboardKey {
+                                    key: "T"
+                                }
                             }
                         }
                     }
                 }
-            }
 
             // Quick tip
             Rectangle {
@@ -506,38 +506,38 @@ ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 8
 
-                    property int selectedPolicy: Config.options.appearance.fakeScreenRounding
+                property int selectedPolicy: Config.options.appearance.fakeScreenRounding
 
-                    SelectionGroupButton {
-                        property int value: 0
+                SelectionGroupButton {
+                    property int value: 0
                         Layout.fillWidth: true
-                        leftmost: true
+                    leftmost: true
                         buttonText: "Disabled"
                         toggled: (parent.selectedPolicy === value)
-                        onClicked: {
-                            Config.options.appearance.fakeScreenRounding = value;
-                        }
+                    onClicked: {
+                            ConfigLoader.setConfigValue("appearance.fakeScreenRounding", value);
                     }
-                    SelectionGroupButton {
-                        property int value: 1
+                }
+                SelectionGroupButton {
+                    property int value: 1
                         Layout.fillWidth: true
                         buttonText: "Always"
                         toggled: (parent.selectedPolicy === value)
-                        onClicked: {
-                            Config.options.appearance.fakeScreenRounding = value;
-                        }
-                    }
-                    SelectionGroupButton {
-                        property int value: 2
-                        Layout.fillWidth: true
-                        rightmost: true
-                        buttonText: "When Windowed"
-                        toggled: (parent.selectedPolicy === value)
-                        onClicked: {
-                            Config.options.appearance.fakeScreenRounding = value;
-                        }
+                    onClicked: {
+                            ConfigLoader.setConfigValue("appearance.fakeScreenRounding", value);
                     }
                 }
+                SelectionGroupButton {
+                    property int value: 2
+                        Layout.fillWidth: true
+                    rightmost: true
+                        buttonText: "When Windowed"
+                        toggled: (parent.selectedPolicy === value)
+                    onClicked: {
+                            ConfigLoader.setConfigValue("appearance.fakeScreenRounding", value);
+                    }
+                }
+            }
 
                 StyledText {
                     text: "Add rounded corners to your screen edges for a modern look"
@@ -568,13 +568,13 @@ ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 8
 
-                        ConfigSwitch {
+                ConfigSwitch {
                             text: ""
-                            checked: Config.options.windows.showTitlebar
-                            onCheckedChanged: {
-                                Config.options.windows.showTitlebar = checked;
-                            }
-                        }
+                    checked: Config.options.windows.showTitlebar
+                    onCheckedChanged: {
+                                ConfigLoader.setConfigValue("windows.showTitlebar", checked);
+                    }
+                }
 
                         StyledText {
                             text: "Show title bars"
@@ -587,20 +587,20 @@ ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 8
 
-                        ConfigSwitch {
+                ConfigSwitch {
                             text: ""
-                            checked: Config.options.windows.centerTitle
-                            onCheckedChanged: {
-                                Config.options.windows.centerTitle = checked;
-                            }
-                        }
+                    checked: Config.options.windows.centerTitle
+                    onCheckedChanged: {
+                                ConfigLoader.setConfigValue("windows.centerTitle", checked);
+                    }
+                }
 
                         StyledText {
                             text: "Center titles"
                             font.pixelSize: Appearance.font.pixelSize.normal
                             color: Appearance.colors.colOnLayer1
-                        }
-                    }
+            }
+        }
                 }
 
                 StyledText {

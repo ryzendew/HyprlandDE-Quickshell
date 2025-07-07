@@ -68,11 +68,11 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 8
 
-                ConfigSwitch {
+        ConfigSwitch {
                     text: ""
-                    checked: Config.options.audio.protection.enable
-                    onCheckedChanged: {
-                        Config.options.audio.protection.enable = checked;
+            checked: Config.options.audio.protection.enable
+                            onCheckedChanged: {
+                        ConfigLoader.setConfigValue("audio.protection.enable", checked);
                     }
                 }
 
@@ -96,31 +96,31 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 16
 
-                ConfigSpinBox {
+            ConfigSpinBox {
                     Layout.fillWidth: true
                     text: "Max volume increase"
-                    value: Config.options.audio.protection.maxAllowedIncrease
-                    from: 0
-                    to: 100
-                    stepSize: 2
-                    onValueChanged: {
-                        Config.options.audio.protection.maxAllowedIncrease = value;
+                value: Config.options.audio.protection.maxAllowedIncrease
+                from: 0
+                to: 100
+                stepSize: 2
+                onValueChanged: {
+                        ConfigLoader.setConfigValue("audio.protection.maxAllowedIncrease", value);
                     }
                 }
 
-                ConfigSpinBox {
+            ConfigSpinBox {
                     Layout.fillWidth: true
-                    text: "Volume limit"
-                    value: Config.options.audio.protection.maxAllowed
-                    from: 0
-                    to: 100
-                    stepSize: 2
-                    onValueChanged: {
-                        Config.options.audio.protection.maxAllowed = value;
-                    }
+                text: "Volume limit"
+                value: Config.options.audio.protection.maxAllowed
+                from: 0
+                to: 100
+                stepSize: 2
+                onValueChanged: {
+                        ConfigLoader.setConfigValue("audio.protection.maxAllowed", value);
                 }
             }
         }
+    }
     }
 
     // Battery Settings Section
@@ -159,7 +159,7 @@ ColumnLayout {
                 }
 
                 ColumnLayout {
-                    Layout.fillWidth: true
+            Layout.fillWidth: true
                     spacing: 2
 
                     StyledText {
@@ -174,8 +174,8 @@ ColumnLayout {
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: "#fff"
                     }
-                }
             }
+        }
 
             // Battery warning levels
             ColumnLayout {
@@ -193,30 +193,30 @@ ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 16
 
-                    ConfigSpinBox {
+            ConfigSpinBox {
                         Layout.fillWidth: true
                         text: "Low battery warning"
                         value: ConfigOptions.battery.low
-                        from: 0
-                        to: 100
-                        stepSize: 5
-                        onValueChanged: {
-                            ConfigOptions.battery.low = value;
-                        }
-                    }
+                from: 0
+                to: 100
+                stepSize: 5
+                onValueChanged: {
+                            ConfigLoader.setConfigValue("battery.low", value);
+                }
+            }
 
-                    ConfigSpinBox {
+            ConfigSpinBox {
                         Layout.fillWidth: true
                         text: "Critical battery warning"
                         value: ConfigOptions.battery.critical
-                        from: 0
-                        to: 100
-                        stepSize: 5
-                        onValueChanged: {
-                            ConfigOptions.battery.critical = value;
-                        }
-                    }
+                from: 0
+                to: 100
+                stepSize: 5
+                onValueChanged: {
+                            ConfigLoader.setConfigValue("battery.critical", value);
                 }
+            }
+        }
             }
 
             // Auto suspend settings
@@ -239,33 +239,33 @@ ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 8
 
-                        ConfigSwitch {
+            ConfigSwitch {
                             text: ""
                             checked: ConfigOptions.battery.automaticSuspend
-                            onCheckedChanged: {
-                                ConfigOptions.battery.automaticSuspend = checked;
-                            }
+                onCheckedChanged: {
+                                ConfigLoader.setConfigValue("battery.automaticSuspend", checked);
+                }
                         }
 
                         StyledText {
                             text: "Auto suspend"
                             font.pixelSize: Appearance.font.pixelSize.normal
                             color: "#fff"
-                        }
-                    }
+                }
+            }
 
-                    ConfigSpinBox {
+            ConfigSpinBox {
                         Layout.fillWidth: true
                         text: "Suspend at (%)"
                         value: ConfigOptions.battery.suspend
-                        from: 0
-                        to: 100
-                        stepSize: 5
-                        onValueChanged: {
-                            ConfigOptions.battery.suspend = value;
-                        }
-                    }
+                from: 0
+                to: 100
+                stepSize: 5
+                onValueChanged: {
+                            ConfigLoader.setConfigValue("battery.suspend", value);
                 }
+            }
+        }
 
                 StyledText {
                     text: "Automatically suspend the system when battery level drops below the specified threshold"
@@ -344,13 +344,13 @@ ColumnLayout {
                     color: "#fff"
                 }
 
-                MaterialTextField {
-                    Layout.fillWidth: true
+        MaterialTextField {
+            Layout.fillWidth: true
                     placeholderText: "Enter custom user agent string for web services"
                     text: ConfigOptions.networking.userAgent
-                    wrapMode: TextEdit.Wrap
-                    onTextChanged: {
-                        ConfigOptions.networking.userAgent = text;
+            wrapMode: TextEdit.Wrap
+            onTextChanged: {
+                        ConfigLoader.setConfigValue("networking.userAgent", text);
                     }
                 }
 
@@ -397,8 +397,8 @@ ColumnLayout {
                         text: "monitor_heart"
                         iconSize: 18
                         color: Appearance.colors.colOnLayer1
-                    }
-                }
+        }
+    }
 
                 ColumnLayout {
                     Layout.fillWidth: true
@@ -431,17 +431,17 @@ ColumnLayout {
                     color: "#fff"
                 }
 
-                ConfigSpinBox {
+        ConfigSpinBox {
                     Layout.fillWidth: true
                     text: "Update interval (ms)"
                     value: ConfigOptions.resources.updateInterval
-                    from: 100
-                    to: 10000
-                    stepSize: 100
-                    onValueChanged: {
-                        ConfigOptions.resources.updateInterval = value;
-                    }
+            from: 100
+            to: 10000
+            stepSize: 100
+                            onValueChanged: {
+                        ConfigLoader.setConfigValue("resources.updateInterval", value);
                 }
+        }
 
                 StyledText {
                     text: "How often system resource usage is updated. Lower values provide more responsive monitoring but use more CPU"

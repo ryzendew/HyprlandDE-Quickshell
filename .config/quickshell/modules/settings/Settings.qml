@@ -1,6 +1,7 @@
 import "root:/modules/common"
 import "root:/modules/common/widgets"
 import "root:/modules/common/functions/color_utils.js" as ColorUtils
+import "root:/services/"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -79,6 +80,11 @@ Scope {
                 Keys.onPressed: (event) => {
                     if (event.key === Qt.Key_Escape) {
                         settingsRoot.hide();
+                    } else if (event.key === Qt.Key_S && (event.modifiers & Qt.ControlModifier)) {
+                        if (ConfigLoader.hasPendingChanges) {
+                            ConfigLoader.savePendingChanges();
+                            Hyprland.dispatch(`exec notify-send "${qsTr("Settings saved")}" "${qsTr("Configuration changes have been saved")}"`);
+                        }
                     }
                 }
 
@@ -241,39 +247,125 @@ Scope {
 
                             Item { Layout.fillHeight: true }
 
-                            // Footer with close button
-                            Rectangle {
+                            // Footer with save and close buttons
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: 56
-                                radius: Appearance.rounding.normal
-                                color: closeMouseArea.containsMouse ? 
-                                       Appearance.colors.colLayer2Hover : 
-                                       Appearance.colors.colLayer2
-                                border.width: 1
-                                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.2)
+                                spacing: 12
 
-                                MouseArea {
-                                    id: closeMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    onClicked: settingsRoot.hide()
-                                }
+                                // Save button
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 48
+                                    radius: Appearance.rounding.normal
+                                    color: saveMouseArea.pressed ? 
+                                           Appearance.colors.colPrimaryActive :
+                                           saveMouseArea.containsMouse ? 
+                                           Appearance.colors.colPrimaryHover : 
+                                           Appearance.colors.colPrimary
+                                    opacity: ConfigLoader.hasPendingChanges ? 1.0 : 0.5
+                                    enabled: ConfigLoader.hasPendingChanges
 
-                                RowLayout {
-                                    anchors.centerIn: parent
-                                    spacing: 12
-
-                                    MaterialSymbol {
-                                        text: "close"
-                                        iconSize: 20
-                                        color: Appearance.colors.colOnLayer0
+                                    MouseArea {
+                                        id: saveMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        enabled: ConfigLoader.hasPendingChanges
+                                        onClicked: {
+                                            console.log("[Settings] Save button clicked");
+                                            console.log("[Settings] Has pending changes:", ConfigLoader.hasPendingChanges);
+                                            console.log("[Settings] Pending changes count:", ConfigLoader.getPendingChangesCount());
+                                            
+                                            if (ConfigLoader.hasPendingChanges) {
+                                                const saved = ConfigLoader.savePendingChanges();
+                                                if (saved) {
+                                                    Hyprland.dispatch(`exec notify-send "${qsTr("Settings saved")}" "${qsTr("Configuration changes have been saved")}"`);
+                                                    console.log("[Settings] Save completed and notification sent");
+                                                } else {
+                                                    Hyprland.dispatch(`exec notify-send "${qsTr("Save failed")}" "${qsTr("Failed to save configuration changes")}"`);
+                                                    console.log("[Settings] Save failed");
+                                                }
+                                            } else {
+                                                console.log("[Settings] No changes to save");
+                                                Hyprland.dispatch(`exec notify-send "${qsTr("No changes")}" "${qsTr("No settings changes to save")}"`);
+                                            }
+                                        }
                                     }
 
-                                    StyledText {
-                                        text: "Close Settings"
-                                        font.pixelSize: Appearance.font.pixelSize.normal
-                                        font.weight: Font.Medium
-                                        color: Appearance.colors.colOnLayer0
+                                    RowLayout {
+                                        anchors.centerIn: parent
+                                        spacing: 12
+
+                                        MaterialSymbol {
+                                            text: "save"
+                                            iconSize: 20
+                                            color: "#000"
+                                        }
+
+                                        StyledText {
+                                            text: ConfigLoader.hasPendingChanges ? 
+                                                  `Save Changes (${ConfigLoader.getPendingChangesCount()})` : 
+                                                  "No Changes"
+                                            font.pixelSize: Appearance.font.pixelSize.normal
+                                            font.weight: Font.Medium
+                                            color: "#000"
+                                            
+                                            // Debug: force update when hasPendingChanges changes
+                                            property bool debugHasChanges: ConfigLoader.hasPendingChanges
+                                            onDebugHasChangesChanged: {
+                                                console.log("[Settings] UI updated - hasPendingChanges:", ConfigLoader.hasPendingChanges);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Close button
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 48
+                                    radius: Appearance.rounding.normal
+                                    color: closeMouseArea.containsMouse ? 
+                                           Appearance.colors.colLayer2Hover : 
+                                           Appearance.colors.colLayer2
+                                    border.width: 1
+                                    border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.2)
+
+                                    MouseArea {
+                                        id: closeMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            console.log("[Settings] Close button clicked");
+                                            console.log("[Settings] Has pending changes:", ConfigLoader.hasPendingChanges);
+                                            if (ConfigLoader.hasPendingChanges) {
+                                                // Auto-save changes before closing
+                                                console.log("[Settings] Auto-saving changes before close");
+                                                const saved = ConfigLoader.savePendingChanges();
+                                                if (saved) {
+                                                    Hyprland.dispatch(`exec notify-send "${qsTr("Settings saved")}" "${qsTr("Configuration changes have been saved")}"`);
+                                                } else {
+                                                    Hyprland.dispatch(`exec notify-send "${qsTr("Save failed")}" "${qsTr("Failed to save configuration changes")}"`);
+                                                }
+                                            }
+                                            settingsRoot.hide();
+                                        }
+                                    }
+
+                                    RowLayout {
+                                        anchors.centerIn: parent
+                                        spacing: 12
+
+                                        MaterialSymbol {
+                                            text: "close"
+                                            iconSize: 20
+                                            color: Appearance.colors.colOnLayer0
+                                        }
+
+                                        StyledText {
+                                            text: "Close Settings"
+                                            font.pixelSize: Appearance.font.pixelSize.normal
+                                            font.weight: Font.Medium
+                                            color: Appearance.colors.colOnLayer0
+                                        }
                                     }
                                 }
                             }
@@ -448,6 +540,18 @@ Scope {
 
         onPressed: {
             settingsLoader.active = true;
+        }
+    }
+
+    GlobalShortcut {
+        name: "settingsSave"
+        description: qsTr("Saves pending settings changes")
+
+        onPressed: {
+            if (ConfigLoader.hasPendingChanges) {
+                ConfigLoader.savePendingChanges();
+                Hyprland.dispatch(`exec notify-send "${qsTr("Settings saved")}" "${qsTr("Configuration changes have been saved")}"`);
+            }
         }
     }
 } 

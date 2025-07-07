@@ -25,7 +25,7 @@ ColumnLayout {
         border.width: 2
         border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.4)
 
-        ColumnLayout {
+            ColumnLayout {
             anchors.left: parent.left
             anchors.leftMargin: 40
             anchors.right: undefined
@@ -81,38 +81,14 @@ ColumnLayout {
                     color: "#fff"
                 }
 
-                GridLayout {
-                    columns: 2
-                    columnSpacing: 32
-                    rowSpacing: 16
-                    anchors.left: parent.left
-                    anchors.leftMargin: 0
-
-                    RowLayout {
-                        spacing: 12
-                ConfigSwitch {
-                    checked: Config.options.bar.borderless
-                            onCheckedChanged: { Config.options.bar.borderless = checked; }
-                        }
-                        StyledText {
-                            text: "Borderless"
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                            color: "#fff"
-                        }
-                    }
-
-                    RowLayout {
-                        spacing: 12
-                ConfigSwitch {
-                    checked: Config.options.bar.showBackground
-                            onCheckedChanged: { Config.options.bar.showBackground = checked; }
-                        }
-                        StyledText {
-                            text: "Show background"
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                            color: "#fff"
-                        }
-                    }
+                // Note: Bar style settings have been removed for simplicity
+                StyledText {
+                    text: "Bar appearance is now fixed with a modern blur effect"
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    color: "#fff"
+                    opacity: 0.7
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
                 }
             }
 
@@ -135,8 +111,8 @@ ColumnLayout {
                         spacing: 12
                 ConfigSwitch {
                     checked: Config.options.bar.utilButtons.showScreenSnip
-                            onCheckedChanged: { Config.options.bar.utilButtons.showScreenSnip = checked; }
-                        }
+                            onCheckedChanged: { ConfigLoader.setConfigValue("bar.utilButtons.showScreenSnip", checked); }
+                }
                         StyledText {
                             text: "Screen capture"
                             font.pixelSize: Appearance.font.pixelSize.normal
@@ -147,35 +123,35 @@ ColumnLayout {
                         spacing: 12
                         ConfigSwitch {
                             checked: Config.options.bar.utilButtons.showColorPicker
-                            onCheckedChanged: { Config.options.bar.utilButtons.showColorPicker = checked; }
-                        }
+                            onCheckedChanged: { ConfigLoader.setConfigValue("bar.utilButtons.showColorPicker", checked); }
+                    }
                         StyledText {
                     text: "Color picker"
                             font.pixelSize: Appearance.font.pixelSize.normal
                             color: "#fff"
-                        }
                     }
                 }
+            }
                 RowLayout {
                     spacing: 24
                     RowLayout {
                         spacing: 12
                 ConfigSwitch {
                             checked: Config.options.bar.utilButtons.showMicToggle
-                            onCheckedChanged: { Config.options.bar.utilButtons.showMicToggle = checked; }
+                            onCheckedChanged: { ConfigLoader.setConfigValue("bar.utilButtons.showMicToggle", checked); }
                         }
                         StyledText {
                             text: "Microphone toggle"
                             font.pixelSize: Appearance.font.pixelSize.normal
                             color: "#fff"
-                        }
                     }
+                }
                     RowLayout {
                         spacing: 12
                 ConfigSwitch {
                             checked: Config.options.bar.utilButtons.showKeyboardToggle
-                            onCheckedChanged: { Config.options.bar.utilButtons.showKeyboardToggle = checked; }
-                        }
+                            onCheckedChanged: { ConfigLoader.setConfigValue("bar.utilButtons.showKeyboardToggle", checked); }
+                }
                         StyledText {
                             text: "Virtual keyboard"
                             font.pixelSize: Appearance.font.pixelSize.normal
@@ -189,8 +165,8 @@ ColumnLayout {
                         spacing: 12
                 ConfigSwitch {
                             checked: Config.options.bar.utilButtons.showDarkModeToggle
-                            onCheckedChanged: { Config.options.bar.utilButtons.showDarkModeToggle = checked; }
-                        }
+                            onCheckedChanged: { ConfigLoader.setConfigValue("bar.utilButtons.showDarkModeToggle", checked); }
+                }
                         StyledText {
                             text: "Theme toggle"
                             font.pixelSize: Appearance.font.pixelSize.normal
@@ -246,20 +222,20 @@ ColumnLayout {
                         spacing: 12
                 ConfigSwitch {
                     checked: Config.options.bar.workspaces.showAppIcons
-                            onCheckedChanged: { Config.options.bar.workspaces.showAppIcons = checked; }
+                            onCheckedChanged: { ConfigLoader.setConfigValue("bar.workspaces.showAppIcons", checked); }
                         }
                         StyledText {
                             text: "Show app icons"
                             font.pixelSize: Appearance.font.pixelSize.normal
                             color: "#fff"
-                        }
                     }
+                }
 
                     RowLayout {
                         spacing: 12
                 ConfigSwitch {
                     checked: Config.options.bar.workspaces.alwaysShowNumbers
-                            onCheckedChanged: { Config.options.bar.workspaces.alwaysShowNumbers = checked; }
+                            onCheckedChanged: { ConfigLoader.setConfigValue("bar.workspaces.alwaysShowNumbers", checked); }
                         }
                         StyledText {
                             text: "Always show numbers"
@@ -280,7 +256,7 @@ ColumnLayout {
                 from: 1
                 to: 30
                 stepSize: 1
-                    onValueChanged: { Config.options.bar.workspaces.shown = value; }
+                                            onValueChanged: { ConfigLoader.setConfigValue("bar.workspaces.shown", value); }
                 }
             }
 
@@ -301,8 +277,8 @@ ColumnLayout {
                     spacing: 12
                     ConfigSwitch {
                         checked: ConfigOptions.bar.weather.enable
-                        onCheckedChanged: { ConfigOptions.bar.weather.enable = checked; }
-                    }
+                        onCheckedChanged: { ConfigLoader.setConfigValue("bar.weather.enable", checked); }
+            }
                     StyledText {
                         text: "Show weather in bar"
                         font.pixelSize: Appearance.font.pixelSize.normal
@@ -372,16 +348,16 @@ ColumnLayout {
                         font.pixelSize: Appearance.font.pixelSize.normal
                         color: "#fff"
                         opacity: 0.9
-                    }
                 }
             }
+        }
 
             // Battery settings
             RowLayout {
                 spacing: 12
-                ConfigSwitch {
+            ConfigSwitch {
                     checked: ConfigOptions.battery.automaticSuspend
-                    onCheckedChanged: { ConfigOptions.battery.automaticSuspend = checked; }
+                    onCheckedChanged: { ConfigLoader.setConfigValue("battery.automaticSuspend", checked); }
                 }
                 StyledText {
                     text: "Automatic suspend when battery is low"
@@ -436,8 +412,8 @@ ColumnLayout {
                         text: "dock"
                         iconSize: 20
                         color: "#000"
-                    }
-                }
+            }
+        }
                 ColumnLayout {
                     spacing: 4
                     StyledText {
@@ -465,8 +441,8 @@ ColumnLayout {
                     spacing: 12
                     ConfigSwitch {
                         checked: ConfigOptions.dock.enable
-                        onCheckedChanged: { ConfigOptions.dock.enable = checked; }
-                    }
+                        onCheckedChanged: { ConfigLoader.setConfigValue("dock.enable", checked); }
+            }
                     StyledText {
                         text: "Enable dock"
                         font.pixelSize: Appearance.font.pixelSize.normal
@@ -504,22 +480,22 @@ ColumnLayout {
                     anchors.left: parent.left
                     anchors.leftMargin: 0
 
-                    ConfigSpinBox {
-                        text: "Rows"
+            ConfigSpinBox {
+                text: "Rows"
                         value: ConfigOptions.overview.rows
-                        from: 1
+                from: 1
                         to: 10
-                        stepSize: 1
-                        onValueChanged: { ConfigOptions.overview.rows = value; }
-                    }
+                stepSize: 1
+                        onValueChanged: { ConfigLoader.setConfigValue("overview.rows", value); }
+                }
 
-                    ConfigSpinBox {
-                        text: "Columns"
+            ConfigSpinBox {
+                text: "Columns"
                         value: ConfigOptions.overview.columns
-                        from: 1
+                from: 1
                         to: 10
-                        stepSize: 1
-                        onValueChanged: { ConfigOptions.overview.columns = value; }
+                stepSize: 1
+                        onValueChanged: { ConfigLoader.setConfigValue("overview.columns", value); }
                     }
 
                     ColumnLayout {
@@ -534,7 +510,7 @@ ColumnLayout {
                             to: 0.5
                             value: ConfigOptions.overview.scale
                             stepSize: 0.01
-                            onValueChanged: { ConfigOptions.overview.scale = value; }
+                            onValueChanged: { ConfigLoader.setConfigValue("overview.scale", value); }
                         }
                         StyledText {
                             text: `${Math.round(ConfigOptions.overview.scale * 100)}%`
@@ -548,14 +524,14 @@ ColumnLayout {
                         spacing: 12
                         ConfigSwitch {
                             checked: ConfigOptions.overview.showXwaylandIndicator
-                            onCheckedChanged: { ConfigOptions.overview.showXwaylandIndicator = checked; }
+                            onCheckedChanged: { ConfigLoader.setConfigValue("overview.showXwaylandIndicator", checked); }
                         }
                         StyledText {
                             text: "Show Xwayland indicator"
                             font.pixelSize: Appearance.font.pixelSize.normal
                             color: "#fff"
-                        }
-                    }
+            }
+        }
                 }
 
                 StyledText {
