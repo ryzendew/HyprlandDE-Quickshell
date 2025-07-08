@@ -754,6 +754,11 @@ install_arch_packages() {
         done
         
         print_success "Configuration files copied successfully (force overwritten, backups made)"
+        # Check for quickshell config
+        if [ ! -f "$USER_HOME/.config/quickshell/shell.qml" ]; then
+            print_warning "Quickshell config (quickshell/shell.qml) is missing after install!"
+            print_warning "Please ensure your repo contains .config/quickshell/shell.qml"
+        fi
     else
         print_error "Configuration directory not found!"
         exit 1
