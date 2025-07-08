@@ -32,7 +32,7 @@ ShellRoot {
     property bool enableBar: true
     property bool enableCheatsheet: true
     property bool enableDock: ConfigOptions.dock.enable
-    property bool enableMediaControls: false
+    property bool enableMediaControls: true
     property bool enableSimpleMediaPlayer: true
     property bool enableNotificationPopup: true
     property bool enableOnScreenDisplayBrightness: true

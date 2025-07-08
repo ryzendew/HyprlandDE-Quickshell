@@ -215,7 +215,7 @@ Scope {
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.rightMargin: 12
-                            spacing: 0
+                            spacing: 4
 
                             BatteryToggle {
                                 visible: Battery.available

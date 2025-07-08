@@ -101,7 +101,9 @@ Scope {
         "lutris": "lutris",
         "heroic": "heroic",
         "obs": "obs",
+        "com.obsproject.Studio.desktop": "gtk-launch com.obsproject.Studio.desktop",
         "com.blackmagicdesign.resolve": "resolve",
+        "com.blackmagicdesign.resolve.desktop": "gtk-launch com.blackmagicdesign.resolve.desktop",
         "net.lutris.davinci-resolve-studio-20-1.desktop": "gtk-launch net.lutris.davinci-resolve-studio-20-1.desktop",
         "AffinityPhoto": "AffinityPhoto",
         "AffinityPhoto.desktop": "gtk-launch AffinityPhoto.desktop",
@@ -377,7 +379,7 @@ Scope {
             id: dockRoot
             margins {
                 top: 0
-                bottom: 2
+                bottom: 0
                 left: 0
                 right: 0
             }
@@ -394,15 +396,7 @@ Scope {
             exclusiveZone: dockHeight
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-            mask: Region {
-                item: Rectangle {
-                    width: dockContent.width + 20
-                    height: dockContent.height + 10
-                    x: dockContent.x + (dockRoot.width - dockContent.width) / 2 - 10
-                    y: dockContent.y - 5
-                    radius: 30
-                }
-            }
+
 
             // Track active windows
             property var activeWindows: []
@@ -455,6 +449,12 @@ Scope {
             }
             
             function getIconForClass(windowClass) {
+                console.log('[DOCK DEBUG] getIconForClass called with:', windowClass)
+                if (!windowClass) {
+                    console.log('[DOCK DEBUG] No windowClass provided, returning image-missing')
+                    return "image-missing"
+                }
+                
                 // First try to find a .desktop file for this window class
                 var desktopPaths = [
                     StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications",
@@ -462,38 +462,58 @@ Scope {
                     "/usr/local/share/applications"
                 ];
                 
+                console.log('[DOCK DEBUG] Searching desktop paths:', desktopPaths)
+                
                 for (var p = 0; p < desktopPaths.length; p++) {
                     var systemPath = desktopPaths[p];
                     var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
                     var content = "";
                     
                     try {
-                        fileView.path = systemPath + "/" + windowClass + ".desktop"
+                        var desktopFilePath = systemPath + "/" + windowClass + ".desktop"
+                        console.log('[DOCK DEBUG] Trying desktop file path:', desktopFilePath)
+                        fileView.path = desktopFilePath
                         content = fileView.text()
+                        console.log('[DOCK DEBUG] Desktop file content length:', content ? content.length : 0)
                     } catch (e) {
+                        console.log('[DOCK DEBUG] Error reading desktop file:', e)
                         try {
                             fileView.path = systemPath
                             content = fileView.text()
                         } catch (e2) {
+                            console.log('[DOCK DEBUG] Error reading system path:', e2)
                             fileView.destroy()
-                            return windowClass.toLowerCase()
+                            continue
                         }
                     }
+                    
                     // Parse the desktop file to find Icon line
-                    var lines = content.split('\n')
-                    for (var i = 0; i < lines.length; i++) {
-                        var line = lines[i].trim()
-                        if (line.startsWith('Icon=')) {
-                            var iconName = line.substring(5)
-                            fileView.destroy()
-                            var resolvedIcon = IconTheme.getIconPath(iconName, StandardPaths.writableLocation(StandardPaths.HomeLocation)) || iconName
-                            console.log('[DOCK DEBUG] getIconForClass:', windowClass, 'Icon entry:', iconName, 'Resolved icon:', resolvedIcon)
-                            return resolvedIcon
+                    if (content) {
+                        var lines = content.split('\n')
+                        console.log('[DOCK DEBUG] Desktop file has', lines.length, 'lines')
+                        for (var i = 0; i < lines.length; i++) {
+                            var line = lines[i].trim()
+                            if (line.startsWith('Icon=')) {
+                                var iconName = line.substring(5)
+                                fileView.destroy()
+                                console.log('[DOCK DEBUG] Found Icon= line:', iconName)
+                                var resolvedIcon = IconTheme.getIconPath(iconName, StandardPaths.writableLocation(StandardPaths.HomeLocation)) || iconName
+                                console.log('[DOCK DEBUG] getIconForClass:', windowClass, 'Icon entry:', iconName, 'Resolved icon:', resolvedIcon)
+                                if (windowClass === "AffinityPhoto.desktop") {
+                                    console.log('[DOCK DEBUG] Testing Affinity Photo icon resolution...')
+                                    console.log('[DOCK DEBUG] iconName:', iconName)
+                                    console.log('[DOCK DEBUG] resolvedIcon:', resolvedIcon)
+                                    console.log('[DOCK DEBUG] IconTheme.getIconPath result:', IconTheme.getIconPath(iconName, StandardPaths.writableLocation(StandardPaths.HomeLocation)))
+                                }
+                                return resolvedIcon
+                            }
                         }
+                        console.log('[DOCK DEBUG] No Icon= line found in desktop file')
                     }
                     fileView.destroy()
-                    return windowClass.toLowerCase()
                 }
+                
+                console.log('[DOCK DEBUG] No desktop file found, using IconTheme.getIconPath')
                 var resolvedIcon = IconTheme.getIconPath(windowClass, StandardPaths.writableLocation(StandardPaths.HomeLocation)) || windowClass.toLowerCase()
                 console.log('[DOCK DEBUG] getIconForClass:', windowClass, 'Resolved icon:', resolvedIcon)
                 return resolvedIcon
@@ -574,15 +594,15 @@ Scope {
                     id: dockContainer
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    implicitWidth: dockContent.width
+                    implicitWidth: dockItemsLayout.width + 8
                     height: dockHeight
 
                     Rectangle {
                         id: dockContent
-                        width: dockItemsLayout.width + (dockHeight * 0.5)
+                        width: dockItemsLayout.width + 8
                         height: parent.height
                         anchors.centerIn: parent
-                        radius: 25
+                        radius: 70
                         color: Qt.rgba(
                             Appearance.colors.colLayer0.r,
                             Appearance.colors.colLayer0.g,
@@ -694,7 +714,7 @@ Scope {
                                 
                                 DockItem {
                                     property var parentRepeater: pinnedAppsRepeater  // Add reference to the repeater
-                                    icon: modelData  // Pass raw class name to SystemIcon
+                                    icon: modelData.endsWith('.desktop') ? dockRoot.getIconForClass(modelData) : modelData  // Use getIconForClass only for .desktop files
                                     tooltip: modelData  // Use the app class name for pinned apps
                                     isActive: dockRoot.isWindowActive(modelData)
                                     isPinned: true
@@ -703,8 +723,14 @@ Scope {
                                         command: modelData.toLowerCase()
                                     })
                                     onClicked: {
-                                        // console.log("[DOCK DEBUG] Clicked pinned app:", modelData);
-                                        
+                                        // Special-case handling for OBS and DaVinci Resolve
+                                        if (modelData === "com.obsproject.Studio") {
+                                            Hyprland.dispatch(`exec gtk-launch com.obsproject.Studio.desktop`)
+                                            return;
+                                        } else if (modelData === "resolve") {
+                                            Hyprland.dispatch(`exec gtk-launch com.blackmagicdesign.resolve.desktop`)
+                                            return;
+                                        }
                                         // Build mapping for .desktop files to possible window classes
                                         var mapping = {
                                             'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
@@ -717,6 +743,7 @@ Scope {
                                             'heroic': ['heroic', 'heroicgameslauncher'],
                                             'obs': ['obs', 'com.obsproject.studio'],
                                             'com.obsproject.Studio.desktop': ['obs', 'com.obsproject.studio'],
+                                            'cursor-cursor': ['cursor', 'Cursor'],
                                             'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
                                             'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                                         };
@@ -838,7 +865,7 @@ Scope {
                                 }
                                 
                                 DockItem {
-                                    icon: modelData.class  // Pass raw class name to SystemIcon
+                                    icon: dockRoot.getIconForClass(modelData.class)  // Use getIconForClass to resolve icon properly
                                     tooltip: modelData.title || modelData.class
                                     isActive: true
                                     isPinned: false
@@ -848,7 +875,14 @@ Scope {
                                     }
                                     
                                     onClicked: {
-                                        // console.log("[DOCK DEBUG] Clicked unpinned app:", modelData.class);
+                                        // Special-case handling for OBS and DaVinci Resolve
+                                        if (modelData === "com.obsproject.Studio") {
+                                            Hyprland.dispatch(`exec gtk-launch com.obsproject.Studio.desktop`)
+                                            return;
+                                        } else if (modelData === "resolve") {
+                                            Hyprland.dispatch(`exec gtk-launch com.blackmagicdesign.resolve.desktop`)
+                                            return;
+                                        }
                                         // For unpinned apps, we already have the specific window
                                         if (modelData.address) {
                                             Hyprland.dispatch(`focuswindow address:${modelData.address}`)
@@ -964,16 +998,7 @@ Scope {
             }
         }
         
-        // Mask to match dock shape
-        mask: Region {
-            item: Rectangle {
-                width: dockContent.width + 20
-                height: dockContent.height + 10
-                x: dockContent.x + (dockRoot.width - dockContent.width) / 2 - 10
-                y: dockContent.y - 5
-                radius: 30
-            }
-        }
+
     }
 
     // Function to extract Exec command from desktop file

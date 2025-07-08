@@ -118,11 +118,10 @@ Item {
         anchors.fill: parent
         spacing: 8
 
-        // Notifications Section (50% height)
+        // Notifications Section (now full height)
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: parent.height * 0.5
-            Layout.fillHeight: false
+            Layout.fillHeight: true // Fills all available space
             radius: Appearance.rounding.large
             color: Qt.rgba(
                 Appearance.colors.colLayer1.r,
@@ -224,23 +223,23 @@ Item {
         }
 
         // Media Player Section (50% height)
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.fillHeight: true // Fills remaining space
-            radius: Appearance.rounding.large
-            color: Qt.rgba(
-                Appearance.colors.colLayer1.r,
-                Appearance.colors.colLayer1.g,
-                Appearance.colors.colLayer1.b,
-                0.3
-            )
-            border.color: Qt.rgba(1, 1, 1, 0.1)
-            border.width: 1
-
-            SimpleMediaPlayerSidebar {
-                anchors.fill: parent
-            }
-        }
+        // Rectangle {
+        //     Layout.fillWidth: true
+        //     Layout.fillHeight: true // Fills remaining space
+        //     radius: Appearance.rounding.large
+        //     color: Qt.rgba(
+        //         Appearance.colors.colLayer1.r,
+        //         Appearance.colors.colLayer1.g,
+        //         Appearance.colors.colLayer1.b,
+        //         0.3
+        //     )
+        //     border.color: Qt.rgba(1, 1, 1, 0.1)
+        //     border.width: 1
+        //
+        //     SimpleMediaPlayerSidebar {
+        //         anchors.fill: parent
+        //     }
+        // }
     }
 
     // Placeholder when list is empty

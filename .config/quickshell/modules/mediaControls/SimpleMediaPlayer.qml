@@ -77,7 +77,7 @@ Scope {
             downloaded = false
             return;
         }
-        console.log("[SimpleMediaPlayer] Art URL changed to:", artUrl)
+        // console.log("[SimpleMediaPlayer] Art URL changed to:", artUrl)
         downloaded = false
         
         // Check if file already exists before downloading
@@ -108,7 +108,7 @@ Scope {
             if (exitCode === 0) {
                 root.downloaded = true
             } else {
-                console.log("[SimpleMediaPlayer] Failed to download album art for:", root.artUrl)
+                // console.log("[SimpleMediaPlayer] Failed to download album art for:", root.artUrl)
                 root.downloaded = false
             }
         }
@@ -210,7 +210,7 @@ Scope {
                             
                             onStatusChanged: {
                                 if (status === Image.Error) {
-                                    console.log("[SimpleMediaPlayer] Background art load error for:", source)
+                                    // console.log("[SimpleMediaPlayer] Background art load error for:", source)
                                 }
                             }
                         }
@@ -371,14 +371,6 @@ Scope {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
                                     enabled: activePlayer && activePlayer.length > 0
-                                    
-                                    onClicked: (mouse) => {
-                                        if (activePlayer && activePlayer.length > 0) {
-                                            const progress = mouse.x / width
-                                            const newPosition = progress * activePlayer.length
-                                            activePlayer.position = newPosition
-                                        }
-                                    }
                                 }
                             }
                         }

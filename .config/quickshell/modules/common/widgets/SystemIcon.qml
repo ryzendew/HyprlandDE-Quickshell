@@ -153,24 +153,20 @@ Item {
     function updateIconSource() {
         var sourcePath = "";
         if (resolvedIconPath && resolvedIconPath !== "") {
-            // console.log("[SYSTEMICON DEBUG] Using resolved desktop/absolute path:", resolvedIconPath);
             sourcePath = resolvedIconPath;
         } else {
             var bestName = getBestIconNameToResolve();
-            // console.log("[SYSTEMICON DEBUG] Calling IconTheme.getIconPath with bestName:", bestName, "homeDirectory:", homeDirectory);
             sourcePath = IconTheme.getIconPath(bestName, homeDirectory);
-            // console.log("[SYSTEMICON DEBUG] IconTheme.js returned path:", sourcePath, "for bestName:", bestName, "(original iconName:", iconName, ")");
         }
-
         if (sourcePath && sourcePath !== "") {
-            mainIcon.source = formatPathForImageSource(sourcePath);
+            var formatted = formatPathForImageSource(sourcePath);
+            console.log("[DEBUG] Setting mainIcon.source to:", formatted);
+            mainIcon.source = formatted;
         } else {
-            // Only warn if logging is enabled and warnings are not suppressed
-            if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.warning && !ConfigOptions?.logging?.suppressIconWarnings) {
-                console.warn("[SYSTEMICON DEBUG] No valid icon path found for (updateIconSource):", iconName, ", attempting final fallback.");
-            }
             var fallbackPath = IconTheme.getIconPath(fallbackIcon, homeDirectory);
-            mainIcon.source = formatPathForImageSource(fallbackPath); // Fallback icon
+            var formattedFallback = formatPathForImageSource(fallbackPath);
+            console.log("[DEBUG] Setting mainIcon.source to fallback:", formattedFallback);
+            mainIcon.source = formattedFallback; // Fallback icon
         }
     }
     
@@ -250,6 +246,13 @@ Item {
         mipmap: true
         sourceSize.width: iconSize * 2
         sourceSize.height: iconSize * 2
+        onStatusChanged: {
+            if (status === Image.Error) {
+                console.log("[DEBUG] Image load error for:", source);
+            } else if (status === Image.Ready) {
+                console.log("[DEBUG] Image loaded successfully:", source);
+            }
+        }
     }
     
     // Color overlay if specified

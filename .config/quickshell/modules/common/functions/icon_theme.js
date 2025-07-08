@@ -43,11 +43,7 @@ function detectCurrentIconTheme(homeDir) {
     // Try to detect from Qt6 theme settings
     try {
         var qt6ConfigPath = StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/qt6ct/qt6ct.conf";
-        var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
-        fileView.path = qt6ConfigPath;
-        var content = fileView.text();
-        fileView.destroy();
-        
+        var content = Qt.createQmlObject('import Qt 6.0; FileHelper.readFile("' + qt6ConfigPath + '")', null);
         if (content) {
             var lines = content.split('\n');
         for (var i = 0; i < lines.length; i++) {
@@ -109,10 +105,7 @@ function themeExists(themeName, homeDir) {
     for (var i = 0; i < iconBasePaths.length; i++) {
         var themePath = iconBasePaths[i] + "/" + themeName;
         try {
-            var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
-            fileView.path = themePath + "/index.theme";
-            var content = fileView.text();
-            fileView.destroy();
+            var content = Qt.createQmlObject('import Qt 6.0; FileHelper.readFile("' + themePath + '/index.theme")', null);
             if (content && content.length > 0) {
                 return true;
             }
@@ -136,9 +129,7 @@ function refreshAvailableThemes(homeDir) {
     for (var i = 0; i < iconBasePaths.length; i++) {
         var basePath = iconBasePaths[i];
         try {
-            var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
-            fileView.path = basePath;
-            var content = fileView.text();
+            var content = Qt.createQmlObject('import Qt 6.0; FileHelper.readFile("' + basePath + '")', null);
             var lines = content.split('\n');
             
             for (var j = 0; j < lines.length; j++) {
@@ -147,10 +138,7 @@ function refreshAvailableThemes(homeDir) {
                     // Check if it's a directory and has an index.theme
                     try {
                         var themeIndexPath = basePath + "/" + line + "/index.theme";
-                        var indexFileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
-                        indexFileView.path = themeIndexPath;
-                        var indexContent = indexFileView.text();
-                        indexFileView.destroy();
+                        var indexContent = Qt.createQmlObject('import Qt 6.0; FileHelper.readFile("' + themeIndexPath + '")', null);
                         
                         if (indexContent && indexContent.length > 0) {
                             if (availableThemes.indexOf(line) === -1) {
@@ -162,7 +150,6 @@ function refreshAvailableThemes(homeDir) {
                     }
                 }
             }
-            fileView.destroy();
         } catch (e) {
             // Directory not accessible
         }
@@ -207,6 +194,24 @@ function getIconPath(iconName, homeDir) {
         return iconCache[cacheKey];
     }
     
+    // Apply icon substitutions from icons.js
+    var substitutedIconName = applyIconSubstitutions(iconName, homeDir);
+    if (substitutedIconName && substitutedIconName !== iconName) {
+        debugLog('Applied substitution for', iconName, '->', substitutedIconName);
+        // If substitution returned an absolute path, return it directly
+        if (substitutedIconName.startsWith('/')) {
+            var absPath = substitutedIconName.startsWith('file://') ? substitutedIconName : 'file://' + substitutedIconName;
+            iconCache[cacheKey] = absPath;
+            return absPath;
+        }
+        // If substitution returned a different icon name, try to resolve it
+        var resolvedFromSubstitution = getIconPath(substitutedIconName, homeDir);
+        if (resolvedFromSubstitution && resolvedFromSubstitution !== substitutedIconName) {
+            iconCache[cacheKey] = resolvedFromSubstitution;
+            return resolvedFromSubstitution;
+        }
+    }
+    
     // Icon variations to try (most specific first)
     var iconVariations = [iconName];
     
@@ -228,7 +233,11 @@ function getIconPath(iconName, homeDir) {
         "obs": ["com.obsproject.Studio", "obs-studio"],
         "ptyxis": ["terminal", "org.gnome.Terminal"],
         "org.gnome.ptyxis": ["terminal", "org.gnome.Terminal"],
-        "org.gnome.Ptyxis": ["terminal", "org.gnome.Terminal"]
+        "org.gnome.Ptyxis": ["terminal", "org.gnome.Terminal"],
+        "AffinityPhoto": ["AffinityPhoto", "photo", "image-editor"],
+        "AffinityPhoto.desktop": ["AffinityPhoto", "photo", "image-editor"],
+        "photo.exe": ["AffinityPhoto", "photo", "image-editor"],
+        "Photo.exe": ["AffinityPhoto", "photo", "image-editor"]
     };
     
     // Add mappings if available
@@ -242,6 +251,27 @@ function getIconPath(iconName, homeDir) {
         iconVariations.push(lowerName);
         if (appMappings[lowerName]) {
             iconVariations = iconVariations.concat(appMappings[lowerName]);
+        }
+    }
+    
+
+    
+    // Map window classes to desktop files for better icon resolution
+    var windowClassToDesktopFile = {
+        "photo.exe": "AffinityPhoto.desktop",
+        "Photo.exe": "AffinityPhoto.desktop",
+        "designer.exe": "AffinityDesigner.desktop",
+        "Designer.exe": "AffinityDesigner.desktop"
+    };
+    
+    // If this is a window class, try to map it to a desktop file
+    if (windowClassToDesktopFile[iconName]) {
+        var mappedDesktopFile = windowClassToDesktopFile[iconName];
+        debugLog('Mapped window class', iconName, 'to desktop file', mappedDesktopFile);
+        var resolvedFromMapping = getIconPath(mappedDesktopFile, homeDir);
+        if (resolvedFromMapping && resolvedFromMapping !== mappedDesktopFile) {
+            iconCache[cacheKey] = resolvedFromMapping;
+            return resolvedFromMapping;
         }
     }
     
@@ -283,26 +313,26 @@ function checkDesktopFiles(iconName, homeDir) {
         "/usr/local/share/applications"
     ];
     
-        for (var p = 0; p < appImageDesktopPaths.length; p++) {
+    for (var p = 0; p < appImageDesktopPaths.length; p++) {
         var desktopPath = appImageDesktopPaths[p] + "/" + iconName + ".desktop";
-            try {
-                var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
-                fileView.path = desktopPath;
-                var content = fileView.text();
+        debugLog('Trying desktop path:', desktopPath);
+        try {
+            var content = Qt.createQmlObject('import Qt 6.0; FileHelper.readFile("' + desktopPath + '")', null);
+            debugLog('Desktop file content length:', content ? content.length : 0);
+            if (content) {
                 var lines = content.split('\n');
-                
+                debugLog('Desktop file has', lines.length, 'lines');
                 for (var i = 0; i < lines.length; i++) {
                     var line = lines[i].trim();
                     if (line.startsWith('Icon=')) {
                         var iconValue = line.substring(5).trim();
                         debugLog('Found Icon= in desktop file:', iconValue, 'at', desktopPath);
-                        fileView.destroy();
-                        
                         // If it's an absolute path, return it directly
                         if (iconValue.startsWith('/')) {
-                            return iconValue;
+                            var absPath = iconValue.startsWith('file://') ? iconValue : 'file://' + iconValue;
+                            debugLog('Found absolute path in desktop file:', absPath);
+                            return absPath;
                         }
-                        
                         // If it's a relative path, try to find the AppImage and extract its icon
                         var execLine = "";
                         for (var j = 0; j < lines.length; j++) {
@@ -311,7 +341,6 @@ function checkDesktopFiles(iconName, homeDir) {
                                 break;
                             }
                         }
-                        
                         if (execLine) {
                             // Extract the AppImage path from the Exec line
                             var appImagePath = execLine.split(' ')[0];
@@ -321,20 +350,18 @@ function checkDesktopFiles(iconName, homeDir) {
                                 return appImageIcon;
                             }
                         }
-                        
                         // Try to resolve the icon name through the theme system
                         return resolveFromIconTheme([iconValue], homeDir);
                     }
                 }
-                fileView.destroy();
-            } catch (e) {
+            }
+        } catch (e) {
             debugLog('Could not read desktop file:', desktopPath, e);
         }
     }
-    
     debugLog('No icon found in desktop files for', iconName);
     return null;
-            }
+}
 
 // Resolve icon from icon theme following XDG standards
 function resolveFromIconTheme(iconVariations, homeDir) {
@@ -375,13 +402,10 @@ function resolveFromIconTheme(iconVariations, homeDir) {
                         
                         // Check if file exists by trying to read it
                         try {
-                            var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
-                            fileView.path = fullPath;
-                            var content = fileView.text();
-                            fileView.destroy();
+                            var content = Qt.createQmlObject('import Qt 6.0; FileHelper.readFile("' + fullPath + '")', null);
                             if (content && content.length > 0) {
                                 debugLog('Found icon in theme:', fullPath);
-                        return fullPath;
+                                return fullPath;
                             } else {
                                 debugLog('File exists but is empty:', fullPath);
                             }
@@ -407,13 +431,10 @@ function resolveFromIconTheme(iconVariations, homeDir) {
                     var fullPath = basePath + "/hicolor/" + sizeDir + "/" + iconVar + ext;
                     
                     try {
-                        var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
-                        fileView.path = fullPath;
-                        var content = fileView.text();
-                        fileView.destroy();
+                        var content = Qt.createQmlObject('import Qt 6.0; FileHelper.readFile("' + fullPath + '")', null);
                         if (content && content.length > 0) {
                             debugLog('Found icon in hicolor fallback:', fullPath);
-                        return fullPath;
+                            return fullPath;
                         } else {
                             debugLog('File exists but is empty in hicolor:', fullPath);
                         }
@@ -448,6 +469,90 @@ function refreshThemes(homeDir) {
     if (oldTheme !== currentDetectedTheme) {
         // console.log("[ICON DEBUG] Theme changed from", oldTheme, "to", currentDetectedTheme);
     }
+}
+
+// Apply icon substitutions from icons.js
+function applyIconSubstitutions(iconName, homeDir) {
+    // Icon substitutions from icons.js
+    var substitutions = {
+        "code-url-handler": "visual-studio-code",
+        "Code": "visual-studio-code",
+        "GitHub Desktop": "github-desktop",
+        "Minecraft* 1.20.1": "minecraft",
+        "gnome-tweaks": "org.gnome.tweaks",
+        "pavucontrol-qt": "pavucontrol",
+        "wps": "wps-office2019-kprometheus",
+        "wpsoffice": "wps-office2019-kprometheus",
+        "footclient": "foot",
+        "zen": "zen-browser",
+        "ptyxis": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/org.gnome.Ptyxis.svg";
+        },
+        "AffinityPhoto.desktop": function() {
+            return homeDir + "/.local/share/icons/AffinityPhoto.png";
+        },
+        "steam-native": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/steam.svg";
+        },
+        "lutris": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/lutris.svg";
+        },
+        "com.blackmagicdesign.resolve.desktop": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/resolve.svg";
+        },
+        "cider": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/cider.svg";
+        },
+        "vesktop": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/vesktop.svg";
+        },
+        "obs": function() {
+            var configDir = StandardPaths.writableLocation(StandardPaths.ConfigLocation);
+            return configDir + "/quickshell/assets/icons/obs.svg";
+        },
+        "heroic": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/heroic.svg";
+        },
+        "microsoft-edge-dev": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/microsoft-edge-dev.svg";
+        },
+        "org.gnome.Nautilus": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/nautilus.svg";
+        },
+        "": "image-missing"
+    };
+    
+    // Check for direct substitution
+    if (substitutions[iconName]) {
+        var substitution = substitutions[iconName];
+        if (typeof substitution === 'function') {
+            return substitution();
+        }
+        return substitution;
+    }
+    
+    // Check for regex substitutions
+    var regexSubstitutions = [
+        {
+            "regex": /^steam_app_(\d+)$/,
+            "replace": "steam_icon_$1"
+        },
+        {
+            "regex": /Minecraft.*$/,
+            "replace": "minecraft"
+        }
+    ];
+    
+    for (var i = 0; i < regexSubstitutions.length; i++) {
+        var substitution = regexSubstitutions[i];
+        var replacedName = iconName.replace(substitution.regex, substitution.replace);
+        if (replacedName !== iconName) {
+            return replacedName;
+        }
+    }
+    
+    // No substitution found
+    return iconName;
 }
 
 // Initialize on first load

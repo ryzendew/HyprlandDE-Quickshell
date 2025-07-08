@@ -51,6 +51,10 @@ Item { // Root container for the weather sidebar page
     property real latitude: 44.65 // Halifax default latitude
     property real longitude: -63.57 // Halifax default longitude
     
+        // --- Weather alert properties ---
+        property var weatherAlerts: [] // Array to hold weather alerts
+        property bool hasAlerts: weatherAlerts.length > 0 // Whether there are any alerts
+    
     // --- Temperature range calculation properties ---
     property real globalTempMin: 999 // Global minimum temperature across all days
     property real globalTempMax: -999 // Global maximum temperature across all days
@@ -90,6 +94,104 @@ Item { // Root container for the weather sidebar page
         
         return Math.max(minWidth, Math.min(maxWidth, width))
     }
+        
+        // --- Function to check for weather alerts ---
+        function checkWeatherAlerts() {
+            var alerts = []
+            
+            if (!forecastData || forecastData.length === 0) {
+                weatherAlerts = alerts
+                return
+            }
+            
+            // Check current and next few days for alerts
+            for (var i = 0; i < Math.min(3, forecastData.length); i++) {
+                var day = forecastData[i]
+                
+                // Heat warning (above 30°C)
+                if (parseFloat(day.tempMax) > 30) {
+                    alerts.push({
+                        type: "heat",
+                        severity: "warning",
+                        message: qsTr("Heat Warning: High temperature of ") + day.tempMax + "°C " + qsTr("expected"),
+                        icon: "🌡️",
+                        color: "#FF5722"
+                    })
+                }
+                
+                // Extreme heat warning (above 35°C)
+                if (parseFloat(day.tempMax) > 35) {
+                    alerts.push({
+                        type: "extreme-heat",
+                        severity: "danger",
+                        message: qsTr("Extreme Heat Warning: Dangerous temperature of ") + day.tempMax + "°C " + qsTr("expected"),
+                        icon: "🔥",
+                        color: "#D32F2F"
+                    })
+                }
+                
+                // Cold warning (below -20°C)
+                if (parseFloat(day.tempMin) < -20) {
+                    alerts.push({
+                        type: "cold",
+                        severity: "warning",
+                        message: qsTr("Cold Warning: Low temperature of ") + day.tempMin + "°C " + qsTr("expected"),
+                        icon: "❄️",
+                        color: "#2196F3"
+                    })
+                }
+                
+                // Extreme cold warning (below -30°C)
+                if (parseFloat(day.tempMin) < -30) {
+                    alerts.push({
+                        type: "extreme-cold",
+                        severity: "danger",
+                        message: qsTr("Extreme Cold Warning: Dangerous temperature of ") + day.tempMin + "°C " + qsTr("expected"),
+                        icon: "🥶",
+                        color: "#1976D2"
+                    })
+                }
+                
+                // High precipitation warning (above 80%)
+                if (parseFloat(day.precip) > 80) {
+                    alerts.push({
+                        type: "heavy-rain",
+                        severity: "warning",
+                        message: qsTr("Heavy Rain Warning: ") + day.precip + "% " + qsTr("chance of precipitation"),
+                        icon: "🌧️",
+                        color: "#1976D2"
+                    })
+                }
+                
+                // Storm conditions (check condition text)
+                if (day.condition && (
+                    day.condition.toLowerCase().includes("storm") ||
+                    day.condition.toLowerCase().includes("thunder") ||
+                    day.condition.toLowerCase().includes("severe")
+                )) {
+                    alerts.push({
+                        type: "storm",
+                        severity: "danger",
+                        message: qsTr("Storm Warning: ") + day.condition,
+                        icon: "⛈️",
+                        color: "#FF9800"
+                    })
+                }
+            }
+            
+            // Check air quality
+            if (airQuality !== "--" && parseInt(airQuality) > 150) {
+                alerts.push({
+                    type: "air-quality",
+                    severity: parseInt(airQuality) > 200 ? "danger" : "warning",
+                    message: qsTr("Poor Air Quality: AQI ") + airQuality,
+                    icon: "😷",
+                    color: parseInt(airQuality) > 200 ? "#D32F2F" : "#FF9800"
+                })
+            }
+            
+            weatherAlerts = alerts
+        }
 
     // --- Weather data refresh function ---
     function refreshWeather() { // Function to refresh weather and air quality
@@ -116,6 +218,7 @@ Item { // Root container for the weather sidebar page
                 item.forecastDataChanged.connect(function() { 
                     root.forecastData = item.forecastData
                     root.calculateTempRange() // Calculate temperature range when data changes
+                    root.checkWeatherAlerts() // Check for weather alerts when data changes
                 }) // Update forecast data on change
                 item.locationDisplayChanged.connect(function() { root.locationDisplay = item.locationDisplay }) // Update location on change
                 item.currentTempChanged.connect(function() { root.currentTemp = item.currentTemp }) // Update temp on change
@@ -144,8 +247,10 @@ Item { // Root container for the weather sidebar page
                                 if (data.hourly && data.hourly.us_aqi && data.hourly.us_aqi.length > 0) { // If AQI data exists
                                     var aqiValue = data.hourly.us_aqi[0]; // Get AQI value
                                     root.airQuality = (aqiValue !== undefined && aqiValue !== null) ? String(aqiValue) : "--"; // Set AQI
+                                    root.checkWeatherAlerts() // Check for alerts when AQI changes
                                 } else {
                                     root.airQuality = "--"; // No AQI
+                                    root.checkWeatherAlerts() // Check for alerts when AQI changes
                                 }
                             } catch (e) { root.airQuality = "--"; } // Error parsing
                         } else { root.airQuality = "--"; } // HTTP error
@@ -321,6 +426,46 @@ Item { // Root container for the weather sidebar page
                         font.pixelSize: Appearance.font.pixelSize.large
                         font.weight: Font.DemiBold
                         horizontalAlignment: Text.AlignHCenter
+                                }
+        }
+        
+        // --- Weather Alerts Section ---
+        Item {
+            id: alertsSection
+            visible: root.hasAlerts
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: Math.max(36, Math.min(64, root.weatherAlerts.length * 28 + 20)) // Small bar, grows with alerts
+            z: 10
+            Rectangle {
+                anchors.fill: parent
+                radius: Appearance.rounding.medium
+                color: Qt.rgba(0.95, 0.2, 0.2, 0.1)
+                border.color: Qt.rgba(0.95, 0.2, 0.2, 0.3)
+                border.width: 1
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 8
+                    Text {
+                        text: "⚠️"
+                        font.pixelSize: 16
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                    Repeater {
+                        model: root.weatherAlerts
+                        delegate: Text {
+                            text: modelData.message
+                            font.pixelSize: Appearance.font.pixelSize.small - 2
+                            color: Appearance.colors.colOnLayer1
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                            wrapMode: Text.WordWrap
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+                    }
+                }
                     }
                 }
             }
@@ -342,7 +487,7 @@ Item { // Root container for the weather sidebar page
         // --- Modern 10-day forecast section ---
         ColumnLayout { // Container for the forecast section
             Layout.fillWidth: true // Fill the width of the parent
-            Layout.fillHeight: true // Fill all remaining vertical space
+            Layout.fillHeight: true // Fill all remaining space
             spacing: 12 // Professional spacing
 
             Text { // Section header: '10-Day Forecast'
@@ -357,7 +502,7 @@ Item { // Root container for the weather sidebar page
 
             Flickable { // Scrollable area for forecast cards
                 Layout.fillWidth: true // Fill width
-                Layout.fillHeight: true // Fill all remaining height
+                Layout.fillHeight: true // Fill the forecast section height
                 contentHeight: forecastColumn.height // Set content height to column height
                 clip: true // Clip content to bounds
                 interactive: contentHeight > height // Enable scrolling if content is taller than view
@@ -387,8 +532,8 @@ Item { // Root container for the weather sidebar page
                             
                             RowLayout { // Card content row
                                 anchors.fill: parent // Fill card
-                                anchors.margins: 16 // Professional margins inside card
-                                spacing: 16 // Better spacing between elements
+                                anchors.margins: 6 // Tighter margins inside card
+                                spacing: 8 // Tighter spacing between columns
                                 
                                 ColumnLayout {
                                     spacing: 4 // Increase spacing between date/icon
@@ -435,7 +580,7 @@ Item { // Root container for the weather sidebar page
                                     }
                                 }
                                 
-                                Item { Layout.fillWidth: true } // Spacer
+                                Item { Layout.fillWidth: true } // Removed the large flexible spacer to allow the temp/bar group to use more space
                                 
                                 ColumnLayout {
                                     Layout.alignment: Qt.AlignVCenter // Center condition text
@@ -453,11 +598,9 @@ Item { // Root container for the weather sidebar page
                                     }
                                 }
                                 
-                                ColumnLayout {
-                                    Layout.alignment: Qt.AlignVCenter // Center temp range
-                                    spacing: 4 // Increase spacing between temp range elements
                                     RowLayout {
-                                        spacing: 8 // Increase spacing between min temp, bar, and max temp
+                                    Layout.fillWidth: true // Use all available space
+                                    spacing: 8 // Spacing between min temp, bar, and max temp
                                         Text { // Min temp
                                             text: root.forecastData[index].tempMin + "°" // Min temp value
                                             font.pixelSize: Appearance.font.pixelSize.large // Larger font size
@@ -475,7 +618,6 @@ Item { // Root container for the weather sidebar page
                                             font.pixelSize: Appearance.font.pixelSize.large // Larger font size
                                             color: Appearance.colors.colOnLayer1 // Text color
                                             verticalAlignment: Text.AlignVCenter // Centered
-                                        }
                                     }
                                 }
                             }

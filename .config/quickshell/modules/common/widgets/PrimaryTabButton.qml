@@ -99,8 +99,8 @@ TabButton {
         // Professional selected tab background with top-only rounded corners
         Item {
             anchors.centerIn: parent
-            width: Math.max(button.tabContentWidth + 24, button.minimumWidth * 0.85)
-            height: parent.height + 3
+            width: Math.max(button.tabContentWidth + 8, button.minimumWidth * 0.75)
+            height: parent.height - 1
             visible: button.selected
             
             Rectangle {
@@ -174,7 +174,7 @@ TabButton {
         Rectangle {
             anchors.centerIn: parent
             width: Math.max(button.tabContentWidth + 16, button.minimumWidth * 0.8)
-            height: parent.height - 10
+            height: parent.height - 1
             topLeftRadius: (Appearance?.rounding.medium ?? 8) + 2
             topRightRadius: (Appearance?.rounding.medium ?? 8) + 2
             bottomLeftRadius: 0

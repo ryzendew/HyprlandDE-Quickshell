@@ -71,16 +71,25 @@ Singleton {
     }
 
     function iconExists(iconName) {
-        return (Quickshell.iconPath(iconName, true).length > 0) 
-            && !iconName.includes("image-missing");
+        var iconPath = Quickshell.iconPath(iconName, true);
+        var exists = (iconPath.length > 0) && !iconName.includes("image-missing");
+        console.log("[APP SEARCH DEBUG] iconExists check:", iconName, "->", exists, "path:", iconPath);
+        return exists;
     }
 
     function guessIcon(str) {
-        if (!str || str.length == 0) return "image-missing";
+        console.log("[APP SEARCH DEBUG] guessIcon called with:", str);
+        
+        if (!str || str.length == 0) {
+            console.log("[APP SEARCH DEBUG] Empty string, returning image-missing");
+            return "image-missing";
+        }
 
         // Normal substitutions
-        if (substitutions[str])
+        if (substitutions[str]) {
+            console.log("[APP SEARCH DEBUG] Found substitution:", str, "->", substitutions[str]);
             return substitutions[str];
+        }
 
         // Regex substitutions
         for (let i = 0; i < regexSubstitutions.length; i++) {
@@ -89,28 +98,50 @@ Singleton {
                 substitution.regex,
                 substitution.replace,
             );
-            if (replacedName != str) return replacedName;
+            if (replacedName != str) {
+                console.log("[APP SEARCH DEBUG] Regex substitution:", str, "->", replacedName);
+                return replacedName;
+            }
         }
 
         // If it gets detected normally, no need to guess
-        if (iconExists(str)) return str;
+        if (iconExists(str)) {
+            console.log("[APP SEARCH DEBUG] Icon exists for original name:", str);
+            return str;
+        }
 
         let guessStr = str;
         // Guess: Take only app name of reverse domain name notation
         guessStr = str.split('.').slice(-1)[0].toLowerCase();
-        if (iconExists(guessStr)) return guessStr;
+        console.log("[APP SEARCH DEBUG] Trying reverse domain name guess:", guessStr);
+        if (iconExists(guessStr)) {
+            console.log("[APP SEARCH DEBUG] Found icon for reverse domain name guess:", guessStr);
+            return guessStr;
+        }
+        
         // Guess: normalize to kebab case
         guessStr = str.toLowerCase().replace(/\s+/g, "-");
-        if (iconExists(guessStr)) return guessStr;
-        // Guess: First fuzze desktop entry match
+        console.log("[APP SEARCH DEBUG] Trying kebab case guess:", guessStr);
+        if (iconExists(guessStr)) {
+            console.log("[APP SEARCH DEBUG] Found icon for kebab case guess:", guessStr);
+            return guessStr;
+        }
+        
+        // Guess: First fuzzy desktop entry match
         const searchResults = root.fuzzyQuery(str);
+        console.log("[APP SEARCH DEBUG] Fuzzy search results count:", searchResults.length);
         if (searchResults.length > 0) {
             const firstEntry = searchResults[0];
-            guessStr = firstEntry.icon
-            if (iconExists(guessStr)) return guessStr;
+            guessStr = firstEntry.icon;
+            console.log("[APP SEARCH DEBUG] Trying fuzzy match icon:", guessStr);
+            if (iconExists(guessStr)) {
+                console.log("[APP SEARCH DEBUG] Found icon for fuzzy match:", guessStr);
+                return guessStr;
+            }
         }
 
         // Give up
+        console.log("[APP SEARCH DEBUG] No icon found, returning original:", str);
         return str;
     }
 }

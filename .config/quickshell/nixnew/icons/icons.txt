@@ -1,0 +1,4 @@
+phosphor icons
+shuffle-off is an edit of shuffle.
+play is edited.
+repeat-none is an edit of repeat.

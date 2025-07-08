@@ -2,6 +2,8 @@ import "root:/modules/common"
 import "root:/modules/common/widgets"
 import "./calendar"
 import "./calendar/calendar_layout.js" as CalendarLayout
+import "./todo"
+import "root:/services"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -204,10 +206,17 @@ Item {
             }
         }
         
-        // Modern Calendar Grid
-        Rectangle {
+        // Content area with calendar and todo list
+        ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            spacing: 20
+            
+            // Calendar Section (top 45%)
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredHeight: parent.height * 0.45
             radius: Appearance.rounding.large
             
             color: Qt.rgba(
@@ -335,6 +344,33 @@ Item {
                     }
                 }
             }
+            }
+            
+            // Enhanced Todo List Section (bottom 55%)
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredHeight: parent.height * 0.55
+                radius: Appearance.rounding.large
+                
+                color: Qt.rgba(
+                    Appearance.colors.colLayer1.r,
+                    Appearance.colors.colLayer1.g,
+                    Appearance.colors.colLayer1.b,
+                    0.4
+                )
+                
+                border.width: 1
+                border.color: Qt.rgba(1, 1, 1, 0.1)
+                
+                // Use the enhanced TodoWidget
+                TodoWidget {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                }
+            }
         }
     }
+    
+
 } 
