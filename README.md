@@ -1,3 +1,13 @@
+# WARNING
+
+**Install these dotfiles at your own risk and you are now responsible to fix all issues or errors as these are My own works built for me.**
+
+Copy and paste this into the terminal and good luck:
+
+```sh
+curl -flSL https://raw.githubusercontent.com/ryzendew/Matts-Quickshell-Hyprland/refs/heads/main/install.sh | bash
+```
+
 ## My dotfiles for my use only! i will not offer any supporrt!
 
 ![image](https://github.com/user-attachments/assets/5fae2ee4-7da2-4d60-91e0-f63ff4f47095)
