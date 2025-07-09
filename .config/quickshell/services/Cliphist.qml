@@ -74,7 +74,7 @@ Singleton {
             if (exitCode === 0) {
                 root.entries = readProc.buffer
             } else {
-                console.error("[Cliphist] Failed to refresh with code", exitCode, "and status", exitStatus)
+                // console.error("[Cliphist] Failed to refresh with code", exitCode, "and status", exitStatus)
             }
         }
     }

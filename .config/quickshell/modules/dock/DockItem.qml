@@ -115,24 +115,7 @@ Rectangle {
         fillMode: Image.PreserveAspectFit
         smooth: true
         
-        // Icon debugging
-        onSourceChanged: {
-            console.log("[DOCK ITEM DEBUG] Icon source changed for app:", appInfo?.class || "unknown");
-            console.log("[DOCK ITEM DEBUG] New icon source:", source);
-            console.log("[DOCK ITEM DEBUG] Icon property value:", dockItem.icon);
-            console.log("[DOCK ITEM DEBUG] App info:", JSON.stringify(appInfo));
-        }
-        
-        onStatusChanged: {
-            if (status === Image.Error) {
-                console.log("[DOCK ITEM DEBUG] Icon failed to load for app:", appInfo?.class || "unknown");
-                console.log("[DOCK ITEM DEBUG] Failed icon source:", source);
-                console.log("[DOCK ITEM DEBUG] Icon property value:", dockItem.icon);
-            } else if (status === Image.Ready) {
-                console.log("[DOCK ITEM DEBUG] Icon loaded successfully for app:", appInfo?.class || "unknown");
-                console.log("[DOCK ITEM DEBUG] Icon source:", source);
-            }
-        }
+        // Icon debugging disabled
     }
 
     // --- Tooltip (disabled) ---

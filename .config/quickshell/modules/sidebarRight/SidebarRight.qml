@@ -64,8 +64,85 @@ Scope {
             id: sidebarRoot
             visible: sidebarLoader.active
 
+            // Animation properties for slide effect
+            property real slideOffset: sidebarWidth
+            property bool isAnimating: false
+
             function hide() {
-                if (!pinned) sidebarLoader.active = false
+                if (!pinned) {
+                    isAnimating = true
+                    slideOutAnimation.start()
+                }
+            }
+
+            function show() {
+                isAnimating = true
+                slideInAnimation.start()
+            }
+
+            // Slide out animation (closing)
+            ParallelAnimation {
+                id: slideOutAnimation
+                NumberAnimation {
+                    target: sidebarRoot
+                    property: "x"
+                    from: 0
+                    to: slideOffset
+                    duration: 200
+                    easing.type: Easing.OutCubic
+                }
+                NumberAnimation {
+                    target: sidebarRoot
+                    property: "opacity"
+                    from: 1.0
+                    to: 0.0
+                    duration: 200
+                    easing.type: Easing.OutCubic
+                }
+                onFinished: {
+                    sidebarLoader.active = false
+                    isAnimating = false
+                    sidebarRoot.opacity = 1.0  // Reset opacity for next time
+                }
+            }
+
+            // Slide in animation (opening)
+            SequentialAnimation {
+                id: slideInAnimation
+                ScriptAction {
+                    script: {
+                        sidebarRoot.x = slideOffset
+                        sidebarRoot.opacity = 0.0  // Start transparent
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: sidebarRoot
+                        property: "x"
+                        from: slideOffset
+                        to: 0
+                        duration: 200
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: sidebarRoot
+                        property: "opacity"
+                        from: 0.0
+                        to: 1.0
+                        duration: 200
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                ScriptAction {
+                    script: {
+                        isAnimating = false
+                    }
+                }
+            }
+
+            // Initialize position when component is created
+            Component.onCompleted: {
+                x = 0
             }
 
             exclusiveZone: 0
@@ -358,16 +435,22 @@ Scope {
         target: "sidebarRight"
 
         function toggle(): void {
-            sidebarLoader.active = !sidebarLoader.active;
-            if(sidebarLoader.active) Notifications.timeoutAll();
+            if (sidebarLoader.active) {
+                sidebarRoot.hide();
+            } else {
+                sidebarLoader.active = true;
+                sidebarRoot.show();
+                Notifications.timeoutAll();
+            }
         }
 
         function close(): void {
-            sidebarLoader.active = false;
+            sidebarRoot.hide();
         }
 
         function open(): void {
             sidebarLoader.active = true;
+            sidebarRoot.show();
             Notifications.timeoutAll();
         }
     }
@@ -377,8 +460,13 @@ Scope {
         description: qsTr("Toggles right sidebar on press")
 
         onPressed: {
-            sidebarLoader.active = !sidebarLoader.active;
-            if(sidebarLoader.active) Notifications.timeoutAll();
+            if (sidebarLoader.active) {
+                sidebarRoot.hide();
+            } else {
+                sidebarLoader.active = true;
+                sidebarRoot.show();
+                Notifications.timeoutAll();
+            }
         }
     }
     GlobalShortcut {
@@ -387,6 +475,7 @@ Scope {
 
         onPressed: {
             sidebarLoader.active = true;
+            sidebarRoot.show();
             Notifications.timeoutAll();
         }
     }
@@ -395,7 +484,7 @@ Scope {
         description: qsTr("Closes right sidebar on press")
 
         onPressed: {
-            sidebarLoader.active = false;
+            sidebarRoot.hide();
         }
     }
 

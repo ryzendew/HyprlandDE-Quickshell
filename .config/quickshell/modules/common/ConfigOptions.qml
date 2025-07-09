@@ -156,8 +156,8 @@ Singleton {
         property bool enabled: false // Master switch for all logging
         property bool debug: false
         property bool info: false
-        property bool warning: true // Keep warnings for important issues
-        property bool error: true // Keep errors for debugging
+        property bool warning: false // Disable all warnings
+        property bool error: false // Disable all errors
         property bool suppressIconWarnings: true // Suppress icon loading warnings
         property bool suppressQmlWarnings: true // Suppress QML warnings
         property bool suppressHyprlandWarnings: true // Suppress Hyprland dispatch warnings

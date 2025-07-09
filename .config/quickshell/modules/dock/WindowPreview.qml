@@ -50,14 +50,7 @@ PanelWindow {
     }
     
     Component.onCompleted: {
-        // console.log("[WINDOW PREVIEW DEBUG] Component completed");
-        // console.log("[WINDOW PREVIEW DEBUG] Available screens:", Quickshell.screens ? Quickshell.screens.length : "none");
-        if (Quickshell.screens) {
-            Quickshell.screens.forEach((s, i) => {
-                // console.log("[WINDOW PREVIEW DEBUG] Screen", i + ":", s.name, s.geometry.width + "x" + s.geometry.height);
-            })
-        }
-        // console.log("[WINDOW PREVIEW DEBUG] Final screen width:", screenWidth);
+        // Component completed
     }
     
     // Window properties
@@ -375,21 +368,14 @@ PanelWindow {
     // Functions
     function showPreviews(windows, position, itemW, className) {
         hidePreviews()
-        // console.log("[WINDOW PREVIEW DEBUG] showPreviews called with:", windows.length, "windows for class:", className);
-        // console.log("[WINDOW PREVIEW DEBUG] Position:", position, "ItemWidth:", itemW);
-        // console.log("[WINDOW PREVIEW DEBUG] Screen width:", screenWidth);
 
         if (windows.length > 0) {
             targetClassName = className
             targetWindows = windows;
-            // console.log("[WINDOW PREVIEW DEBUG] Setting isVisible to true");
             isVisible = true;
             const targetPosition = previewsContent.mapToItem(root, position.x, position.y);
-            // console.log("[WINDOW PREVIEW DEBUG] Calculated left margin:", Math.max(10, Math.min(targetPosition.x - (implicitWidth / 2), screenWidth - implicitWidth - 10)));
             previewsContent.x = Math.max(10, Math.min(targetPosition.x - (implicitWidth / 2), screenWidth - implicitWidth - 10));
             previewsContent.y = targetPosition.y - previewsContent.height - 10; // Position above the dock item
-        } else {
-            // console.log("[WINDOW PREVIEW DEBUG] No windows to show");
         }
     }
     

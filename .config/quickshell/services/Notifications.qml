@@ -90,7 +90,7 @@ Singleton {
             const jsonData = validNotifications.map((notif) => notifToJSON(notif));
             return JSON.stringify(jsonData, null, 2);
         } catch (e) {
-            console.error("[Notifications] Error stringifying notifications:", e);
+            // console.error("[Notifications] Error stringifying notifications:", e);
             return "[]";
         }
     }
@@ -166,8 +166,6 @@ Singleton {
 
         onNotification: (notification) => {
             if (!notification) return;
-            console.log("[Notifications] Received notification:", notification.appName || "Unknown", notification.summary || "No summary")
-            console.log("[Notifications] Notification details - ID:", notification.id, "Body:", notification.body)
             notification.tracked = true
             const newNotifObject = {
                 "id": (notification.id || 0) + root.idOffset,
@@ -185,11 +183,8 @@ Singleton {
                 "time": Date.now(),
                 "urgency": notification.urgency?.toString() || "normal",
             }
-            console.log("[Notifications] Created notification object:", JSON.stringify(newNotifObject))
 			root.list = [...root.list, newNotifObject];
-            console.log("[Notifications] Total notifications in list:", root.list.length)
             root.notify(newNotifObject);
-            console.log("[Notifications] Emitted notify signal")
             saveNotifications()
         }
     }
@@ -251,15 +246,15 @@ Singleton {
             );
             
             if (action) {
-                console.log("Invoking notification action:", actionIdentifier, "for notification:", notificationId);
+                // console.log("Invoking notification action:", actionIdentifier, "for notification:", notificationId);
                 action.invoke();
                 // Close the sidebar after invoking action
                 Hyprland.dispatch("global quickshell:sidebarRightClose");
             } else {
-                console.warn("Action not found:", actionIdentifier, "for notification:", notificationId);
+                // console.warn("Action not found:", actionIdentifier, "for notification:", notificationId);
             }
         } else {
-            console.warn("Notification not found in server:", notificationId);
+            // console.warn("Notification not found in server:", notificationId);
         }
     }
 
@@ -272,10 +267,10 @@ Singleton {
             const dir = `${Directories.cache}/notifications`
             Hyprland.dispatch(`exec mkdir -p '${dir}'`)
             const content = stringifyList(root.list);
-            console.log("[Notifications] Saving", root.list.length, "notifications to file");
+            // console.log("[Notifications] Saving", root.list.length, "notifications to file");
             notifFileView.setText(content)
         } catch (e) {
-            console.error("[Notifications] Error saving notifications:", e);
+            // console.error("[Notifications] Error saving notifications:", e);
         }
     }
 
@@ -293,7 +288,7 @@ Singleton {
                 
                 // Check if text is empty or whitespace only
                 if (!fileContent || fileContent.trim() === "") {
-                    console.log("[Notifications] Empty notifications file, initializing with empty list");
+                    // console.log("[Notifications] Empty notifications file, initializing with empty list");
                     root.list = [];
                     root.idOffset = 1;
                     root.initDone();
@@ -319,17 +314,17 @@ Singleton {
                         });
                         return notif;
                     });
-                    console.log("[Notifications] Loaded", root.list.length, "notifications from file");
+                    // console.log("[Notifications] Loaded", root.list.length, "notifications from file");
                     root.initDone();
                 } else {
-                    console.warn("[Notifications] JSON is not an array, initializing with empty list");
+                    // console.warn("[Notifications] JSON is not an array, initializing with empty list");
                     root.list = [];
                     root.idOffset = 1;
                     root.initDone();
                 }
             } catch (e) {
-                console.error("[Notifications] Error parsing JSON:", e);
-                console.error("[Notifications] File content was:", notifFileView.text());
+                // console.error("[Notifications] Error parsing JSON:", e);
+                // console.error("[Notifications] File content was:", notifFileView.text());
                 // Initialize with empty list on parse error
                 root.list = [];
                 root.idOffset = 1;
@@ -342,7 +337,7 @@ Singleton {
                 root.idOffset = 1;
                 root.initDone();
             } else {
-                console.error("Error loading notifications file:", error);
+                // console.error("Error loading notifications file:", error);
             }
         }
     }

@@ -47,14 +47,16 @@ ShellRoot {
 		}
 
 		function handleDismiss() {
-			console.log(`dismiss (sub)`)
+			        // Dismiss
 		}
 
 		function handleDiscard() {
-			console.log(`discard (sub)`)
+			        // Discard
 		}
 
-		Component.onDestruction: console.log(`destroy (sub)`)
+		        Component.onDestruction: {
+            // Component destroyed
+        }
 	};
 
 	property Component realComponent: DaemonNotification {

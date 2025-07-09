@@ -15,40 +15,30 @@ Item {
     Connections {
         target: Notifications
         function onInitDone() {
-            console.log("[NotificationList] onInitDone called, notifications count:", Notifications.list.length)
             // Filter out any null notifications before processing
             const validNotifications = Notifications.list.filter(notification => notification != null);
-            console.log("[NotificationList] Valid notifications count:", validNotifications.length)
             validNotifications.slice().reverse().forEach((notification) => {
                 if (!notification) return; // Skip null notifications
-                console.log("[NotificationList] Creating widget for notification:", notification.summary)
                 try {
                     const notif = notificationComponent.createObject(columnLayout, { notificationObject: notification });
                     if (notif) {
                         notificationWidgetList.push(notif)
-                        console.log("[NotificationList] Successfully created widget, total widgets:", notificationWidgetList.length)
-                    } else {
-                        console.error("[NotificationList] Failed to create notification widget - createObject returned null")
                     }
                 } catch (error) {
-                    console.error("[NotificationList] Error creating notification widget:", error)
+                    // Error handling disabled
                 }
             })
         }
 
         function onNotify(notification) {
             if (!notification) return; // Skip null notifications
-            console.log("[NotificationList] onNotify called for:", notification.summary)
             try {
                 const notif = notificationComponent.createObject(columnLayout, { notificationObject: notification });
                 if (notif) {
                     notificationWidgetList.unshift(notif)
-                    console.log("[NotificationList] Successfully created widget for new notification, total widgets:", notificationWidgetList.length)
-                } else {
-                    console.error("[NotificationList] Failed to create notification widget for new notification - createObject returned null")
                 }
             } catch (error) {
-                console.error("[NotificationList] Error creating notification widget for new notification:", error)
+                // Error handling disabled
             }
 
             // Remove stuff from the column, add back
@@ -67,20 +57,17 @@ Item {
         }
 
         function onDiscard(id) {
-            console.log("[NotificationList] onDiscard called for ID:", id)
             for (let i = notificationWidgetList.length - 1; i >= 0; i--) {
                 const widget = notificationWidgetList[i];
                 if (widget && widget.notificationObject && widget.notificationObject.id === id) {
                     widget.destroyWithAnimation();
                     notificationWidgetList.splice(i, 1);
-                    console.log("[NotificationList] Discarded notification, remaining widgets:", notificationWidgetList.length)
                     break;
                 }
             }
         }
 
         function onDiscardAll() {
-            console.log("[NotificationList] onDiscardAll called")
             for (let i = notificationWidgetList.length - 1; i >= 0; i--) {
                 const widget = notificationWidgetList[i];
                 if (widget) {
@@ -88,17 +75,14 @@ Item {
                 }
             }
             notificationWidgetList = [];
-            console.log("[NotificationList] All notifications discarded")
         }
 
         function onTimeout(id) {
-            console.log("[NotificationList] onTimeout called for ID:", id)
             for (let i = notificationWidgetList.length - 1; i >= 0; i--) {
                 const widget = notificationWidgetList[i];
                 if (widget && widget.notificationObject && widget.notificationObject.id === id) {
                     widget.destroyWithAnimation();
                     notificationWidgetList.splice(i, 1);
-                    console.log("[NotificationList] Timed out notification, remaining widgets:", notificationWidgetList.length)
                     break;
                 }
             }
@@ -111,7 +95,7 @@ Item {
     }
 
     Component.onCompleted: {
-        console.log("[NotificationList] Component completed, notificationComponent valid:", notificationComponent ? "yes" : "no")
+        // Component completed
     }
 
     ColumnLayout {

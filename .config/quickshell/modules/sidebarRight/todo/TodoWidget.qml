@@ -9,6 +9,9 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    Layout.fillWidth: true
+    Layout.preferredHeight: parent ? parent.height * 0.6 : 600
+    Layout.fillHeight: false
     property int currentTab: 0
     property var tabButtonList: [
         {"icon": "checklist", "name": qsTr("Active"), "filter": "active"},
@@ -17,19 +20,18 @@ Item {
         {"icon": "check_circle", "name": qsTr("Completed"), "filter": "completed"}
     ]
     property bool showAddDialog: false
-    property bool showSearchBar: false
     property string searchQuery: ""
     property string currentFilter: "all"
     property string currentSort: "priority"
-    property int dialogMargins: 20
-    property int fabSize: 48
-    property int fabMargins: 14
 
     // Filtered and sorted task list
     property var filteredTasks: {
-        let tasks = Todo.list.map(function(item, i) { 
-            return Object.assign({}, item, {originalIndex: i}); 
-        })
+        console.log("[TodoWidget] Total tasks:", Todo.list.length)
+        let tasks = Todo.list
+            .filter(item => item && typeof item.content === 'string' && item.content.trim() !== "")
+            .map(function(item, i) { 
+                return Object.assign({}, item, {originalIndex: i}); 
+            })
         
         // Apply search filter
         if (searchQuery.length > 0) {
@@ -90,19 +92,10 @@ Item {
             root.showAddDialog = true
             event.accepted = true;
         }
-        // Toggle search on "S"
-        else if (event.key === Qt.Key_S && event.modifiers === Qt.ControlModifier) {
-            root.showSearchBar = !root.showSearchBar
-            if (root.showSearchBar) searchInput.focus = true
-            event.accepted = true;
-        }
         // Close dialog on Esc if open
         else if (event.key === Qt.Key_Escape) {
             if (root.showAddDialog) {
                 root.showAddDialog = false
-            } else if (root.showSearchBar) {
-                root.showSearchBar = false
-                root.searchQuery = ""
             }
             event.accepted = true;
         }
@@ -110,263 +103,222 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 0
+        spacing: 12
 
-        // Header with search and actions
+        // Clean Header with title and add button
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: headerLayout.implicitHeight + 16
-            radius: Appearance.rounding.verylarge
-            color: Appearance.colors.colLayer1
+            Layout.preferredHeight: 50
+            radius: 12
+            color: Qt.rgba(1, 1, 1, 0.1)
             border.width: 1
-            border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.1)
+            border.color: Qt.rgba(1, 1, 1, 0.2)
 
-            ColumnLayout {
-                id: headerLayout
+            RowLayout {
                 anchors.fill: parent
-                anchors.margins: 8
-                spacing: 8
+                anchors.margins: 12
+                spacing: 12
+                Layout.alignment: Qt.AlignVCenter
 
-                // Search bar
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: showSearchBar ? 40 : 0
-                    radius: Appearance.rounding.verylarge
-                    color: Appearance.colors.colLayer1
-                    border.width: 1
-                    border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.1)
-                    
-                    Behavior on Layout.preferredHeight {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                    }
+                // Title
+                Text {
+                    text: qsTr("Tasks")
+                    font.pixelSize: 18
+                    font.weight: Font.Bold
+                    color: "#FFFFFF"
+                    verticalAlignment: Text.AlignVCenter
+                    Layout.alignment: Qt.AlignVCenter
+                }
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 8
+                Item { Layout.fillWidth: true }
 
-                        MaterialSymbol {
-                            text: "search"
-                            iconSize: 16
-                            color: Appearance.m3colors.m3outline
-                        }
+                // Tab buttons
+                RowLayout {
+                    spacing: 4
+                    Layout.alignment: Qt.AlignVCenter
 
-                        TextField {
-                            id: searchInput
-                            Layout.fillWidth: true
-                            placeholderText: qsTr("Search tasks...")
-                            text: root.searchQuery
-                            onTextChanged: root.searchQuery = text
-                            color: Appearance.colors.colOnLayer1
-                            background: Rectangle { color: "transparent" }
-                            
-                            Keys.onEscapePressed: {
-                                root.showSearchBar = false
-                                root.searchQuery = ""
+                    Repeater {
+                        model: root.tabButtonList
+                        delegate: Rectangle {
+                            Layout.preferredWidth: 28
+                            Layout.preferredHeight: 28
+                            radius: 6
+                            color: currentTab === index ? Qt.rgba(1, 1, 1, 0.3) : "transparent"
+                            border.width: 1
+                            border.color: currentTab === index ? Qt.rgba(1, 1, 1, 0.4) : Qt.rgba(1, 1, 1, 0.2)
+                            Layout.alignment: Qt.AlignVCenter
+
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: modelData.icon
+                                iconSize: 16
+                                color: "#FFFFFF"
                             }
-                        }
 
-                        Button {
-                            visible: root.searchQuery.length > 0
-                            onClicked: {
-                                root.searchQuery = ""
-                                searchInput.text = ""
-                            }
-                            background: Rectangle {
+                            MouseArea {
                                 anchors.fill: parent
-                                radius: Appearance.rounding.full
-                                color: parent.pressed ? Qt.rgba(1, 1, 1, 0.2) : 
-                                       parent.hovered ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
-                            }
-                            contentItem: MaterialSymbol {
-                                text: "close"
-                                iconSize: 14
-                                color: Appearance.colors.colOnLayer1
+                                onClicked: currentTab = index
                             }
                         }
                     }
                 }
 
-                // Replace the tab bar with a ComboBox dropdown for filter selection
-                ComboBox {
-                    id: filterDropdown
-                    Layout.topMargin: 12
-                    Layout.bottomMargin: 12
-                    Layout.preferredWidth: 180
-                    model: root.tabButtonList
-                    textRole: "name"
-                    currentIndex: currentTab
-                    onCurrentIndexChanged: currentTab = currentIndex
-                    font.pixelSize: 16
-                    font.weight: Font.Bold
-                    font.family: "Inter, Arial, Segoe UI, sans-serif"
+                // Add button
+                Rectangle {
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    radius: 8
+                    color: addButton.pressed ? Qt.rgba(1, 1, 1, 0.3) : 
+                           addButton.hovered ? Qt.rgba(1, 1, 1, 0.2) : Qt.rgba(1, 1, 1, 0.1)
+                    border.width: 1
+                    border.color: Qt.rgba(1, 1, 1, 0.3)
+                    Layout.alignment: Qt.AlignVCenter
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "add"
+                        iconSize: 18
+                        color: "#FFFFFF"
+                    }
+
+                    MouseArea {
+                        id: addButton
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: root.showAddDialog = true
+                    }
+                }
+            }
+        }
+
+        // Search bar
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 40
+            radius: 10
+            color: Qt.rgba(1, 1, 1, 0.08)
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.15)
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 8
+                Layout.alignment: Qt.AlignVCenter
+
+                MaterialSymbol {
+                    text: "search"
+                    iconSize: 16
+                    color: "#FFFFFF"
+                    opacity: 0.7
+                    Layout.alignment: Qt.AlignVCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                TextField {
+                    id: searchInput
+                    Layout.fillWidth: true
+                    placeholderText: qsTr("Search tasks...")
+                    text: root.searchQuery
+                    onTextChanged: root.searchQuery = text
+                    color: "#FFFFFF"
+                    font.pixelSize: 14
+                    background: Rectangle { color: "transparent" }
+                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.5)
+                    verticalAlignment: Text.AlignVCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                    Keys.onEscapePressed: {
+                        root.searchQuery = ""
+                        text = ""
+                    }
+                }
+
+                Button {
+                    visible: root.searchQuery.length > 0
+                    onClicked: {
+                        root.searchQuery = ""
+                        searchInput.text = ""
+                    }
                     background: Rectangle {
                         anchors.fill: parent
-                        radius: Appearance.rounding.verylarge
-                        color: Appearance.colors.colLayer1
-                        border.width: 1
-                        border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.1)
+                        radius: 4
+                        color: parent.pressed ? Qt.rgba(1, 1, 1, 0.2) : 
+                               parent.hovered ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
                     }
-                    contentItem: StyledText {
-                        text: filterDropdown.displayText
-                        color: "#fff"
-                        font.pixelSize: 16
-                        font.weight: Font.Bold
-                        font.family: "Inter, Arial, Segoe UI, sans-serif"
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        leftPadding: 16
-                    }
-                    indicator: MaterialSymbol {
-                        anchors.right: parent.right
+                    contentItem: MaterialSymbol {
+                        text: "close"
+                        iconSize: 14
+                        color: "#FFFFFF"
+                        Layout.alignment: Qt.AlignVCenter
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "expand_more"
-                        iconSize: 20
-                        color: "#fff"
-                        rightPadding: 12
-                    }
-                    popup: Popup {
-                        y: filterDropdown.height
-                        width: filterDropdown.width
-                        background: Rectangle {
-                            color: "#18171c"
-                            radius: 14
-                        }
-                        ListView {
-                            implicitHeight: contentHeight
-                            model: filterDropdown.delegateModel
-                            currentIndex: filterDropdown.highlightedIndex
-                            clip: true
-                            delegate: ItemDelegate {
-                                width: filterDropdown.width
-                                background: Rectangle {
-                                    color: highlighted ? "#333" : "transparent"
-                                    radius: 14
-                                }
-                                contentItem: StyledText {
-                                    text: model.name
-                                    color: "#fff"
-                                    font.pixelSize: 16
-                                    font.weight: Font.Bold
-                                    font.family: "Inter, Arial, Segoe UI, sans-serif"
-                                    verticalAlignment: Text.AlignVCenter
-                                    leftPadding: 16
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Sort and filter controls
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-
-                    // Sort dropdown
-                    ComboBox {
-                        id: sortComboBox
-                        Layout.preferredWidth: 120
-                        model: [
-                            {"text": qsTr("Priority"), "value": "priority"},
-                            {"text": qsTr("Due Date"), "value": "dueDate"},
-                            {"text": qsTr("Name"), "value": "name"}
-                        ]
-                        textRole: "text"
-                        currentIndex: 0
-                        onCurrentIndexChanged: {
-                            root.currentSort = model[currentIndex].value
-                        }
-                        
-                        background: Rectangle {
-                            anchors.fill: parent
-                            radius: Appearance.rounding.small
-                            color: Appearance.colors.colLayer2
-                            border.width: 1
-                            border.color: Appearance.m3colors.m3outline
-                        }
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    // Search toggle button
-                    Button {
-                        onClicked: root.showSearchBar = !root.showSearchBar
-                        background: Rectangle {
-                            anchors.fill: parent
-                            radius: Appearance.rounding.full
-                            color: parent.pressed ? Qt.rgba(1, 1, 1, 0.2) : 
-                                   parent.hovered ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
-                        }
-                        contentItem: MaterialSymbol {
-                            text: "search"
-                            iconSize: 16
-                            color: Appearance.colors.colOnLayer1
-                        }
-                    }
-
-                    // Add task button
-                    Button {
-                        onClicked: root.showAddDialog = true
-                        background: Rectangle {
-                            anchors.fill: parent
-                            radius: Appearance.rounding.full
-                            color: parent.pressed ? Qt.rgba(1, 1, 1, 0.2) : 
-                                   parent.hovered ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
-                        }
-                        contentItem: MaterialSymbol {
-                            text: "add"
-                            iconSize: 16
-                            color: Appearance.colors.colOnLayer1
-                        }
                     }
                 }
             }
         }
 
         // Task list content
-        SwipeView {
-            id: swipeView
-            Layout.topMargin: 12
+        Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 10
-            clip: true
-            currentIndex: currentTab
-            onCurrentIndexChanged: {
-                currentTab = currentIndex
-            }
+            radius: 12
+            color: Qt.rgba(1, 1, 1, 0.05)
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.1)
 
-            // All tabs use the same TaskList with different filters
-            Repeater {
-                model: root.tabButtonList
-                delegate: EnhancedTaskList {
-                    listBottomPadding: root.fabSize + root.fabMargins * 2
-                    emptyPlaceholderIcon: modelData.icon
-                    emptyPlaceholderText: getEmptyText(modelData.filter)
-                    taskList: root.filteredTasks
-                    showProgress: index === 3 // Show progress for completed tasks
+            Flickable {
+                id: flickable
+                anchors.fill: parent
+                anchors.margins: 8
+                contentHeight: taskColumn.height
+                clip: true
+
+                ColumnLayout {
+                    id: taskColumn
+                    width: parent.width
+                    spacing: 8
+
+                    // Empty state
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.preferredHeight: 200
+                        visible: filteredTasks.length === 0
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 12
+
+                            MaterialSymbol {
+                                text: root.tabButtonList[currentTab].icon
+                                iconSize: 48
+                                color: "#FFFFFF"
+                                opacity: 0.3
+                            }
+
+                            Text {
+                                text: getEmptyText(root.tabButtonList[currentTab].filter)
+                                font.pixelSize: 16
+                                color: "#FFFFFF"
+                                opacity: 0.6
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
+                    }
+
+                    // Task items
+                    Repeater {
+                        model: filteredTasks
+                        delegate: CleanTaskItem {
+                            taskData: modelData
+                            Layout.fillWidth: true
+                        }
+                    }
                 }
             }
         }
     }
 
     // Helper functions
-    function getTaskCount(filter) {
-        let tasks = Todo.list
-        if (filter === "active") {
-            return tasks.filter(item => !item.done).length
-        } else if (filter === "today") {
-            const today = new Date().toISOString().split('T')[0]
-            return tasks.filter(item => !item.done && item.dueDate === today).length
-        } else if (filter === "upcoming") {
-            const today = new Date().toISOString().split('T')[0]
-            return tasks.filter(item => !item.done && item.dueDate && item.dueDate > today).length
-        } else if (filter === "completed") {
-            return tasks.filter(item => item.done).length
-        }
-        return tasks.length
-    }
-
     function getEmptyText(filter) {
         if (filter === "active") return qsTr("No active tasks")
         if (filter === "today") return qsTr("No tasks due today")
@@ -375,7 +327,7 @@ Item {
         return qsTr("No tasks")
     }
 
-    // Enhanced Add Task Dialog
+    // Simple Add Task Dialog
     Item {
         anchors.fill: parent
         z: 9999
@@ -389,12 +341,6 @@ Item {
             }
         }
 
-        onVisibleChanged: {
-            if (!visible) {
-                resetDialog()
-            }
-        }
-
         Rectangle { // Scrim
             anchors.fill: parent
             color: Qt.rgba(0, 0, 0, 0.6)
@@ -404,253 +350,166 @@ Item {
             }
         }
 
-        Rectangle { // Enhanced Dialog
-            id: enhancedDialog
+        Rectangle { // Dialog
             anchors.centerIn: parent
-            width: Math.min(parent.width - 40, 500)
-            height: dialogContent.implicitHeight + 40
-            radius: Appearance.rounding.large
-            color: Appearance.colors.colLayer1
+            width: 400
+            height: 280
+            radius: 16
+            color: "#23232A"
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.1)
-
-            layer.enabled: true
-            layer.effect: MultiEffect {
-                source: enhancedDialog
-                shadowEnabled: true
-                shadowColor: Qt.rgba(0, 0, 0, 0.3)
-                shadowBlur: 20
-                shadowVerticalOffset: 10
-            }
+            border.color: Qt.rgba(1, 1, 1, 0.2)
 
             ColumnLayout {
-                id: dialogContent
                 anchors.fill: parent
-                anchors.margins: 20
-                spacing: 16
+                anchors.margins: 28
+                spacing: 18
+                Layout.alignment: Qt.AlignVCenter
 
-                // Header
-                RowLayout {
+                // Title
+                Text {
+                    text: qsTr("Add New Task")
+                    font.pixelSize: 20
+                    font.weight: Font.Bold
+                    color: "#FFFFFF"
+                    horizontalAlignment: Text.AlignHCenter
+                    Layout.alignment: Qt.AlignHCenter
+                }
+
+                // Task Description
+                TextField {
+                    id: newTaskInput
                     Layout.fillWidth: true
-                    spacing: 12
-
-                    Rectangle {
-                        Layout.preferredWidth: 40
-                        Layout.preferredHeight: 40
-                        radius: Appearance.rounding.medium
-                        color: Appearance.m3colors.m3primaryContainer
-
-                        MaterialSymbol {
-                            anchors.centerIn: parent
-                            text: "add_task"
-                            iconSize: 20
-                            color: Appearance.m3colors.m3onPrimaryContainer
-                        }
+                    placeholderText: qsTr("Enter task description...")
+                    color: "#FFFFFF"
+                    font.pixelSize: 15
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 8
+                        color: Qt.rgba(1, 1, 1, 0.08)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.18)
                     }
+                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.5)
+                }
 
-                    StyledText {
-                        text: qsTr("Add New Task")
-                        font.pixelSize: Appearance.font.pixelSize.large
-                        font.weight: Font.Bold
-                        color: Appearance.colors.colOnLayer1
+                // Priority Dropdown
+                ComboBox {
+                    id: priorityCombo
+                    Layout.fillWidth: true
+                    model: [qsTr("Low"), qsTr("Medium"), qsTr("High")]
+                    currentIndex: 1
+                    contentItem: Text {
+                        text: priorityCombo.displayText
+                        color: Appearance.m3colors.m3onSurface
+                        font.pixelSize: 15
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignLeft
+                        anchors.verticalCenter: parent.verticalCenter
+                        leftPadding: 8
                     }
-
-                    Item { Layout.fillWidth: true }
-
-                    Button {
-                        onClicked: root.showAddDialog = false
+                    delegate: ItemDelegate {
+                        width: priorityCombo.width
                         background: Rectangle {
-                            anchors.fill: parent
-                            radius: Appearance.rounding.full
-                            color: parent.pressed ? Qt.rgba(1, 1, 1, 0.2) : 
-                                   parent.hovered ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
+                            color: Appearance.m3colors.m3surfaceContainer
+                            radius: 10
                         }
-                        contentItem: MaterialSymbol {
-                            text: "close"
-                            iconSize: 16
-                            color: Appearance.colors.colOnLayer1
+                        contentItem: Text {
+                            text: modelData
+                            color: Appearance.m3colors.m3onSurface
+                            font.pixelSize: 15
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignLeft
+                            leftPadding: 8
                         }
                     }
-                }
-
-                // Task description
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
-
-                    StyledText {
-                        text: qsTr("Description")
-                        font.pixelSize: Appearance.font.pixelSize.small
-                        color: Appearance.m3colors.m3outline
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 8
+                        color: Appearance.m3colors.m3surfaceContainer
+                        border.width: 1
+                        border.color: Appearance.m3colors.m3outlineVariant
                     }
-
-                    TextField {
-                        id: enhancedTaskInput
-                        Layout.fillWidth: true
-                        placeholderText: qsTr("What needs to be done?")
-                        color: Appearance.colors.colOnLayer1
-                        font.pixelSize: Appearance.font.pixelSize.normal
+                    popup: Popup {
+                        y: priorityCombo.height
+                        width: priorityCombo.width
+                        implicitHeight: contentItem.implicitHeight
                         background: Rectangle {
-                            anchors.fill: parent
-                            radius: Appearance.rounding.medium
-                            border.width: 2
-                            border.color: enhancedTaskInput.activeFocus ? 
-                                         Appearance.m3colors.m3primary : 
-                                         Appearance.m3colors.m3outline
-                            color: "transparent"
+                            color: Appearance.m3colors.m3surfaceContainer
+                            radius: 12
                         }
-                        onAccepted: addEnhancedTask()
+                        contentItem: ListView {
+                            clip: true
+                            implicitHeight: contentHeight
+                            model: priorityCombo.delegateModel
+                            currentIndex: priorityCombo.highlightedIndex
+                            delegate: priorityCombo.delegate
+                        }
                     }
                 }
 
-                // Due date and priority row
+                // Due Date
+                TextField {
+                    id: dueDateInput
+                    Layout.fillWidth: true
+                    placeholderText: qsTr("YYYY-MM-DD (Due date)")
+                    color: "#FFFFFF"
+                    font.pixelSize: 15
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 8
+                        color: Qt.rgba(1, 1, 1, 0.08)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.18)
+                    }
+                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.5)
+                }
+
+                // Buttons
                 RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-
-                    // Due date
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
-
-                        StyledText {
-                            text: qsTr("Due Date")
-                            font.pixelSize: Appearance.font.pixelSize.small
-                            color: Appearance.m3colors.m3outline
-                        }
-
-                        TextField {
-                            id: enhancedDueDateInput
-                            Layout.fillWidth: true
-                            placeholderText: qsTr("YYYY-MM-DD")
-                            inputMask: "0000-00-00;_"
-                            color: Appearance.colors.colOnLayer1
-                            background: Rectangle {
-                                anchors.fill: parent
-                                radius: Appearance.rounding.medium
-                                border.width: 2
-                                border.color: enhancedDueDateInput.activeFocus ? 
-                                             Appearance.m3colors.m3primary : 
-                                             Appearance.m3colors.m3outline
-                                color: "transparent"
-                            }
-                        }
-                    }
-
-                    // Priority
-                    ColumnLayout {
-                        Layout.preferredWidth: 120
-                        spacing: 4
-
-                        StyledText {
-                            text: qsTr("Priority")
-                            font.pixelSize: Appearance.font.pixelSize.small
-                            color: Appearance.m3colors.m3outline
-                        }
-
-                        ComboBox {
-                            id: enhancedPriorityInput
-                            Layout.fillWidth: true
-                            model: [
-                                {"text": qsTr("Low"), "value": "low", "color": "#4CAF50"},
-                                {"text": qsTr("Medium"), "value": "medium", "color": "#FF9800"},
-                                {"text": qsTr("High"), "value": "high", "color": "#F44336"}
-                            ]
-                            textRole: "text"
-                            currentIndex: 1
-                            
-                            background: Rectangle {
-                                anchors.fill: parent
-                                radius: Appearance.rounding.medium
-                                border.width: 2
-                                border.color: enhancedPriorityInput.activeFocus ? 
-                                             Appearance.m3colors.m3primary : 
-                                             Appearance.m3colors.m3outline
-                                color: "transparent"
-                            }
-
-                            contentItem: RowLayout {
-                                spacing: 8
-                                Rectangle {
-                                    Layout.preferredWidth: 8
-                                    Layout.preferredHeight: 8
-                                    radius: 4
-                                    color: enhancedPriorityInput.model[enhancedPriorityInput.currentIndex].color
-                                }
-                                StyledText {
-                                    text: enhancedPriorityInput.displayText
-                                    color: Appearance.colors.colOnLayer1
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Categories
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
-
-                    StyledText {
-                        text: qsTr("Categories (comma separated)")
-                        font.pixelSize: Appearance.font.pixelSize.small
-                        color: Appearance.m3colors.m3outline
-                    }
-
-                    TextField {
-                        id: enhancedCategoriesInput
-                        Layout.fillWidth: true
-                        placeholderText: qsTr("work, personal, urgent")
-                        color: Appearance.colors.colOnLayer1
-                        background: Rectangle {
-                            anchors.fill: parent
-                            radius: Appearance.rounding.medium
-                            border.width: 2
-                            border.color: enhancedCategoriesInput.activeFocus ? 
-                                         Appearance.m3colors.m3primary : 
-                                         Appearance.m3colors.m3outline
-                            color: "transparent"
-                        }
-                    }
-                }
-
-                // Action buttons
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.topMargin: 8
-                    spacing: 8
-
-                    Item { Layout.fillWidth: true }
-
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: 18
                     Button {
                         text: qsTr("Cancel")
                         onClicked: root.showAddDialog = false
                         background: Rectangle {
                             anchors.fill: parent
-                            radius: Appearance.rounding.medium
-                            color: parent.pressed ? Qt.rgba(1, 1, 1, 0.2) : 
-                                   parent.hovered ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
+                            radius: 8
+                            color: parent.pressed ? Qt.rgba(1, 1, 1, 0.18) : parent.hovered ? Qt.rgba(1, 1, 1, 0.12) : "transparent"
+                            border.width: 1
+                            border.color: Qt.rgba(1, 1, 1, 0.18)
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#FFFFFF"
+                            font.pixelSize: 15
+                            horizontalAlignment: Text.AlignHCenter
                         }
                     }
-
                     Button {
-                        text: qsTr("Add Task")
-                        enabled: enhancedTaskInput.text.trim().length > 0
-                        onClicked: addEnhancedTask()
+                        text: qsTr("Add")
+                        onClicked: {
+                            if (newTaskInput.text.trim()) {
+                                var priority = ["low", "medium", "high"][priorityCombo.currentIndex]
+                                var dueDate = dueDateInput.text.trim() || null
+                                Todo.addTask(newTaskInput.text.trim(), dueDate, priority)
+                                newTaskInput.text = ""
+                                dueDateInput.text = ""
+                                priorityCombo.currentIndex = 1
+                                root.showAddDialog = false
+                            }
+                        }
                         background: Rectangle {
                             anchors.fill: parent
-                            radius: Appearance.rounding.medium
-                            color: parent.enabled ? 
-                                   (parent.pressed ? Appearance.m3colors.m3primaryContainer : 
-                                    parent.hovered ? Appearance.m3colors.m3primaryContainer : 
-                                    Appearance.m3colors.m3primary) : 
-                                   Appearance.m3colors.m3outline
+                            radius: 8
+                            color: parent.pressed ? Qt.rgba(1, 1, 1, 0.25) : parent.hovered ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(1, 1, 1, 0.12)
+                            border.width: 1
+                            border.color: Qt.rgba(1, 1, 1, 0.18)
                         }
-                        contentItem: StyledText {
+                        contentItem: Text {
                             text: parent.text
-                            color: parent.enabled ? 
-                                   Appearance.m3colors.m3onPrimary : 
-                                   Appearance.m3colors.m3onSurfaceVariant
+                            color: "#FFFFFF"
+                            font.pixelSize: 15
+                            horizontalAlignment: Text.AlignHCenter
                         }
                     }
                 }
@@ -658,24 +517,9 @@ Item {
         }
     }
 
-    function addEnhancedTask() {
-        if (enhancedTaskInput.text.trim().length > 0) {
-            Todo.addTask(
-                enhancedTaskInput.text.trim(),
-                enhancedDueDateInput.text || null,
-                enhancedPriorityInput.model[enhancedPriorityInput.currentIndex].value,
-                enhancedCategoriesInput.text.split(",").map(x => x.trim()).filter(x => x)
-            )
-            resetDialog()
-            root.showAddDialog = false
-            root.currentTab = 0 // Show active tasks
+    Component.onCompleted: {
+        if (showAddDialog) {
+            newTaskInput.focus = true
         }
-    }
-
-    function resetDialog() {
-        enhancedTaskInput.text = ""
-        enhancedDueDateInput.text = ""
-        enhancedPriorityInput.currentIndex = 1
-        enhancedCategoriesInput.text = ""
     }
 }

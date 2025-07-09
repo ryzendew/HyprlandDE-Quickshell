@@ -176,12 +176,12 @@ Scope {
                 
                 if (lastTheme === "") {
                     lastTheme = currentTheme;
-                    console.log("[DOCK DEBUG] Initial Qt6 theme detected:", currentTheme);
+                    // console.log("[DOCK DEBUG] Initial Qt6 theme detected:", currentTheme);
                     IconTheme.setCurrentTheme(currentTheme);
                     // Initialize the icon theme system with home directory
                     IconTheme.initializeIconTheme(StandardPaths.writableLocation(StandardPaths.HomeLocation));
                 } else if (lastTheme !== currentTheme) {
-                    console.log("[DOCK DEBUG] Qt6 theme changed from", lastTheme, "to", currentTheme);
+                    // console.log("[DOCK DEBUG] Qt6 theme changed from", lastTheme, "to", currentTheme);
                     lastTheme = currentTheme;
                     
                     // Update the theme in the icon system
@@ -194,7 +194,7 @@ Scope {
                     forceRefreshIcons();
                 }
             } catch (e) {
-                console.log("[DOCK DEBUG] Error reading Qt6 theme settings:", e);
+                // console.log("[DOCK DEBUG] Error reading Qt6 theme settings:", e);
             }
         }
     }
@@ -274,12 +274,12 @@ Scope {
     
     // Reorder pinned apps (for drag and drop)
     function reorderPinnedApp(fromIndex, toIndex) {
-        console.log("reorderPinnedApp called with fromIndex:", fromIndex, "toIndex:", toIndex)
-        console.log("Current pinnedApps:", JSON.stringify(pinnedApps))
+        // console.log("reorderPinnedApp called with fromIndex:", fromIndex, "toIndex:", toIndex)
+        // console.log("Current pinnedApps:", JSON.stringify(pinnedApps))
         
         if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || 
             fromIndex >= pinnedApps.length || toIndex >= pinnedApps.length) {
-            console.log("Invalid indices, aborting reorder")
+            // console.log("Invalid indices, aborting reorder")
             return
         }
         
@@ -288,7 +288,7 @@ Scope {
         newPinnedApps.splice(toIndex, 0, item)
         pinnedApps = newPinnedApps
         
-        console.log("New pinnedApps:", JSON.stringify(pinnedApps))
+        // console.log("New pinnedApps:", JSON.stringify(pinnedApps))
         savePinnedApps()
     }
     
@@ -327,9 +327,9 @@ Scope {
                         dock.autoHide = config.autoHide
                     }
                 }
-                console.log("[Dock] Config loaded")
+                // console.log("[Dock] Config loaded")
             } catch (e) {
-                console.log("[Dock] Error parsing config: " + e)
+                // console.log("[Dock] Error parsing config: " + e)
                 // Initialize with defaults on parsing error
                 dock.pinnedApps = defaultPinnedApps
                 savePinnedApps()
@@ -337,7 +337,6 @@ Scope {
         }
         
         onLoadFailed: (error) => {
-            console.log("[Dock] Config load failed: " + error)
             // Initialize with defaults if file doesn't exist
             dock.pinnedApps = defaultPinnedApps
             savePinnedApps()
@@ -354,7 +353,6 @@ Scope {
         Hyprland.dispatch(`keyword decoration:blur:size ${AppearanceSettingsState.dockBlurAmount}`)
         
         // Initialize icon theme system
-        console.log("[DOCK DEBUG] Initializing icon theme system");
         IconTheme.initializeIconTheme(StandardPaths.writableLocation(StandardPaths.HomeLocation));
         
         // If pinnedOnStartup is true, set autoHide to false
@@ -363,8 +361,6 @@ Scope {
         }
         
         // Debug: Show what's in pinnedApps
-        // console.log("[DOCK DEBUG] Dock component completed")
-        // console.log("[DOCK DEBUG] pinnedApps:", JSON.stringify(pinnedApps))
     }
     
     function showMenuForApp(appInfo) {
@@ -373,7 +369,7 @@ Scope {
     }
     
     Variants {
-        model: Quickshell.screens
+        model: Quickshell.screens.filter(screen => screen.name === "DP-1")
 
         PanelWindow {
             id: dockRoot
@@ -408,38 +404,28 @@ Scope {
                 if (level === "info" && !ConfigOptions?.logging?.info) return
                 if (level === "warning" && !ConfigOptions?.logging?.warning) return
                 if (level === "error" && !ConfigOptions?.logging?.error) return
-                console.log(`[Dock][${level.toUpperCase()}] ${message}`)
+                // console.log(`[Dock][${level.toUpperCase()}] ${message}`)
             }
             
             // Update when window list changes
             Connections {
                 target: HyprlandData
                 function onWindowListChanged() { 
-                    // console.log("[DOCK DEBUG] Window list changed event received")
-                    // console.log("[DOCK DEBUG] Current window list:", JSON.stringify(HyprlandData.windowList.map(w => w.class)))
                     log("debug", "Window list changed, updating active windows")
                     updateActiveWindows() 
                 }
             }
             
             Component.onCompleted: {
-                // console.log("[DOCK DEBUG] Dock component completed, initializing...")
-                // console.log("[DOCK DEBUG] Initial window list:", JSON.stringify(HyprlandData.windowList.map(w => w.class)))
                 log("info", "Dock component completed, initializing...")
                 updateActiveWindows()
             }
             
             function updateActiveWindows() {
-                // console.log("[DOCK DEBUG] updateActiveWindows called")
-                // console.log("[DOCK DEBUG] Current monitor:", modelData.name)
-                // console.log("[DOCK DEBUG] All windows:", JSON.stringify(HyprlandData.windowList.map(w => ({class: w.class, monitor: w.monitor}))))
-                
                 // Show apps from ALL monitors/workspaces instead of filtering by current monitor
                 const windows = HyprlandData.windowList.filter(window => 
                     window.class && window.class.length > 0  // Only filter out windows without a valid class
                 )
-                
-                // console.log("[DOCK DEBUG] All windows across all monitors:", JSON.stringify(windows.map(w => w.class)))
                 
                 if (JSON.stringify(windows) !== JSON.stringify(activeWindows)) {
                     log("debug", `Updating active windows: ${windows.length} windows found`)
@@ -449,9 +435,9 @@ Scope {
             }
             
             function getIconForClass(windowClass) {
-                console.log('[DOCK DEBUG] getIconForClass called with:', windowClass)
+                // console.log('[DOCK DEBUG] getIconForClass called with:', windowClass)
                 if (!windowClass) {
-                    console.log('[DOCK DEBUG] No windowClass provided, returning image-missing')
+                                          // console.log('[DOCK DEBUG] No windowClass provided, returning image-missing')
                     return "image-missing"
                 }
                 
@@ -462,7 +448,7 @@ Scope {
                     "/usr/local/share/applications"
                 ];
                 
-                console.log('[DOCK DEBUG] Searching desktop paths:', desktopPaths)
+                                  // console.log('[DOCK DEBUG] Searching desktop paths:', desktopPaths)
                 
                 for (var p = 0; p < desktopPaths.length; p++) {
                     var systemPath = desktopPaths[p];
@@ -471,17 +457,13 @@ Scope {
                     
                     try {
                         var desktopFilePath = systemPath + "/" + windowClass + ".desktop"
-                        console.log('[DOCK DEBUG] Trying desktop file path:', desktopFilePath)
                         fileView.path = desktopFilePath
                         content = fileView.text()
-                        console.log('[DOCK DEBUG] Desktop file content length:', content ? content.length : 0)
                     } catch (e) {
-                        console.log('[DOCK DEBUG] Error reading desktop file:', e)
                         try {
                             fileView.path = systemPath
                             content = fileView.text()
                         } catch (e2) {
-                            console.log('[DOCK DEBUG] Error reading system path:', e2)
                             fileView.destroy()
                             continue
                         }
@@ -490,32 +472,20 @@ Scope {
                     // Parse the desktop file to find Icon line
                     if (content) {
                         var lines = content.split('\n')
-                        console.log('[DOCK DEBUG] Desktop file has', lines.length, 'lines')
                         for (var i = 0; i < lines.length; i++) {
                             var line = lines[i].trim()
                             if (line.startsWith('Icon=')) {
                                 var iconName = line.substring(5)
                                 fileView.destroy()
-                                console.log('[DOCK DEBUG] Found Icon= line:', iconName)
                                 var resolvedIcon = IconTheme.getIconPath(iconName, StandardPaths.writableLocation(StandardPaths.HomeLocation)) || iconName
-                                console.log('[DOCK DEBUG] getIconForClass:', windowClass, 'Icon entry:', iconName, 'Resolved icon:', resolvedIcon)
-                                if (windowClass === "AffinityPhoto.desktop") {
-                                    console.log('[DOCK DEBUG] Testing Affinity Photo icon resolution...')
-                                    console.log('[DOCK DEBUG] iconName:', iconName)
-                                    console.log('[DOCK DEBUG] resolvedIcon:', resolvedIcon)
-                                    console.log('[DOCK DEBUG] IconTheme.getIconPath result:', IconTheme.getIconPath(iconName, StandardPaths.writableLocation(StandardPaths.HomeLocation)))
-                                }
                                 return resolvedIcon
                             }
                         }
-                        console.log('[DOCK DEBUG] No Icon= line found in desktop file')
                     }
                     fileView.destroy()
                 }
                 
-                console.log('[DOCK DEBUG] No desktop file found, using IconTheme.getIconPath')
                 var resolvedIcon = IconTheme.getIconPath(windowClass, StandardPaths.writableLocation(StandardPaths.HomeLocation)) || windowClass.toLowerCase()
-                console.log('[DOCK DEBUG] getIconForClass:', windowClass, 'Resolved icon:', resolvedIcon)
                 return resolvedIcon
             }
             
@@ -666,7 +636,7 @@ Scope {
                             Item {
                                 Layout.preferredWidth: dock.dockWidth - 6
                                 Layout.preferredHeight: dock.dockWidth - 6
-                                Layout.leftMargin: 0 // Remove left margin completely
+                                Layout.leftMargin: 2 // Move Arch logo over by 2px
                                 
                                 Rectangle {
                                     id: archButton
@@ -1128,10 +1098,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 1, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 1, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 1,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 1 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 1 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1140,10 +1110,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 2, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 2, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 2,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 2 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 2 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1152,10 +1122,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 3, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 3, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 3,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 3 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 3 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1164,10 +1134,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 4, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 4, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 4,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 4 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 4 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1176,10 +1146,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 5, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 5, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 5,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 5 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 5 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1188,10 +1158,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 6, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 6, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 6,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 6 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 6 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1200,10 +1170,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 7, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 7, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 7,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 7 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 7 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1303,24 +1273,16 @@ Scope {
                 possibleClasses.includes(w.initialClass.toLowerCase())
             )
             
-            if (targetWindow) {
-                // Use the actual window data instead of the simple appInfo
-                finalAppInfo = targetWindow
-                console.log("[DOCK MENU DEBUG] Found window for pinned app:", targetWindow.class, "address:", targetWindow.address)
-            } else {
-                console.log("[DOCK MENU DEBUG] No window found for pinned app:", appInfo.class)
-            }
+                    if (targetWindow) {
+            // Use the actual window data instead of the simple appInfo
+            finalAppInfo = targetWindow
+        }
         }
         
         // Now set the context with the final app info
         dockContextMenu.contextAppInfo = finalAppInfo
         dockContextMenu.contextIsPinned = isPinned
         dockContextMenu.contextDockItem = dockItem
-        
-        console.log("[DOCK MENU DEBUG] Opening context menu for app:", dockContextMenu.contextAppInfo ? dockContextMenu.contextAppInfo.class : "null")
-        console.log("[DOCK MENU DEBUG] App info:", JSON.stringify(dockContextMenu.contextAppInfo, null, 2))
-        console.log("[DOCK MENU DEBUG] Has address:", dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address ? "yes" : "no")
-        console.log("[DOCK MENU DEBUG] Address value:", dockContextMenu.contextAppInfo ? dockContextMenu.contextAppInfo.address : "undefined")
         
         // Just open the menu at default position for now
         dockContextMenu.open()

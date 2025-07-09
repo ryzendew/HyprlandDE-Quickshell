@@ -98,7 +98,7 @@ Singleton {
             root.applyStates(fileContent)
         }
         onLoadFailed: (error) => {
-            console.log("[PersistentStateManager] File not found, creating new file")
+            // console.log("[PersistentStateManager] File not found, creating new file")
             root.saveStates()
         }
     }

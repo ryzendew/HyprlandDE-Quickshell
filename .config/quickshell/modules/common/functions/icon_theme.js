@@ -25,9 +25,8 @@ function getCurrentTheme() {
 }
 
 function debugLog(...args) {
-    if (typeof console !== 'undefined' && console.log) {
-        console.log('[ICON DEBUG]', ...args);
-    }
+    // Debug logging disabled
+    return;
 }
 
 // Detect the current icon theme following XDG standards

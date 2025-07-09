@@ -24,14 +24,13 @@ Rectangle {
     border.width: 1
 
     // Debug mode - prevent closing
-    property bool debugMode: false  // Set to true to prevent closing
+    property bool debugMode: false  // Set to false to disable debug mode
 
     // Block ALL closing attempts while in debug mode
     Connections {
         target: Quickshell
         function onSidebarRightCloseRequested() {
             if (debugMode) {
-                console.log("Sidebar closing prevented (debug mode)")
                 return
             }
             Hyprland.dispatch("global quickshell:sidebarRightClose")
@@ -41,7 +40,6 @@ Rectangle {
     // Block escape key
     Keys.onEscapePressed: {
         if (debugMode) {
-            console.log("Escape key blocked (debug mode)")
             event.accepted = true
         }
     }

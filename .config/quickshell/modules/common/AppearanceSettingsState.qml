@@ -71,11 +71,9 @@ QtObject {
         try {
             Hyprland.dispatch(command);
         } catch (e) {
-            console.warn("Hyprland dispatch failed:", command, e);
             // If we get too many errors, assume Hyprland is not available
             if (command.includes("setvar") && command.includes("decoration:blur")) {
                 hyprlandAvailable = false;
-                console.warn("Hyprland blur features disabled due to errors");
             }
         }
     }
@@ -218,9 +216,7 @@ QtObject {
         // Check if Hyprland is available by trying a simple command
         try {
             Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
-            console.log("Hyprland integration available");
         } catch (e) {
-            console.warn("Hyprland integration not available:", e);
             hyprlandAvailable = false;
         }
         

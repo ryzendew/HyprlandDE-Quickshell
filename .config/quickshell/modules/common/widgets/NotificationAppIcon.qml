@@ -98,7 +98,6 @@ Rectangle {
 
                 onStatusChanged: {
                     if (status === Image.Error) {
-                        console.warn("[NotificationWidget] Failed to load image: " + parent.originalSource + ". Using fallback.")
                         root.iconCache[parent.originalSource] = { failed: true }
                         source = parent.fallbackIconSource
                     } else if (status === Image.Ready) {
@@ -108,7 +107,6 @@ Rectangle {
 
                 Component.onCompleted: {
                     if (root.iconCache[parent.originalSource] && root.iconCache[parent.originalSource].failed) {
-                        console.log("[NotificationWidget] Image previously failed, using fallback immediately: " + parent.originalSource)
                         source = parent.fallbackIconSource
                     }
                 }

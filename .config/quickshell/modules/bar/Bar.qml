@@ -31,15 +31,8 @@ Scope {
         try {
             Hyprland.dispatch(command);
         } catch (e) {
-            // Only warn if logging is enabled and Hyprland warnings are not suppressed
-            if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.warning && !ConfigOptions?.logging?.suppressHyprlandWarnings) {
-                console.warn("Hyprland dispatch failed in Bar.qml:", command, e);
-            }
             if (command.includes("setvar") && command.includes("decoration:blur")) {
                 hyprlandAvailable = false;
-                if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.warning && !ConfigOptions?.logging?.suppressHyprlandWarnings) {
-                    console.warn("Hyprland blur features disabled in Bar.qml due to errors");
-                }
             }
         }
     }
@@ -74,13 +67,7 @@ Scope {
         // Check if Hyprland is available
         try {
             Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
-            if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.info) {
-                console.log("Hyprland integration available in Bar.qml");
-            }
         } catch (e) {
-            if (ConfigOptions?.logging?.enabled && ConfigOptions?.logging?.warning && !ConfigOptions?.logging?.suppressHyprlandWarnings) {
-                console.warn("Hyprland integration not available in Bar.qml:", e);
-            }
             hyprlandAvailable = false;
         }
         
@@ -98,7 +85,7 @@ Scope {
     }
 
     Variants {
-        model: Quickshell.screens
+        model: Quickshell.screens.filter(screen => screen.name === "DP-1")
 
         PanelWindow {
             id: barRoot
@@ -215,7 +202,7 @@ Scope {
                             Rectangle {
                                 id: archLogoContainer
                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                                Layout.leftMargin: 2
+                                Layout.leftMargin: 10
                                 Layout.fillWidth: false
                                 Layout.fillHeight: true
                                 
@@ -243,13 +230,7 @@ Scope {
                                     acceptedButtons: Qt.LeftButton
                                     
                                     onClicked: {
-                                        GlobalStates.hyprMenuOpen = !GlobalStates.hyprMenuOpen
-                                    }
-                                    
-                                    onPressed: (event) => {
-                                        if (event.button === Qt.LeftButton) {
-                                            safeDispatch('global quickshell:sidebarLeftOpen')
-                                        }
+                                        GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen
                                     }
                                 }
                             }

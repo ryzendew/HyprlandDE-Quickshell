@@ -47,7 +47,6 @@ Item {
     Component.onCompleted: {
         root.ready = true
         if (popup && notificationObject && notificationObject.appName) {
-            console.log("Starting notification timer for:", notificationObject.appName, notificationObject.summary)
             timeoutTimer.start()
         }
     }
@@ -57,9 +56,6 @@ Item {
         interval: notificationObject && notificationObject.expireTimeout ? notificationObject.expireTimeout : root.defaultTimeoutValue
         repeat: false
         onTriggered: {
-            if (notificationObject && notificationObject.appName) {
-                console.log("Notification timeout for:", notificationObject.appName, notificationObject.summary)
-            }
             root.notificationXAnimation = Appearance.animation.elementMoveExit
             if (notificationObject && notificationObject.id) {
                 Notifications.timeoutNotification(notificationObject.id);
@@ -169,7 +165,6 @@ Item {
                     let focused = false
                     for (const className of classesToTry) {
                         if (className && className !== "") {
-                            console.log("Attempting to focus window class:", className)
                             Hyprland.dispatch(`focuswindow class:${className}`)
                         }
                     }
@@ -414,7 +409,7 @@ Item {
 
                                     onStatusChanged: {
                                         if (status === Image.Error) {
-                                            console.warn("[NotificationWidget] Failed to load image: " + parent.originalSource + ". Using fallback.");
+                                            // console.warn("[NotificationWidget] Failed to load image: " + parent.originalSource + ". Using fallback.");
                                             root.imageCache[parent.originalSource] = { failed: true }; 
                                             source = parent.fallbackIconSource;
                                         } else if (status === Image.Ready) {

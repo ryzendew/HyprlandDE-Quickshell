@@ -69,7 +69,7 @@ FullwidthMouseArea {
 			overlay.color: "#30000000"
 
 			function updateArt(reverse: bool) {
-				console.log("update art", MprisController.activeTrack.artUrl)
+				        // Update art
 				this.setArt(MprisController.activeTrack.artUrl, reverse, false)
 			}
 
@@ -304,7 +304,7 @@ FullwidthMouseArea {
 					target: MprisController
 
 					function onTrackChanged(reverse: bool) {
-						console.log(`track changed: rev: ${reverse}`)
+						        // Track changed
 						popupBkg.setArt(MprisController.activeTrack.artUrl, reverse, false);
 					}
 				}
@@ -353,7 +353,9 @@ FullwidthMouseArea {
 
 						RowLayout { //ScrollView {
 							property Item selectedPlayerDisplay: null;
-							onSelectedPlayerDisplayChanged: console.log(selectedPlayerDisplay)
+							        onSelectedPlayerDisplayChanged: {
+            // Player display changed
+        }
 							id: playerSelector
 							x: parent.width / 2 - (selectedPlayerDisplay ? selectedPlayerDisplay.x + selectedPlayerDisplay.width / 2 : 0)
 							anchors.verticalCenter: parent.verticalCenter
@@ -389,7 +391,7 @@ FullwidthMouseArea {
 												anchors.margins: 5
 												source: {
 													const entry = DesktopEntries.byId(modelData.desktopEntry);
-													console.log(`ent ${entry} id ${modelData.desktopEntry}`)
+													        // Entry selected
 													return Quickshell.iconPath(entry?.icon);
 												}
 
@@ -449,7 +451,7 @@ FullwidthMouseArea {
 								onDragStarted: trackStack.lastFlicked = this
 								onDragEnded: {
 									//return;
-									console.log(`dragend ${contentX}`)
+									        // Drag ended
 									if (Math.abs(contentX) > 75) {
 										if (contentX < 0) MprisController.previous();
 										else if (contentX > 0) MprisController.next();
@@ -676,7 +678,9 @@ FullwidthMouseArea {
 								rescaleSize: 200
 								depth: 0
 								source: MprisController.activeTrack.artUrl
-								onColorsChanged: console.log(colors)
+								        onColorsChanged: {
+            // Colors changed
+        }
 							}
 
 							grooveColor: quant.colors.length === 0 ? "#30ceffff" : Qt.alpha(quant.colors[0], 0.2)

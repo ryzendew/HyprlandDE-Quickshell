@@ -1,7 +1,7 @@
 import "root:/modules/common"
 import "root:/modules/common/widgets"
 import "root:/services"
-import "./calendar"
+import "./calendar/ModernCalendar.qml" as ModernCalendarComponent
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -26,7 +26,7 @@ Rectangle {
     
     visible: !hideCalendar
 
-    CalendarWidget {
+    ModernCalendarComponent.ModernCalendar {
         id: calendarWidget
         anchors.fill: parent
     }

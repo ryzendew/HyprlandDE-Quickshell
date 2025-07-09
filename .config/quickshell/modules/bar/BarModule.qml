@@ -134,7 +134,6 @@ Item {
                     dragStarted = true
                     isDragging = true
                     dragStarted(moduleId, moduleIndex)
-                    console.log("Started dragging module:", moduleId, "at index:", moduleIndex)
                 }
                 
                 if (isDragging) {
@@ -164,8 +163,6 @@ Item {
         
         onReleased: (mouse) => {
             if (mouse.button === Qt.LeftButton && isDragging) {
-                console.log("Drop detected for module:", moduleId)
-                
                 // Find drop target
                 var parentLayout = barModule.parent
                 var dropTargetId = ""
@@ -187,7 +184,6 @@ Item {
                 
                 // Perform reorder if valid drop target found
                 if (dropTargetId && dropTargetIndex >= 0 && dropTargetIndex !== moduleIndex) {
-                    console.log("Reordering module from", moduleIndex, "to", dropTargetIndex)
                     requestReorder(moduleId, moduleIndex, dropTargetIndex)
                 }
                 
@@ -214,13 +210,11 @@ Item {
         onEntered: (drag) => {
             if (drag.source && drag.source.moduleId && drag.source.moduleId !== moduleId) {
                 isDropTarget = true
-                console.log("Drop target activated for:", moduleId)
             }
         }
         
         onExited: {
             isDropTarget = false
-            console.log("Drop target deactivated for:", moduleId)
         }
         
         onDropped: (drop) => {

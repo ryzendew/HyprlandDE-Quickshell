@@ -10,15 +10,12 @@ Singleton {
     property var options: ConfigOptions
 
     function setNestedValue(nestedKey, value) {
-        console.log("Config.setNestedValue called with:", nestedKey, "=", value);
-        
         let keys = nestedKey.split(".");
         let obj = root.options;
 
         // Traverse to the parent object
         for (let i = 0; i < keys.length - 1; ++i) {
             if (!obj[keys[i]]) {
-                console.warn("Config property path not found:", keys.slice(0, i + 1).join("."));
                 return;
             }
             obj = obj[keys[i]];
@@ -41,11 +38,8 @@ Singleton {
         const finalKey = keys[keys.length - 1];
         if (obj.hasOwnProperty(finalKey)) {
             obj[finalKey] = convertedValue;
-            console.log("Config.setNestedValue success:", nestedKey, "=", convertedValue);
-        } else {
-            console.warn("Config property not found:", nestedKey);
-                }
-            }
+        }
+    }
 
     // Config persistence disabled - using ConfigOptions directly
     // FileView {
