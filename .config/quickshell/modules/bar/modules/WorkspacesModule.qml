@@ -7,7 +7,7 @@ import "root:/modules/common"
 import "../"
 
 Item {
-    Layout.alignment: Qt.AlignCenter
+    Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
     implicitWidth: workspaces.implicitWidth
     implicitHeight: workspaces.implicitHeight
     

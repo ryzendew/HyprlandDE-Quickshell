@@ -47,7 +47,6 @@ Singleton {
         const lines = fileContent.split("\n")
         const dataIndex = lines.indexOf(root.lineBeforeData)
         if (dataIndex === -1) {
-            console.warn("No data section found in emoji script file.")
             return
         }
         const emojis = lines.slice(dataIndex + 1).filter(line => line.trim() !== "")

@@ -6,6 +6,7 @@ import "root:/modules/common"
 import "../"
 
 Item {
+    Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
     Layout.fillWidth: false
     Layout.fillHeight: true
     Layout.rightMargin: 4

@@ -36,7 +36,7 @@ Item {
     
     // Initialize on component completion
     Component.onCompleted: {
-        console.log("Weather service initialized with location:", location)
+        // console.log("Weather service initialized with location:", location)
         loadWeather()
         updateTimer.start()
     }
@@ -52,7 +52,7 @@ Item {
     
     // Methods
     function loadWeather() {
-        console.log("Loading weather for location:", location)
+        // console.log("Loading weather for location:", location)
         var now = Date.now();
         var locationKey = location ? location.trim().toLowerCase() : "auto";
         
@@ -62,10 +62,10 @@ Item {
             (now - weatherCache.lastWeatherTimestamp) < cacheDurationMs) {
             try {
                 parseWeather(JSON.parse(weatherCache.lastWeatherJson));
-                console.log("Using cached weather data")
+                // console.log("Using cached weather data")
                 return;
             } catch (e) {
-                console.error("Failed to parse cached weather data:", e)
+                // console.error("Failed to parse cached weather data:", e)
             }
         }
         
@@ -80,7 +80,7 @@ Item {
     }
     
     function detectLocationFromIP() {
-        console.log("Auto-detecting location from IP address...")
+        // console.log("Auto-detecting location from IP address...")
         if (_geoXhr) {
             _geoXhr.abort();
         }
@@ -94,7 +94,7 @@ Item {
                 if (_geoXhr.status === 200) {
                     try {
                         var ipData = JSON.parse(_geoXhr.responseText);
-                        console.log("IP geolocation response:", JSON.stringify(ipData, null, 2));
+                        // console.log("IP geolocation response:", JSON.stringify(ipData, null, 2));
                         
                         if (ipData.latitude && ipData.longitude) {
                             var lat = parseFloat(ipData.latitude);
@@ -110,20 +110,20 @@ Item {
                                 display: locationDisplay
                             };
                             
-                            console.log("Auto-detected location:", locationDisplay, "at", lat, lon);
+                            // console.log("Auto-detected location:", locationDisplay, "at", lat, lon);
                             fetchWeatherData(lat, lon, locationDisplay);
                         } else {
-                            console.log("IP geolocation failed, no location data available");
+                            // console.log("IP geolocation failed, no location data available");
                             loading = false;
                             createDefaultWeatherData();
                         }
                     } catch (e) {
-                        console.error("Error parsing IP geolocation response:", e);
+                        // console.error("Error parsing IP geolocation response:", e);
                         loading = false;
                         createDefaultWeatherData();
                     }
                 } else {
-                    console.error("IP geolocation request failed with status:", _geoXhr.status);
+                    // console.error("IP geolocation request failed with status:", _geoXhr.status);
                     loading = false;
                     createDefaultWeatherData();
                 }
@@ -135,7 +135,7 @@ Item {
     }
     
     function geocodeLocation(locationName) {
-        console.log("Geocoding location:", locationName);
+        // console.log("Geocoding location:", locationName);
         if (_geoXhr) {
             _geoXhr.abort();
         }
@@ -145,14 +145,14 @@ Item {
                     encodeURIComponent(locationName) + 
                     "&count=1&language=en&format=json";
                     
-        console.log("Fetching geocoding data from:", geoUrl)
+        // console.log("Fetching geocoding data from:", geoUrl)
                     
         _geoXhr.onreadystatechange = function() {
             if (_geoXhr.readyState === XMLHttpRequest.DONE) {
                 if (_geoXhr.status === 200) {
                     try {
                         var geoData = JSON.parse(_geoXhr.responseText);
-                        console.log("Geocoding API response:", JSON.stringify(geoData, null, 2));
+                        // console.log("Geocoding API response:", JSON.stringify(geoData, null, 2));
                         
                         if (geoData.results && geoData.results.length > 0) {
                             var lat = geoData.results[0].latitude;
@@ -165,22 +165,22 @@ Item {
                             if (geoData.results[0].country) locationParts.push(geoData.results[0].country);
                             
                             var locationDisplay = locationParts.join(", ");
-                            console.log("Location resolved to:", locationDisplay, "at", lat, lon)
+                            // console.log("Location resolved to:", locationDisplay, "at", lat, lon)
                             
                             // Get weather data for these coordinates
                             fetchWeatherData(lat, lon, locationDisplay);
                         } else {
-                            console.log("No geocoding results found for location:", locationName);
+                            // console.log("No geocoding results found for location:", locationName);
                             loading = false;
                             createDefaultWeatherData();
                         }
                     } catch (e) {
-                        console.error("Error parsing geocoding response:", e);
+                        // console.error("Error parsing geocoding response:", e);
                         loading = false;
                         createDefaultWeatherData();
                     }
                 } else {
-                    console.error("Geocoding request failed with status:", _geoXhr.status);
+                    // console.error("Geocoding request failed with status:", _geoXhr.status);
                     loading = false;
                     createDefaultWeatherData();
                 }
@@ -232,11 +232,11 @@ Item {
                         // Parse the weather data
                         parseWeather(data, locationDisplay);
                     } catch (e) {
-                        console.error("Error parsing weather data:", e);
+                        // console.error("Error parsing weather data:", e);
                         loading = false;
                     }
                 } else {
-                    console.error("Weather request failed with status:", _xhr.status);
+                    // console.error("Weather request failed with status:", _xhr.status);
                     loading = false;
                 }
             }
@@ -248,7 +248,7 @@ Item {
     
     function parseWeather(data, locationDisplay) {
         if (!data || !data.current) {
-            console.error("Invalid weather data format");
+            // console.error("Invalid weather data format");
             loading = false;
             return;
         }

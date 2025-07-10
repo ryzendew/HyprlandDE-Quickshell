@@ -29,7 +29,6 @@ Rectangle {
         try {
             Hyprland.dispatch(command);
         } catch (e) {
-            console.warn("Hyprland dispatch failed in IndicatorsModule:", command, e);
             hyprlandAvailable = false;
         }
     }
@@ -38,9 +37,7 @@ Rectangle {
         // Check if Hyprland is available
         try {
             Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
-            console.log("Hyprland integration available in IndicatorsModule");
         } catch (e) {
-            console.warn("Hyprland integration not available in IndicatorsModule:", e);
             hyprlandAvailable = false;
         }
     }

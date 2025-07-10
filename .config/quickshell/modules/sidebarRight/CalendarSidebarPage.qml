@@ -28,16 +28,17 @@ Item {
         }
     }
     
-    MouseArea {
-        anchors.fill: parent
-        onWheel: (event) => {
-            if (event.angleDelta.y > 0) {
-                monthShift--;
-            } else if (event.angleDelta.y < 0) {
-                monthShift++;
-            }
-        }
-    }
+    // Remove or comment out the top-level MouseArea
+    // MouseArea {
+    //     anchors.fill: parent
+    //     onWheel: (event) => {
+    //         if (event.angleDelta.y > 0) {
+    //             monthShift--;
+    //         } else if (event.angleDelta.y < 0) {
+    //             monthShift++;
+    //         }
+    //     }
+    // }
     
     ColumnLayout {
         anchors.fill: parent
@@ -217,17 +218,27 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredHeight: parent.height * 0.45
-            radius: Appearance.rounding.large
-            
-            color: Qt.rgba(
-                Appearance.colors.colLayer1.r,
-                Appearance.colors.colLayer1.g,
-                Appearance.colors.colLayer1.b,
-                0.4
-            )
-            
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.1)
+                radius: Appearance.rounding.large
+                color: Qt.rgba(
+                    Appearance.colors.colLayer1.r,
+                    Appearance.colors.colLayer1.g,
+                    Appearance.colors.colLayer1.b,
+                    0.4
+                )
+                border.width: 1
+                border.color: Qt.rgba(1, 1, 1, 0.1)
+                // Add MouseArea here for month scrolling
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.NoButton // Only handle wheel
+                    onWheel: (event) => {
+                        if (event.angleDelta.y > 0) {
+                            monthShift--;
+                        } else if (event.angleDelta.y < 0) {
+                            monthShift++;
+                        }
+                    }
+                }
             
             ColumnLayout {
                 anchors.fill: parent
@@ -351,14 +362,9 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredHeight: parent.height * 0.55
-                radius: Appearance.rounding.large
+                radius: 12
                 
-                color: Qt.rgba(
-                    Appearance.colors.colLayer1.r,
-                    Appearance.colors.colLayer1.g,
-                    Appearance.colors.colLayer1.b,
-                    0.4
-                )
+                color: Qt.rgba(1, 1, 1, 0.05)
                 
                 border.width: 1
                 border.color: Qt.rgba(1, 1, 1, 0.1)
@@ -366,7 +372,7 @@ Item {
                 // Use the enhanced TodoWidget
                 TodoWidget {
                     anchors.fill: parent
-                    anchors.margins: 12
+                    anchors.margins: 8
                 }
             }
         }

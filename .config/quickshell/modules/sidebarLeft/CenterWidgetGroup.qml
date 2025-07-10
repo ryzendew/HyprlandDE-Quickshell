@@ -1,11 +1,7 @@
 import "root:/modules/common"
 import "root:/modules/common/widgets"
 import "root:/services"
-import "./calendar"
-import "./notifications"
-import "./todo"
-import "./volumeMixer"
-import "./performance"
+import "./wifi"
 import "./bluetooth"
 import QtQuick
 import QtQuick.Controls
@@ -24,50 +20,11 @@ Rectangle {
     border.color: Qt.rgba(1, 1, 1, 0.12)
     border.width: 1
 
-    // Debug mode - prevent closing
-    property bool debugMode: false  // Set to false to disable debug mode
-
-    // Block ALL closing attempts while in debug mode
-    Connections {
-        target: Quickshell
-        function onSidebarRightCloseRequested() {
-            if (debugMode) {
-                return
-            }
-            Hyprland.dispatch("global quickshell:sidebarRightClose")
-        }
-    }
-
-    // Block escape key
-    Keys.onEscapePressed: {
-        if (debugMode) {
-            event.accepted = true
-        }
-    }
-
-    // Block clicking outside
-    MouseArea {
-        anchors.fill: parent
-        onClicked: mouse.accepted = debugMode
-    }
-
     property int selectedTab: 0
     property var tabButtonList: [
-        {"icon": "notifications", "name": qsTr("Notifications")},
-        {"icon": "volume_up", "name": qsTr("Volume mixer")},
-        {"icon": "cloud", "name": qsTr("Weather")},
-        {"icon": "calendar_month", "name": qsTr("Calendar")}
+        {"icon": "wifi", "name": qsTr("WiFi")},
+        {"icon": "bluetooth", "name": qsTr("Bluetooth")}
     ]
-
-    // Intercept the close signal
-    Connections {
-        target: Quickshell
-        function onSidebarRightCloseRequested() {
-            if (!root.preventClosing) {
-                Hyprland.dispatch("global quickshell:sidebarRightClose")
-            }
-        }
-    }
 
     Keys.onPressed: (event) => {
         if (event.key === Qt.Key_PageDown || event.key === Qt.Key_PageUp) {
@@ -111,18 +68,14 @@ Rectangle {
             Layout.fillHeight: true
             sourceComponent: {
                 switch(root.selectedTab) {
-                    case 0: return notificationComponent;
-                    case 1: return volumeMixerComponent;
-                    case 2: return weatherComponent;
-                    case 3: return calendarComponent;
-                    default: return notificationComponent;
+                    case 0: return wifiComponent;
+                    case 1: return bluetoothComponent;
+                    default: return wifiComponent;
                 }
             }
         }
 
-        Component { id: notificationComponent; NotificationList {} }
-        Component { id: volumeMixerComponent; VolumeMixer {} }
-        Component { id: weatherComponent; WeatherSidebarPage {} }
-        Component { id: calendarComponent; CalendarSidebarPage {} }
+        Component { id: wifiComponent; WifiPage {} }
+        Component { id: bluetoothComponent; BluetoothPage {} }
     }
-}
+} 

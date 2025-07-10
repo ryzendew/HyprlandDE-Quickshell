@@ -26,27 +26,6 @@ MouseArea {
             item.activate()
         } else if (mouse.button === Qt.RightButton) {
             if (item.hasMenu) {
-                // Debug logging
-                console.log("=== SYSTRAY MENU DEBUG ===")
-                console.log("root.x:", root.x, "root.y:", root.y)
-                console.log("systrayWidget.x:", systrayWidget.x, "systrayWidget.y:", systrayWidget.y)
-                console.log("systrayWidget.parent.x:", systrayWidget.parent?.x, "systrayWidget.parent.y:", systrayWidget.parent?.y)
-                console.log("systrayWidget.parent.parent.x:", systrayWidget.parent?.parent?.x, "systrayWidget.parent.parent.y:", systrayWidget.parent?.parent?.y)
-                console.log("calculated x:", root.x + systrayWidget.x)
-                console.log("calculated y:", root.y + systrayWidget.y)
-                
-                // Try to find the actual position by walking up the hierarchy
-                var totalX = root.x + systrayWidget.x
-                var totalY = root.y + systrayWidget.y
-                var currentItem = systrayWidget.parent
-                while (currentItem && currentItem !== bar) {
-                    console.log("Adding parent coords:", currentItem.x, currentItem.y)
-                    totalX += currentItem.x
-                    totalY += currentItem.y
-                    currentItem = currentItem.parent
-                }
-                console.log("Total calculated position:", totalX, totalY)
-                
                 menu.open()
             }
         } else if (mouse.button === Qt.MiddleButton) {

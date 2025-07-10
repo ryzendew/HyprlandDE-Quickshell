@@ -92,6 +92,21 @@ Singleton {
 
     property QtObject networking: QtObject {
         property string userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+        property QtObject wifi: QtObject {
+            property bool autoScan: true
+            property int scanInterval: 30000 // milliseconds
+            property bool showSignalStrength: true
+            property bool showSecurityType: true
+            property bool autoConnect: true
+            property bool rememberNetworks: true
+            property list<string> preferredNetworks: []
+            property bool showHiddenNetworks: false
+            property QtObject connection: QtObject {
+                property int timeout: 30000 // milliseconds
+                property bool showPassword: false
+                property bool autoReconnect: true
+            }
+        }
     }
 
     property QtObject osd: QtObject {
@@ -156,8 +171,8 @@ Singleton {
         property bool enabled: false // Master switch for all logging
         property bool debug: false
         property bool info: false
-        property bool warning: true // Keep warnings for important issues
-        property bool error: true // Keep errors for debugging
+        property bool warning: false // Disable all warnings
+        property bool error: false // Disable all errors
         property bool suppressIconWarnings: true // Suppress icon loading warnings
         property bool suppressQmlWarnings: true // Suppress QML warnings
         property bool suppressHyprlandWarnings: true // Suppress Hyprland dispatch warnings

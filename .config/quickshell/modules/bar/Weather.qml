@@ -180,7 +180,7 @@ Item {
     }
     
     function detectLocationFromIP() {
-        console.log("[BAR WEATHER] Auto-detecting location from IP address...")
+        // console.log("[BAR WEATHER] Auto-detecting location from IP address...")
         var geoXhr = new XMLHttpRequest();
         var ipUrl = "https://ipapi.co/json/";
         
@@ -189,23 +189,23 @@ Item {
                 if (geoXhr.status === 200) {
                     try {
                         var ipData = JSON.parse(geoXhr.responseText);
-                        console.log("[BAR WEATHER] IP geolocation response:", JSON.stringify(ipData, null, 2));
+                        // console.log("[BAR WEATHER] IP geolocation response:", JSON.stringify(ipData, null, 2));
                         
                         if (ipData.latitude && ipData.longitude) {
                             var lat = parseFloat(ipData.latitude);
                             var lon = parseFloat(ipData.longitude);
-                            console.log("[BAR WEATHER] Auto-detected location at", lat, lon);
+                            // console.log("[BAR WEATHER] Auto-detected location at", lat, lon);
                             fetchWeatherData(lat, lon);
                         } else {
-                            console.log("[BAR WEATHER] IP geolocation failed, no location data available");
+                            // console.log("[BAR WEATHER] IP geolocation failed, no location data available");
                             fallbackWeatherData("Location unavailable");
                         }
                     } catch (e) {
-                        console.error("[BAR WEATHER] Error parsing IP geolocation response:", e);
+                        // console.error("[BAR WEATHER] Error parsing IP geolocation response:", e);
                         fallbackWeatherData("Location error");
                     }
                 } else {
-                    console.error("[BAR WEATHER] IP geolocation request failed with status:", geoXhr.status);
+                    // console.error("[BAR WEATHER] IP geolocation request failed with status:", geoXhr.status);
                     fallbackWeatherData("Location error");
                 }
             }
@@ -216,7 +216,7 @@ Item {
     }
     
     function geocodeLocation(locationName) {
-        console.log("[BAR WEATHER] Geocoding location:", locationName);
+        // console.log("[BAR WEATHER] Geocoding location:", locationName);
         var geoXhr = new XMLHttpRequest();
         var geoUrl = "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(locationName) + "&count=1&language=en&format=json";
         geoXhr.onreadystatechange = function() {
@@ -252,11 +252,11 @@ Item {
                                         weatherCache.lastLocation = locationKey;
                                         parseWeatherOpenMeteo(data);
                                     } catch (e) {
-                                        console.log("[BAR WEATHER] Parse error:", e);
+                                        // console.log("[BAR WEATHER] Parse error:", e);
                                         fallbackWeatherData("Parse error");
                                     }
                                 } else {
-                                    console.log("[BAR WEATHER] Weather request failed with status:", xhr.status);
+                                    // console.log("[BAR WEATHER] Weather request failed with status:", xhr.status);
                                     fallbackWeatherData("Request error");
                                 }
                             }
@@ -264,11 +264,11 @@ Item {
                         xhr.open("GET", weatherUrl);
                         xhr.send();
                     } catch (e) {
-                        console.log("[BAR WEATHER] Geocoding parse error:", e);
+                        // console.log("[BAR WEATHER] Geocoding parse error:", e);
                         fallbackWeatherData("Geocoding error");
                     }
                 } else {
-                    console.log("[BAR WEATHER] Geocoding request failed");
+                    // console.log("[BAR WEATHER] Geocoding request failed");
                     fallbackWeatherData("Geocoding failed");
                 }
             }
@@ -306,11 +306,11 @@ Item {
                         weatherCache.lastLocation = locationKey;
                         parseWeatherOpenMeteo(data);
                     } catch (e) {
-                        console.log("[BAR WEATHER] Parse error:", e);
+                        // console.log("[BAR WEATHER] Parse error:", e);
                         fallbackWeatherData("Parse error");
                     }
                 } else {
-                    console.log("[BAR WEATHER] Weather request failed with status:", xhr.status);
+                    // console.log("[BAR WEATHER] Weather request failed with status:", xhr.status);
                     fallbackWeatherData("Request error");
                 }
             }
@@ -320,12 +320,10 @@ Item {
     }
 
     function parseWeatherOpenMeteo(data) {
-        console.log("[BAR WEATHER] Parsing Open-Meteo weather data:", JSON.stringify(data, null, 2));
         if (data && data.current) {
             var tempC = Math.round(data.current.temperature_2m);
             var feelsLikeC = Math.round(data.current.apparent_temperature);
             var condition = mapWeatherCode(data.current.weather_code);
-            console.log("[BAR WEATHER] Parsed values - temp:", tempC, "feelsLike:", feelsLikeC, "condition:", condition);
             weatherData = {
                 currentTemp: tempC + "°C",
                 feelsLike: feelsLikeC + "°C",
@@ -333,20 +331,17 @@ Item {
                 currentCondition: condition
             };
         } else {
-            console.log("[BAR WEATHER] No current weather data found");
             fallbackWeatherData("No data");
         }
     }
 
     function parseWeather(data) {
-        console.log("[BAR WEATHER] Parsing wttr.in weather data:", JSON.stringify(data, null, 2));
         // Parse wttr.in JSON for current conditions (fallback)
         if (data.current_condition && data.current_condition[0]) {
             var current = data.current_condition[0];
             var tempC = current.temp_C;
             var feelsLikeC = current.FeelsLikeC;
             var condition = current.weatherDesc[0]?.value || "";
-            console.log("[BAR WEATHER] Parsed values - temp:", tempC, "feelsLike:", feelsLikeC, "condition:", condition);
             weatherData = {
                 currentTemp: tempC + "°C",
                 feelsLike: feelsLikeC + "°C",
@@ -354,7 +349,6 @@ Item {
                 currentCondition: condition
             };
         } else {
-            console.log("[BAR WEATHER] No current_condition data found");
             fallbackWeatherData("No data");
         }
     }

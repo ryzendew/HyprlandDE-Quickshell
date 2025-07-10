@@ -6,16 +6,28 @@ import Quickshell.Io
 import QtQuick
 
 /**
- * Simple polled network state service.
+ * Enhanced network state service with WiFi management capabilities.
  */
 Singleton {
     id: root
 
+    // Basic network state
     property bool wifi: true
     property bool ethernet: false
-    property int updateInterval: 1000
+    property bool wifiEnabled: true
+    property bool connected: false
+    property string ssid: ""
     property string networkName: ""
-    property int networkStrength
+    property int networkStrength: 0
+    property int updateInterval: 1000
+    
+    // WiFi scanning and management
+    property bool isScanning: false
+    property var networks: []
+    property bool isConnecting: false
+    property string connectionError: ""
+    
+    // Material symbol for display
     property string materialSymbol: ethernet ? "lan" :
         (Network.networkName.length > 0 && Network.networkName != "lo") ? (
         Network.networkStrength > 80 ? "signal_wifi_4_bar" :
@@ -24,10 +36,41 @@ Singleton {
         Network.networkStrength > 20 ? "network_wifi_1_bar" :
         "signal_wifi_0_bar"
     ) : "signal_wifi_off"
+
     function update() {
         updateConnectionType.startCheck();
         updateNetworkName.running = true;
         updateNetworkStrength.running = true;
+        updateWifiState.running = true;
+    }
+
+    function scanNetworks() {
+        if (isScanning) return;
+        isScanning = true;
+        scanProcess.running = true;
+    }
+
+    function connectToNetwork(ssid, password = "") {
+        if (isConnecting) return;
+        isConnecting = true;
+        connectionError = "";
+        
+        if (password) {
+            connectWithPasswordProcess.ssid = ssid;
+            connectWithPasswordProcess.password = password;
+            connectWithPasswordProcess.running = true;
+        } else {
+            connectOpenProcess.ssid = ssid;
+            connectOpenProcess.running = true;
+        }
+    }
+
+    function disconnectFromNetwork() {
+        disconnectProcess.running = true;
+    }
+
+    function toggleWifi() {
+        toggleWifiProcess.running = true;
     }
 
     Timer {
@@ -40,6 +83,7 @@ Singleton {
         }
     }
 
+    // Update connection type (ethernet/wifi)
     Process {
         id: updateConnectionType
         property string buffer
@@ -66,9 +110,11 @@ Singleton {
             });
             root.ethernet = hasEthernet;
             root.wifi = hasWifi;
+            root.connected = hasEthernet || hasWifi;
         }
     }
 
+    // Update network name
     Process {
         id: updateNetworkName
         command: ["sh", "-c", "nmcli -t -f NAME c show --active | head -1"]
@@ -76,10 +122,12 @@ Singleton {
         stdout: SplitParser {
             onRead: data => {
                 root.networkName = data;
+                root.ssid = data;
             }
         }
     }
 
+    // Update network strength
     Process {
         id: updateNetworkStrength
         running: true
@@ -88,6 +136,113 @@ Singleton {
             onRead: data => {
                 root.networkStrength = parseInt(data);
             }
+        }
+    }
+
+    // Update WiFi enabled state
+    Process {
+        id: updateWifiState
+        command: ["sh", "-c", "nmcli radio wifi"]
+        running: true
+        stdout: SplitParser {
+            onRead: data => {
+                root.wifiEnabled = data.trim() === "enabled";
+            }
+        }
+    }
+
+    // Scan for available networks
+    Process {
+        id: scanProcess
+        property string buffer
+        command: ["nmcli", "-t", "-f", "SSID,SECURITY,SIGNAL,IN-USE", "device", "wifi", "list"]
+        running: false
+        stdout: SplitParser {
+            onRead: data => {
+                scanProcess.buffer += data + "\n";
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            const lines = scanProcess.buffer.trim().split('\n');
+            const nets = [];
+            const seen = {};
+            
+            for (let i = 0; i < lines.length; ++i) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const parts = line.split(':');
+                const ssid = parts[0];
+                const security = parts[1] || "Open";
+                const signal = parseInt(parts[2]) || 0;
+                const inUse = parts[3] === "*";
+                
+                if (ssid && !seen[ssid]) {
+                    nets.push({ 
+                        ssid: ssid, 
+                        security: security, 
+                        signal: signal, 
+                        connected: inUse 
+                    });
+                    seen[ssid] = true;
+                }
+            }
+            
+            root.networks = nets;
+            root.isScanning = false;
+        }
+    }
+
+    // Connect to open network
+    Process {
+        id: connectOpenProcess
+        property string ssid
+        command: ["sh", "-c", "nmcli device wifi connect \"" + ssid + "\""]
+        running: false
+        onExited: (exitCode, exitStatus) => {
+            root.isConnecting = false;
+            if (exitCode !== 0) {
+                root.connectionError = "Failed to connect to " + connectOpenProcess.ssid;
+            } else {
+                root.update();
+            }
+        }
+    }
+
+    // Connect to secured network
+    Process {
+        id: connectWithPasswordProcess
+        property string ssid
+        property string password
+        command: ["sh", "-c", "nmcli device wifi connect '" + ssid + "' password '" + password + "'"]
+        running: false
+        onExited: (exitCode, exitStatus) => {
+            root.isConnecting = false;
+            if (exitCode !== 0) {
+                root.connectionError = "Failed to connect to " + connectWithPasswordProcess.ssid;
+            } else {
+                root.update();
+            }
+        }
+    }
+
+    // Disconnect from current network
+    Process {
+        id: disconnectProcess
+        command: ["sh", "-c", "nmcli device disconnect $(nmcli -t -f DEVICE,TYPE device status | grep wireless | cut -d: -f1 | head -1)"]
+        running: false
+        onExited: (exitCode, exitStatus) => {
+            root.update();
+        }
+    }
+
+    // Toggle WiFi on/off
+    Process {
+        id: toggleWifiProcess
+        command: ["sh", "-c", "nmcli radio wifi | grep -q enabled && nmcli radio wifi off || nmcli radio wifi on"]
+        running: false
+        onExited: (exitCode, exitStatus) => {
+            root.update();
         }
     }
 }

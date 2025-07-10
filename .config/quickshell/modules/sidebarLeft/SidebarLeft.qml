@@ -3,7 +3,6 @@ import "root:/services"
 import "root:/modules/common"
 import "root:/modules/common/widgets"
 import "root:/modules/common/functions/string_utils.js" as StringUtils
-import "./quickToggles/"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -14,50 +13,26 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
 import Quickshell.Hyprland
-import Quickshell.Services.UPower
+import "../sidebarRight/quickToggles"
 
 Scope {
-    readonly property bool upowerReady: typeof PowerProfiles !== 'undefined' && PowerProfiles
-    readonly property int currentProfile: upowerReady ? PowerProfiles.profile : 0
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 8
-    property string currentSystemProfile: ""
-    property bool showBluetoothDialog: false
     property bool pinned: false
-
-    // Refresh system profile from powerprofilesctl
-    function refreshSystemProfile() {
-        getProfileProcess.start()
-    }
-
-    Process {
-        id: getProfileProcess
-        command: ["powerprofilesctl", "get"]
-        onExited: {
-            if (getProfileProcess.stdout) {
-                currentSystemProfile = getProfileProcess.stdout.trim()
-            }
-        }
-    }
-
-    Component.onCompleted: {
-        console.log("[Sidebar] PowerProfiles.profile on load:", PowerProfiles.profile)
-        refreshSystemProfile()
-    }
-
-    Connections {
-        target: PowerProfiles
-        onProfileChanged: {
-            console.log("[Sidebar] PowerProfiles.profile changed:", PowerProfiles.profile)
-            refreshSystemProfile()
-        }
-    }
 
     Loader {
         id: sidebarLoader
-        active: false
-        onActiveChanged: {
-            GlobalStates.sidebarRightOpen = sidebarLoader.active
+        active: GlobalStates.sidebarLeftOpen
+
+        Connections {
+            target: GlobalStates
+            function onSidebarLeftOpenChanged() {
+                if (GlobalStates.sidebarLeftOpen && sidebarLoader.active) {
+                    sidebarRoot.show()
+                } else if (!GlobalStates.sidebarLeftOpen && sidebarRoot.visible) {
+                    sidebarRoot.hide()
+                }
+            }
         }
 
         PanelWindow {
@@ -87,7 +62,7 @@ Scope {
                     target: sidebarRoot
                     property: "x"
                     from: 0
-                    to: slideOffset
+                    to: -slideOffset
                     duration: 200
                     easing.type: Easing.OutCubic
                 }
@@ -100,7 +75,7 @@ Scope {
                     easing.type: Easing.OutCubic
                 }
                 onFinished: {
-                    sidebarLoader.active = false
+                    GlobalStates.sidebarLeftOpen = false
                     isAnimating = false
                     sidebarRoot.opacity = 1.0  // Reset opacity for next time
                 }
@@ -111,7 +86,7 @@ Scope {
                 id: slideInAnimation
                 ScriptAction {
                     script: {
-                        sidebarRoot.x = slideOffset
+                        sidebarRoot.x = -slideOffset
                         sidebarRoot.opacity = 0.0  // Start transparent
                     }
                 }
@@ -119,7 +94,7 @@ Scope {
                     NumberAnimation {
                         target: sidebarRoot
                         property: "x"
-                        from: slideOffset
+                        from: -slideOffset
                         to: 0
                         duration: 200
                         easing.type: Easing.OutCubic
@@ -147,14 +122,12 @@ Scope {
 
             exclusiveZone: 0
             implicitWidth: sidebarWidth
-            WlrLayershell.namespace: "quickshell:sidebarRight"
-            // Hyprland 0.49: Focus is always exclusive and setting this breaks mouse focus grab
-            // WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+            WlrLayershell.namespace: "quickshell:sidebarLeft"
             color: "transparent"
 
             anchors {
                 top: true
-                right: true
+                left: true
                 bottom: true
             }
 
@@ -169,7 +142,7 @@ Scope {
 
             // Modern Background
             Rectangle {
-                id: sidebarRightBackground
+                id: sidebarLeftBackground
                 anchors.centerIn: parent
                 width: parent.width - Appearance.sizes.hyprlandGapsOut * 2
                 height: parent.height - Appearance.sizes.hyprlandGapsOut * 2
@@ -206,7 +179,7 @@ Scope {
                 
                 layer.enabled: true
                 layer.effect: MultiEffect {
-                    source: sidebarRightBackground
+                    source: sidebarLeftBackground
                     shadowEnabled: true
                     shadowColor: Qt.rgba(0, 0, 0, 0.15)
                     shadowVerticalOffset: 8
@@ -241,7 +214,7 @@ Scope {
                     anchors.margins: sidebarPadding
                     spacing: 6
 
-                    // Header with logo, uptime, and action buttons
+                    // Header with logo and uptime
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 60
@@ -255,16 +228,16 @@ Scope {
                         border.color: Qt.rgba(1, 1, 1, 0.15)
                         border.width: 1
                         
-                        // Left side - Logo and uptime
+                        // Logo and uptime
                         RowLayout {
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 12
-                            spacing: 10
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 16
 
                             Item {
                                 implicitWidth: 25
                                 implicitHeight: 25
+                                Layout.alignment: Qt.AlignVCenter
                                 Image {
                                     id: cachyosLogo
                                     width: 25
@@ -284,147 +257,27 @@ Scope {
                                 color: Appearance.colors.colOnLayer0
                                 text: StringUtils.format(qsTr("Uptime: {0}"), DateTime.uptime)
                                 textFormat: Text.MarkdownText
+                                Layout.alignment: Qt.AlignVCenter
                             }
-                        }
 
-                        // Right side - Buttons
-                        RowLayout {
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.rightMargin: 12
-                            spacing: 4
-
-                            BatteryToggle {
-                                visible: Battery.available
-                            }
+                            Item { Layout.fillWidth: true }
 
                             QuickToggleButton {
-                                toggled: pinned
                                 buttonIcon: "push_pin"
+                                toggled: pinned
                                 onClicked: pinned = !pinned
+                                Layout.alignment: Qt.AlignVCenter
                                 StyledToolTip {
                                     content: pinned ? qsTr("Unpin sidebar (auto-close)") : qsTr("Pin sidebar (keep open)")
                                 }
                             }
-                            
-                            QuickToggleButton {
-                                toggled: false
-                                buttonIcon: "restart_alt"
-                                onClicked: {
-                                    Hyprland.dispatch("reload")
-                                    Quickshell.reload(true)
-                                }
-                                StyledToolTip {
-                                    content: qsTr("Reload Hyprland & Quickshell")
-                                }
-                            }
-                            
-                            QuickToggleButton {
-                                toggled: false
-                                buttonIcon: "settings"
-                                onClicked: {
-                                    Hyprland.dispatch("global quickshell:settingsOpen")
-                                }
-                                StyledToolTip {
-                                    content: qsTr("Settings")
-                                }
-                            }
-                            
-                            QuickToggleButton {
-                                toggled: false
-                                buttonIcon: "power_settings_new"
-                                onClicked: {
-                                    Hyprland.dispatch("global quickshell:sessionOpen")
-                                }
-                                StyledToolTip {
-                                    content: qsTr("Session")
-                                }
-                            }
                         }
                     }
 
-                    // Quick toggle controls
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: false
-                        radius: Appearance.rounding.full
-                        color: Qt.rgba(
-                            Appearance.colors.colLayer1.r,
-                            Appearance.colors.colLayer1.g,
-                            Appearance.colors.colLayer1.b,
-                            0.55
-                        )
-                        border.color: Qt.rgba(1, 1, 1, 0.12)
-                        border.width: 1
-                        implicitHeight: sidebarQuickControlsRow.implicitHeight + 10
-                        
-                        RowLayout {
-                            id: sidebarQuickControlsRow
-                            anchors.centerIn: parent
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.margins: 5
-                            spacing: 14
-                            
-                            Item { Layout.fillWidth: true }
-                            
-                            RowLayout {
-                                spacing: 14
-                                Layout.alignment: Qt.AlignVCenter
-
-                                NetworkToggle {
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-                                BluetoothToggle {
-                                    id: bluetoothToggle
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-                                NightLight {
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-                                GameMode {
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-                                IdleInhibitor {
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-                                QuickToggleButton {
-                                    id: perfProfilePerformance
-                                    buttonIcon: "speed"
-                                    toggled: PowerProfiles.profile === PowerProfile.Performance
-                                    onClicked: PowerProfiles.profile = PowerProfile.Performance
-                                    Layout.alignment: Qt.AlignVCenter
-                                    StyledToolTip { content: qsTr("Performance Mode") }
-                                }
-                                QuickToggleButton {
-                                    id: perfProfileBalanced
-                                    buttonIcon: "balance"
-                                    toggled: PowerProfiles.profile === PowerProfile.Balanced
-                                    onClicked: PowerProfiles.profile = PowerProfile.Balanced
-                                    Layout.alignment: Qt.AlignVCenter
-                                    StyledToolTip { content: qsTr("Balanced Mode") }
-                                }
-                                QuickToggleButton {
-                                    id: perfProfileSaver
-                                    buttonIcon: "battery_saver"
-                                    toggled: PowerProfiles.profile === PowerProfile.PowerSaver
-                                    onClicked: PowerProfiles.profile = PowerProfile.PowerSaver
-                                    Layout.alignment: Qt.AlignVCenter
-                                    StyledToolTip { content: qsTr("Power Saver Mode") }
-                                }
-                            }
-                            
-                            Item { Layout.fillWidth: true }
-                        }
-                    }
-
-                    // Main content (tabs: notifications, volume, weather, calendar)
+                    // Main content area with tabs
                     CenterWidgetGroup {
-                        id: centerWidgetGroup
-                        focus: sidebarRoot.visible
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.fillHeight: true
                         Layout.fillWidth: true
+                        Layout.fillHeight: true
                     }
                 }
             }
@@ -432,7 +285,7 @@ Scope {
     }
 
     IpcHandler {
-        target: "sidebarRight"
+        target: "sidebarLeft"
 
         function toggle(): void {
             if (sidebarLoader.active) {
@@ -440,7 +293,6 @@ Scope {
             } else {
                 sidebarLoader.active = true;
                 sidebarRoot.show();
-                Notifications.timeoutAll();
             }
         }
 
@@ -451,13 +303,12 @@ Scope {
         function open(): void {
             sidebarLoader.active = true;
             sidebarRoot.show();
-            Notifications.timeoutAll();
         }
     }
 
     GlobalShortcut {
-        name: "sidebarRightToggle"
-        description: qsTr("Toggles right sidebar on press")
+        name: "sidebarLeftToggle"
+        description: qsTr("Toggles left sidebar on press")
 
         onPressed: {
             if (sidebarLoader.active) {
@@ -465,50 +316,26 @@ Scope {
             } else {
                 sidebarLoader.active = true;
                 sidebarRoot.show();
-                Notifications.timeoutAll();
             }
         }
     }
+
     GlobalShortcut {
-        name: "sidebarRightOpen"
-        description: qsTr("Opens right sidebar on press")
+        name: "sidebarLeftOpen"
+        description: qsTr("Opens left sidebar on press")
 
         onPressed: {
             sidebarLoader.active = true;
             sidebarRoot.show();
-            Notifications.timeoutAll();
         }
     }
+
     GlobalShortcut {
-        name: "sidebarRightClose"
-        description: qsTr("Closes right sidebar on press")
+        name: "sidebarLeftClose"
+        description: qsTr("Closes left sidebar on press")
 
         onPressed: {
             sidebarRoot.hide();
         }
     }
-
-    // Process to set profile and refresh after
-    Process {
-        id: setProfileProcess
-        command: ["true"]
-        onExited: refreshSystemProfile()
-    }
-
-    Loader {
-        id: bluetoothDialogLoader
-        active: showBluetoothDialog
-        visible: showBluetoothDialog
-        z: 9999
-        source: showBluetoothDialog ? "quickToggles/BluetoothConnectModule.qml" : undefined
-        onStatusChanged: {
-            if (status === Loader.Error) {
-                console.log("Bluetooth dialog failed to load:", errorString);
-            }
-        }
-    }
-    Connections {
-        target: bluetoothToggle
-        onRequestBluetoothDialog: showBluetoothDialog = true
-    }
-}
+} 

@@ -160,12 +160,10 @@ Item {
         }
         if (sourcePath && sourcePath !== "") {
             var formatted = formatPathForImageSource(sourcePath);
-            console.log("[DEBUG] Setting mainIcon.source to:", formatted);
             mainIcon.source = formatted;
         } else {
             var fallbackPath = IconTheme.getIconPath(fallbackIcon, homeDirectory);
             var formattedFallback = formatPathForImageSource(fallbackPath);
-            console.log("[DEBUG] Setting mainIcon.source to fallback:", formattedFallback);
             mainIcon.source = formattedFallback; // Fallback icon
         }
     }
@@ -247,11 +245,7 @@ Item {
         sourceSize.width: iconSize * 2
         sourceSize.height: iconSize * 2
         onStatusChanged: {
-            if (status === Image.Error) {
-                console.log("[DEBUG] Image load error for:", source);
-            } else if (status === Image.Ready) {
-                console.log("[DEBUG] Image loaded successfully:", source);
-            }
+            // Image status changed
         }
     }
     

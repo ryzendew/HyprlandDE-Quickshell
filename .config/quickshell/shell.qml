@@ -13,6 +13,7 @@ import "./modules/overview/"
 import "./modules/session/"
 import "./modules/settings/"
 import "./modules/sidebarRight/"
+import "./modules/sidebarLeft/"
 import "./modules/hyprmenu/"
 import "./modules/cheatsheet/"
 import QtQuick
@@ -44,6 +45,7 @@ ShellRoot {
     property bool enableSession: true
     property bool enableSettings: true
     property bool enableSidebarRight: true
+    property bool enableSidebarLeft: true
     property bool enableHyprMenu: true
 
     // Force initialization of some singletons
@@ -79,6 +81,7 @@ ShellRoot {
     Loader { active: enableSession; sourceComponent: Session {} }
     Loader { active: enableSettings; sourceComponent: Settings {} }
     Loader { active: enableSidebarRight; sourceComponent: SidebarRight {} }
+    Loader { active: enableSidebarLeft; sourceComponent: SidebarLeft {} }
     Loader { active: enableHyprMenu; sourceComponent: HyprMenu {} }
 }
 

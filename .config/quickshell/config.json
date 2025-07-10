@@ -34,6 +34,24 @@
       "kitty"
     ]
   },
+  "networking": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "wifi": {
+      "autoScan": true,
+      "scanInterval": 30000,
+      "showSignalStrength": true,
+      "showSecurityType": true,
+      "autoConnect": true,
+      "rememberNetworks": true,
+      "preferredNetworks": [],
+      "showHiddenNetworks": false,
+      "connection": {
+        "timeout": 30000,
+        "showPassword": false,
+        "autoReconnect": true
+      }
+    }
+  },
   "hacks": {
     "arbitraryRaceConditionDelay": 20
   }

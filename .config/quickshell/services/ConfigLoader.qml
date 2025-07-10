@@ -29,11 +29,11 @@ Singleton {
     
     onPendingChangesChanged: {
         root.hasPendingChanges = Object.keys(root.pendingChanges).length > 0;
-        console.log("[ConfigLoader] Pending changes updated, hasPendingChanges:", root.hasPendingChanges);
+        // console.log("[ConfigLoader] Pending changes updated, hasPendingChanges:", root.hasPendingChanges);
     }
 
     onPreventNextNotificationChanged: {
-        console.log("HMM: preventNextNotification:", root.preventNextNotification);
+        // console.log("HMM: preventNextNotification:", root.preventNextNotification);
     }
 
     function loadConfig() {
@@ -41,10 +41,10 @@ Singleton {
     }
 
     function applyConfig(fileContent) {
-        console.log("[ConfigLoader] Applying config from file:", root.filePath);
+        // console.log("[ConfigLoader] Applying config from file:", root.filePath);
         try {
             if (fileContent.trim() === "") {
-                console.warn("[ConfigLoader] Config file is empty, skipping load.");
+                // console.warn("[ConfigLoader] Config file is empty, skipping load.");
                 return;
             }
             const json = JSON.parse(fileContent);
@@ -56,8 +56,8 @@ Singleton {
                 root.saveConfig(); // Make sure new properties are added to the user's config file
             }
         } catch (e) {
-            console.error("[ConfigLoader] Error reading file:", e);
-            console.log("[ConfigLoader] File content was:", fileContent);
+            // console.error("[ConfigLoader] Error reading file:", e);
+            // console.log("[ConfigLoader] File content was:", fileContent);
             Hyprland.dispatch(`exec notify-send "${qsTr("Shell configuration failed to load")}" "${root.filePath}"`)
             return;
 
@@ -91,63 +91,58 @@ Singleton {
             }
         }
 
-        console.log(parents.join("."));
-        console.log(`[ConfigLoader] Setting live config value: ${nestedKey} = ${convertedValue}`);
         obj[keys[keys.length - 1]] = convertedValue;
     }
 
     function saveConfig() {
         const plainConfig = ObjectUtils.toPlainObject(ConfigOptions)
-        console.log("[ConfigLoader] Saving config to:", root.filePath)
-        console.log("[ConfigLoader] Config content:", JSON.stringify(plainConfig, null, 2))
         Hyprland.dispatch(`exec echo '${StringUtils.shellSingleQuoteEscape(JSON.stringify(plainConfig, null, 2))}' > '${root.filePath}'`)
-        console.log("[ConfigLoader] Save command dispatched")
     }
 
     function setConfigValueAndSave(nestedKey, value, preventNextNotification = true) {
-        console.log("[ConfigLoader] setConfigValueAndSave called with:", nestedKey, "=", value)
+        // console.log("[ConfigLoader] setConfigValueAndSave called with:", nestedKey, "=", value)
         setLiveConfigValue(nestedKey, value);
         root.preventNextNotification = preventNextNotification;
-        console.log("SETTING: preventNextNotification:", root.preventNextNotification);
+        // console.log("SETTING: preventNextNotification:", root.preventNextNotification);
         saveConfig();
-        console.log("[ConfigLoader] setConfigValueAndSave completed")
+        // console.log("[ConfigLoader] setConfigValueAndSave completed")
     }
 
     // New functions for manual save system
     function setConfigValue(nestedKey, value) {
-        console.log("[ConfigLoader] setConfigValue called with:", nestedKey, "=", value)
+        // console.log("[ConfigLoader] setConfigValue called with:", nestedKey, "=", value)
         setLiveConfigValue(nestedKey, value);
         
         // Track pending changes - use Object.assign to trigger property change
         root.pendingChanges = Object.assign({}, root.pendingChanges, {[nestedKey]: value});
         
-        console.log("[ConfigLoader] Pending changes:", root.pendingChanges);
-        console.log("[ConfigLoader] Has pending changes:", root.hasPendingChanges);
+        // console.log("[ConfigLoader] Pending changes:", root.pendingChanges);
+        // console.log("[ConfigLoader] Has pending changes:", root.hasPendingChanges);
     }
 
     function savePendingChanges() {
-        console.log("[ConfigLoader] savePendingChanges called");
-        console.log("[ConfigLoader] hasPendingChanges:", root.hasPendingChanges);
-        console.log("[ConfigLoader] pendingChanges:", root.pendingChanges);
+        // console.log("[ConfigLoader] savePendingChanges called");
+        // console.log("[ConfigLoader] hasPendingChanges:", root.hasPendingChanges);
+        // console.log("[ConfigLoader] pendingChanges:", root.pendingChanges);
         
         if (!root.hasPendingChanges) {
-            console.log("[ConfigLoader] No pending changes to save");
+            // console.log("[ConfigLoader] No pending changes to save");
             return false;
         }
         
-        console.log("[ConfigLoader] Saving pending changes:", root.pendingChanges);
+        // console.log("[ConfigLoader] Saving pending changes:", root.pendingChanges);
         root.preventNextNotification = true;
         saveConfig();
         
         // Clear pending changes after successful save
         root.pendingChanges = {};
         
-        console.log("[ConfigLoader] Pending changes saved and cleared");
+        // console.log("[ConfigLoader] Pending changes saved and cleared");
         return true;
     }
 
     function discardPendingChanges() {
-        console.log("[ConfigLoader] Discarding pending changes:", root.pendingChanges);
+        // console.log("[ConfigLoader] Discarding pending changes:", root.pendingChanges);
         
         // Reload config from file to discard changes
         loadConfig();
@@ -155,7 +150,7 @@ Singleton {
         // Clear pending changes
         root.pendingChanges = {};
         
-        console.log("[ConfigLoader] Pending changes discarded");
+        // console.log("[ConfigLoader] Pending changes discarded");
     }
 
     function getPendingChangesCount() {
@@ -167,7 +162,7 @@ Singleton {
         interval: ConfigOptions.hacks.arbitraryRaceConditionDelay
         running: false
         onTriggered: {
-            console.log("GONNA APPLY KONFIG preventNextNotification:", root.preventNextNotification);
+            // console.log("GONNA APPLY KONFIG preventNextNotification:", root.preventNextNotification);
             if (root.preventNextLoad) {
                 root.preventNextLoad = false;
                 return;
@@ -175,7 +170,7 @@ Singleton {
             if (root.firstLoad) {
                 root.applyConfig(configFileView.text())
             } else {
-                console.log("APPLYING: preventNextNotification:", root.preventNextNotification);
+                // console.log("APPLYING: preventNextNotification:", root.preventNextNotification);
                 root.applyConfig(configFileView.text())
                 if (!root.preventNextNotification) {
                     Hyprland.dispatch(`exec notify-send "${qsTr("Shell configuration reloaded")}" "${root.filePath}"`)
@@ -200,7 +195,7 @@ Singleton {
         }
         onLoadFailed: (error) => {
             if(error == FileViewError.FileNotFound) {
-                console.log("[ConfigLoader] File not found, creating new file.")
+                // console.log("[ConfigLoader] File not found, creating new file.")
                 root.saveConfig()
                 Hyprland.dispatch(`exec notify-send "${qsTr("Shell configuration created")}" "${root.filePath}"`)
             } else {

@@ -12,7 +12,6 @@ QtObject {
             fileView.destroy();
             return content;
         } catch (e) {
-            console.log('[FileHelper] Error reading file:', path, e);
             return '';
         }
     }

@@ -185,25 +185,9 @@ Loader {
                     source: {
                         var guessedIcon = AppSearch.guessIcon(appToplevel.appId);
                         var iconPath = Quickshell.iconPath(guessedIcon, "image-missing");
-                        console.log("[DOCK APP BUTTON DEBUG] App ID:", appToplevel.appId);
-                        console.log("[DOCK APP BUTTON DEBUG] Guessed icon:", guessedIcon);
-                        console.log("[DOCK APP BUTTON DEBUG] Final icon path:", iconPath);
-                        console.log("[DOCK APP BUTTON DEBUG] Desktop entry:", root.desktopEntry ? root.desktopEntry.name : "none");
-                        if (root.desktopEntry) {
-                            console.log("[DOCK APP BUTTON DEBUG] Desktop entry icon:", root.desktopEntry.icon);
-                        }
                         return iconPath;
                     }
                     implicitSize: root.iconSize
-                    
-                    onStatusChanged: {
-                        if (status === Image.Error) {
-                            console.log("[DOCK APP BUTTON DEBUG] Icon failed to load for app:", appToplevel.appId);
-                            console.log("[DOCK APP BUTTON DEBUG] Failed source:", source);
-                        } else if (status === Image.Ready) {
-                            console.log("[DOCK APP BUTTON DEBUG] Icon loaded successfully for app:", appToplevel.appId);
-                        }
-                    }
                 }
             }
 

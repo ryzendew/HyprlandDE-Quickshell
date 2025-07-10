@@ -8,8 +8,8 @@ import Qt.labs.platform
 import QtQuick;
 
 /**
- * Enhanced to-do list manager with advanced features.
- * Each item is an object with "content", "done", "dueDate", "priority", "categories", and "recurring" properties.
+ * Enhanced to-do list manager with advanced features using .conf file format.
+ * Each item is stored as a section in the conf file with properties.
  */
 Singleton {
     id: root
@@ -43,7 +43,6 @@ Singleton {
     function addItem(item) {
         // Validate item
         if (!item.content || item.content.trim() === "") {
-            console.warn("[Todo] Cannot add item with empty content")
             return false
         }
         
@@ -111,6 +110,7 @@ Singleton {
             // Reassign to trigger onListChanged
             root.list = list.slice(0)
             saveToFile()
+            refresh() // Force reload after delete
         }
     }
 
@@ -232,8 +232,137 @@ Singleton {
         todoFileView.reload()
     }
 
+    // Convert task object to conf format
+    function taskToConf(task, index) {
+        let conf = `[Task${index}]\n`
+        conf += `content=${escapeConfValue(task.content)}\n`
+        conf += `done=${task.done}\n`
+        conf += `priority=${task.priority || "medium"}\n`
+        
+        if (task.dueDate) {
+            conf += `dueDate=${task.dueDate}\n`
+        }
+        
+        if (task.categories && task.categories.length > 0) {
+            conf += `categories=${task.categories.join(",")}\n`
+        }
+        
+        if (task.recurring) {
+            conf += `recurring=${JSON.stringify(task.recurring)}\n`
+        }
+        
+        if (task.createdAt) {
+            conf += `createdAt=${task.createdAt}\n`
+        }
+        
+        if (task.completedAt) {
+            conf += `completedAt=${task.completedAt}\n`
+        }
+        
+        return conf
+    }
+
+    // Escape special characters in conf values
+    function escapeConfValue(value) {
+        if (typeof value !== 'string') return value
+        return value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\r/g, '\\r')
+    }
+
+    // Unescape conf values
+    function unescapeConfValue(value) {
+        if (typeof value !== 'string') return value
+        return value.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\\\/g, '\\')
+    }
+
+    // Parse conf file content into task objects
+    function parseConfFile(content) {
+        const tasks = []
+        const lines = content.split('\n')
+        let currentTask = null
+        let currentSection = null
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim()
+            
+            // Skip empty lines and comments
+            if (line === '' || line.startsWith('#')) {
+                continue
+            }
+            
+            // Check for section header [TaskX]
+            if (line.startsWith('[') && line.endsWith(']')) {
+                if (currentTask && currentSection) {
+                    tasks.push(currentTask)
+                }
+                currentSection = line.slice(1, -1)
+                currentTask = {
+                    content: '',
+                    done: false,
+                    dueDate: null,
+                    priority: 'medium',
+                    categories: [],
+                    recurring: null,
+                    createdAt: null,
+                    completedAt: null
+                }
+                continue
+            }
+            
+            // Parse key=value pairs
+            if (currentTask && line.includes('=')) {
+                const [key, ...valueParts] = line.split('=')
+                const value = valueParts.join('=') // Rejoin in case value contains =
+                
+                switch (key.trim()) {
+                    case 'content':
+                        currentTask.content = unescapeConfValue(value.trim())
+                        break
+                    case 'done':
+                        currentTask.done = value.trim() === 'true'
+                        break
+                    case 'priority':
+                        currentTask.priority = value.trim()
+                        break
+                    case 'dueDate':
+                        currentTask.dueDate = value.trim() || null
+                        break
+                    case 'categories':
+                        currentTask.categories = value.trim() ? value.trim().split(',') : []
+                        break
+                    case 'recurring':
+                        try {
+                            currentTask.recurring = JSON.parse(value.trim())
+                        } catch (e) {
+                            currentTask.recurring = null
+                        }
+                        break
+                    case 'createdAt':
+                        currentTask.createdAt = value.trim() || null
+                        break
+                    case 'completedAt':
+                        currentTask.completedAt = value.trim() || null
+                        break
+                }
+            }
+        }
+        
+        // Add the last task if exists
+        if (currentTask && currentSection) {
+            tasks.push(currentTask)
+        }
+        
+        return tasks
+    }
+
     function saveToFile() {
-        todoFileView.setText(JSON.stringify(root.list, null, 2))
+        let confContent = "# Todo List Configuration File\n"
+        confContent += "# Generated by Quickshell Todo Service\n\n"
+        
+        list.forEach((task, index) => {
+            confContent += taskToConf(task, index) + "\n"
+        })
+        
+        todoFileView.setText(confContent)
     }
 
     function initializeWithSampleTasks() {
@@ -249,56 +378,47 @@ Singleton {
     FileView {
         id: todoFileView
         path: Qt.resolvedUrl(root.filePath)
+        watchChanges: true
         onLoaded: {
             try {
                 const fileContents = todoFileView.text()
+                
                 if (fileContents && fileContents.trim() !== '') {
-                    const parsed = JSON.parse(fileContents)
-                    if (Array.isArray(parsed)) {
-                        // Validate and clean up data
-                        root.list = parsed.filter(item => {
-                            if (!item.content || typeof item.content !== 'string') {
-                                console.warn("[Todo] Invalid item found, skipping:", item)
-                                return false
-                            }
-                            return true
-                        }).map(item => {
-                            // Ensure all required fields exist
-                            return {
-                                content: item.content,
-                                done: item.done || false,
-                                dueDate: item.dueDate || null,
-                                priority: item.priority || "medium",
-                                categories: Array.isArray(item.categories) ? item.categories : [],
-                                recurring: item.recurring || null,
-                                createdAt: item.createdAt || new Date().toISOString(),
-                                completedAt: item.completedAt || null
-                            }
-                        })
-                    } else {
-                        console.log("[To Do] Invalid data format, creating new list")
-                        root.list = []
-                        saveToFile()
-                    }
+                    const parsedTasks = parseConfFile(fileContents)
+                    
+                    // Validate and clean up data
+                    root.list = parsedTasks.filter(item => {
+                        if (!item.content || typeof item.content !== 'string') {
+                            return false
+                        }
+                        return true
+                    }).map(item => {
+                        // Ensure all required fields exist
+                        return {
+                            content: item.content,
+                            done: item.done || false,
+                            dueDate: item.dueDate || null,
+                            priority: item.priority || "medium",
+                            categories: Array.isArray(item.categories) ? item.categories : [],
+                            recurring: item.recurring || null,
+                            createdAt: item.createdAt || new Date().toISOString(),
+                            completedAt: item.completedAt || null
+                        }
+                    })
                 } else {
-                    console.log("[To Do] Empty file, creating new list")
                     root.list = []
                     saveToFile()
                 }
-                console.log("[To Do] File loaded successfully")
             } catch (e) {
-                console.log("[To Do] Error parsing JSON, creating new list:", e)
                 root.list = []
                 saveToFile()
             }
         }
         onLoadFailed: (error) => {
             if(error == FileViewError.FileNotFound) {
-                console.log("[To Do] File not found, creating new file.")
                 root.list = []
                 saveToFile()
             } else {
-                console.log("[To Do] Error loading file: " + error)
                 root.list = []
             }
         }
