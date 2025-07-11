@@ -100,6 +100,7 @@ Scope {
         "cursor-cursor": "gtk-launch cursor-cursor",
         "steam-native": "steam-native -newbigpicture",
         "lutris": "lutris",
+        "net.lutris.Lutris": "lutris",
         "heroic": "heroic",
         "obs": "obs",
         "com.obsproject.Studio.desktop": "gtk-launch com.obsproject.Studio.desktop",
@@ -110,8 +111,9 @@ Scope {
         "AffinityPhoto.desktop": "gtk-launch AffinityPhoto.desktop",
         "AffinityDesigner": "AffinityDesigner",
         "AffinityDesigner.desktop": "gtk-launch AffinityDesigner.desktop",
-        "cider": "bash -c 'source ~/.bashrc && Cider'",
-        "Cider.desktop": "bash -c 'source ~/.bashrc && Cider'"
+        "cider": "Cider",
+        "Cider": "Cider",
+        "Cider.desktop": "Cider"
     })
     
     // Watch for changes in blur settings
