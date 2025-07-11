@@ -238,17 +238,24 @@ Scope {
                                 implicitWidth: 25
                                 implicitHeight: 25
                                 Layout.alignment: Qt.AlignVCenter
+                                antialiasing: true
                                 Image {
-                                    id: cachyosLogo
+                                    id: nobaraLogo
                                     width: 25
                                     height: 25
-                                    source: "root:/assets/icons/cachyos-symbolic.svg"
+                                    source: "root:/assets/icons/Nobara-linux-logo.svg"
                                     fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    antialiasing: true
+                                    sourceSize.width: 25
+                                    sourceSize.height: 25
+                                    layer.enabled: true
+                                    layer.smooth: true
                                 }
                                 ColorOverlay {
-                                    anchors.fill: cachyosLogo
-                                    source: cachyosLogo
-                                    color: "#00ffcc"
+                                    anchors.fill: nobaraLogo
+                                    source: nobaraLogo
+                                    color: "white"
                                 }
                             }
 

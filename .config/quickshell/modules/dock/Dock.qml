@@ -653,7 +653,7 @@ Scope {
                                 Layout.preferredWidth: dock.dockWidth - 6
                                 Layout.preferredHeight: dock.dockWidth - 6
                                 Layout.leftMargin: 2 // Move Arch logo over by 2px
-                                
+                                antialiasing: true
                                 Rectangle {
                                     id: archButton
                                     anchors.fill: parent
@@ -676,15 +676,21 @@ Scope {
                                         width: parent.width * 0.75
                                         height: parent.height * 0.75
                                         fillMode: Image.PreserveAspectFit
-                                }
-                                
-                                MouseArea {
-                                    id: archMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
+                                        smooth: true
+                                        antialiasing: true
+                                        sourceSize.width: parent.width * 0.75
+                                        sourceSize.height: parent.height * 0.75
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                    }
                                     
-                                    onClicked: {
-                                        GlobalStates.hyprMenuOpen = !GlobalStates.hyprMenuOpen
+                                    MouseArea {
+                                        id: archMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        
+                                        onClicked: {
+                                            GlobalStates.hyprMenuOpen = !GlobalStates.hyprMenuOpen
                                         }
                                     }
                                 }

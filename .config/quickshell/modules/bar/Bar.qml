@@ -202,7 +202,7 @@ Scope {
                             Rectangle {
                                 id: archLogoContainer
                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                                Layout.leftMargin: 10
+                                Layout.leftMargin: 4
                                 Layout.fillWidth: false
                                 Layout.fillHeight: true
                                 
@@ -213,14 +213,20 @@ Scope {
                                 implicitWidth: archLogo.width + 10
                                 implicitHeight: barHeight
 
+                                antialiasing: true
                                 Image {
                                     id: archLogo
                                     anchors.centerIn: parent
-                                    width: 22
-                                    height: 22
+                                    width: 32
+                                    height: 32
                                     source: "root:/logo/Nobara-linux-logo.svg"
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
+                                    antialiasing: true
+                                    sourceSize.width: 32
+                                    sourceSize.height: 32
+                                    layer.enabled: true
+                                    layer.smooth: true
                                 }
                                 
                                 MouseArea {
