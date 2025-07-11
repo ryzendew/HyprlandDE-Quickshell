@@ -218,7 +218,7 @@ Scope {
                                     anchors.centerIn: parent
                                     width: 22
                                     height: 22
-                                    source: "root:/logo/Arch-linux-logo.png"
+                                    source: "root:/logo/Nobara-linux-logo.svg"
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
                                 }

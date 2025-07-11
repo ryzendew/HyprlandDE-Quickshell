@@ -38,7 +38,10 @@ Singleton {
         repeat: false
         running: false
         onTriggered: {
-            root.applyColors(themeFileView.text())
+            const fileContent = themeFileView.text()
+            if (fileContent && fileContent.length > 0) {
+                root.applyColors(fileContent)
+            }
         }
     }
 
@@ -52,7 +55,9 @@ Singleton {
         }
         onLoadedChanged: {
             const fileContent = themeFileView.text()
-            root.applyColors(fileContent)
+            if (fileContent && fileContent.length > 0) {
+                root.applyColors(fileContent)
+            }
         }
     }
 }

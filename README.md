@@ -32,3 +32,9 @@ curl -flSL https://raw.githubusercontent.com/ryzendew/Matts-Quickshell-Hyprland/
 ## How to Install My dots
 
 Install End4 https://github.com/end-4/dots-hyprland and then overwrite all files from my .config https://github.com/ryzendew/Matts-Quickshell-Hyprland/tree/main/.config and done.
+
+## Deps are a must 
+
+required lxpolkit 
+
+Required hyprpolkitagent

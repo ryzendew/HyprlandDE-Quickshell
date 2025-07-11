@@ -423,9 +423,44 @@ Scope {
             
             function updateActiveWindows() {
                 // Show apps from ALL monitors/workspaces instead of filtering by current monitor
-                const windows = HyprlandData.windowList.filter(window => 
-                    window.class && window.class.length > 0  // Only filter out windows without a valid class
-                )
+                const windows = HyprlandData.windowList.filter((window, idx, arr) => {
+                    var icon = dockRoot.getIconForClass(window.class);
+                    log("debug", `[FILTER] Checking window: class='${window.class}', title='${window.title}', icon='${icon}'`);
+                    // Skip windows without a valid class
+                    if (!window.class || window.class.trim() === '') {
+                        log("debug", `[FILTER] Excluded: missing or empty class`);
+                        return false;
+                    }
+                    // Skip windows with very short class names that might be temporary/placeholder
+                    if (window.class.length < 2) {
+                        log("debug", `[FILTER] Excluded: class too short`);
+                        return false;
+                    }
+                    // Skip windows with generic class names that don't represent real apps
+                    const genericClasses = ['window', 'x11', 'xwayland', 'wayland', 'unknown', 'null', 'undefined'];
+                    if (genericClasses.includes(window.class.toLowerCase())) {
+                        log("debug", `[FILTER] Excluded: generic class '${window.class}'`);
+                        return false;
+                    }
+                    // Skip windows that don't have a proper title (optional additional check)
+                    if (!window.title || window.title.trim() === '') {
+                        log("debug", `[FILTER] Excluded: missing or empty title`);
+                        return false;
+                    }
+                    // Skip windows that would resolve to 'image-missing' icon unless they are the only window of their class
+                    if (icon === 'image-missing') {
+                        var hasValidIcon = arr.some((w, i) => w.class === window.class && i !== idx && dockRoot.getIconForClass(w.class) !== 'image-missing');
+                        if (hasValidIcon) {
+                            log("debug", `[FILTER] Excluded: image-missing icon and another window of same class has valid icon`);
+                            return false;
+                        } else {
+                            log("debug", `[FILTER] Included: image-missing icon but only window of its class`);
+                        }
+                    } else {
+                        log("debug", `[FILTER] Included: valid icon`);
+                    }
+                    return true;
+                })
                 
                 if (JSON.stringify(windows) !== JSON.stringify(activeWindows)) {
                     log("debug", `Updating active windows: ${windows.length} windows found`)
@@ -440,60 +475,13 @@ Scope {
                     // console.log('[DOCK DEBUG] No windowClass provided, returning image-missing')
                     return "image-missing"
                 }
-                
                 // Try to get iconUrl from DesktopEntries first (like hyprmenu does)
                 var desktopEntry = DesktopEntries.byId(windowClass)
                 if (desktopEntry && desktopEntry.iconUrl) {
                     // console.log('[DOCK DEBUG] Found DesktopEntry iconUrl for', windowClass + ':', desktopEntry.iconUrl)
                     return desktopEntry.iconUrl
                 }
-                
-                // If no desktop entry found, try to find a .desktop file for this window class
-                var desktopPaths = [
-                    StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications",
-                    "/usr/share/applications",
-                    "/usr/local/share/applications"
-                ];
-                
-                // console.log('[DOCK DEBUG] Searching desktop paths:', desktopPaths)
-                
-                for (var p = 0; p < desktopPaths.length; p++) {
-                    var systemPath = desktopPaths[p];
-                    var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', this);
-                    var content = "";
-                    
-                    try {
-                        var desktopFilePath = systemPath + "/" + windowClass + ".desktop"
-                        fileView.path = desktopFilePath
-                        content = fileView.text()
-                    } catch (e) {
-                        try {
-                            fileView.path = systemPath
-                            content = fileView.text()
-                        } catch (e2) {
-                            fileView.destroy()
-                            continue
-                        }
-                    }
-                    
-                    // Parse the desktop file to find Icon line
-                    if (content) {
-                        var lines = content.split('\n')
-                        for (var i = 0; i < lines.length; i++) {
-                            var line = lines[i].trim()
-                            if (line.startsWith('Icon=')) {
-                                var iconName = line.substring(5)
-                                fileView.destroy()
-                                // Use AppSearch.guessIcon() for better icon resolution
-                                var guessedIcon = AppSearch.guessIcon(iconName)
-                                // console.log('[DOCK DEBUG] Found icon in desktop file:', iconName, 'guessed as:', guessedIcon)
-                                return guessedIcon || iconName
-                            }
-                        }
-                    }
-                    fileView.destroy()
-                }
-                
+                // Remove all dynamic QML FileView logic for desktop file reading
                 // Final fallback: use AppSearch.guessIcon() on the window class itself
                 var guessedIcon = AppSearch.guessIcon(windowClass)
                 // console.log('[DOCK DEBUG] Final fallback for', windowClass + ':', guessedIcon)
@@ -667,7 +655,7 @@ Scope {
                                     // Arch Linux logo
                                     Image {
                                         anchors.centerIn: parent
-                                        source : StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/quickshell/logo/Arch-linux-logo.png"
+                                        source: "root:/logo/Nobara-linux-logo.svg"
                                         width: parent.width * 0.75
                                         height: parent.height * 0.75
                                         fillMode: Image.PreserveAspectFit
@@ -837,7 +825,65 @@ Scope {
                                     }
                                     for (var i = 0; i < dockRoot.activeWindows.length; i++) {
                                         var activeWindow = dockRoot.activeWindows[i]
+                                        log("debug", `[UNPINNED][FULL] Window properties: ${JSON.stringify(activeWindow)}`);
+                                        var icon = dockRoot.getIconForClass(activeWindow.class);
+                                        log("debug", `[UNPINNED] Checking window: class='${activeWindow.class}', title='${activeWindow.title}', icon='${icon}'`);
+                                        // Additional filtering for unpinned apps to prevent windows without proper class names or icons
                                         if (!pinnedClasses.has(activeWindow.class.toLowerCase())) {
+                                            // Hide if this window's class matches a pinned app
+                                            var isPinnedClass = false;
+                                            for (var j = 0; j < dock.pinnedApps.length; j++) {
+                                                if (activeWindow.class && dock.pinnedApps[j].toLowerCase() === activeWindow.class.toLowerCase()) {
+                                                    isPinnedClass = true;
+                                                    log("debug", `[UNPINNED] Excluded: class matches pinned app '${activeWindow.class}'`);
+                                                    break;
+                                                }
+                                            }
+                                            if (isPinnedClass) {
+                                                continue;
+                                            }
+                                            // Hide if the resolved icon is 'zenity'
+                                            if (icon === 'zenity') {
+                                                log("debug", `[UNPINNED] Excluded: icon is 'zenity'`);
+                                                continue;
+                                            }
+                                            // Skip windows with empty or invalid class names
+                                            if (!activeWindow.class || activeWindow.class.trim() === '') {
+                                                log("debug", `[UNPINNED] Excluded: missing or empty class`);
+                                                continue;
+                                            }
+                                            
+                                            // Skip windows with very short class names that might be temporary/placeholder
+                                            if (activeWindow.class.length < 2) {
+                                                log("debug", `[UNPINNED] Excluded: class too short`);
+                                                continue;
+                                            }
+                                            
+                                            // Skip windows with generic class names that don't represent real apps
+                                            var genericClasses = ['window', 'x11', 'xwayland', 'wayland', 'unknown', 'null', 'undefined'];
+                                            if (genericClasses.includes(activeWindow.class.toLowerCase())) {
+                                                log("debug", `[UNPINNED] Excluded: generic class '${activeWindow.class}'`);
+                                                continue;
+                                            }
+                                            
+                                            // Skip windows that don't have a proper title (optional additional check)
+                                            if (!activeWindow.title || activeWindow.title.trim() === '') {
+                                                log("debug", `[UNPINNED] Excluded: missing or empty title`);
+                                                continue;
+                                            }
+                                            
+                                            // Skip windows that would resolve to 'image-missing' icon unless they are the only window of their class
+                                            if (icon === 'image-missing') {
+                                                var hasValidIcon = dockRoot.activeWindows.some((w, j) => w.class === activeWindow.class && j !== i && dockRoot.getIconForClass(w.class) !== 'image-missing');
+                                                if (hasValidIcon) {
+                                                    log("debug", `[UNPINNED] Excluded: image-missing icon and another window of same class has valid icon`);
+                                                    continue;
+                                                } else {
+                                                    log("debug", `[UNPINNED] Included: image-missing icon but only window of its class`);
+                                                }
+                                            } else {
+                                                log("debug", `[UNPINNED] Included: valid icon`);
+                                            }
                                             nonPinnedApps.push(activeWindow)
                                         }
                                     }
@@ -846,7 +892,21 @@ Scope {
                                 }
                                 
                                 DockItem {
-                                    icon: dockRoot.getIconForClass(modelData.class)  // Use getIconForClass to resolve icon properly
+                                    icon: {
+                                        // If this window's class matches a pinned app, use the pinned app's icon
+                                        var pinnedIcon = null;
+                                        for (var i = 0; i < dock.pinnedApps.length; i++) {
+                                            if (modelData.class && dock.pinnedApps[i].toLowerCase() === modelData.class.toLowerCase()) {
+                                                pinnedIcon = dockRoot.getIconForClass(dock.pinnedApps[i]);
+                                                break;
+                                            }
+                                        }
+                                        if (pinnedIcon) {
+                                            return pinnedIcon;
+                                        }
+                                        // Otherwise, use the normal icon resolution
+                                        return dockRoot.getIconForClass(modelData.class);
+                                    }
                                     tooltip: modelData.title || modelData.class
                                     isActive: true
                                     isPinned: false
@@ -989,34 +1049,11 @@ Scope {
             var userPath = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications/" + desktopFileName
             var systemPath = "/usr/share/applications/" + desktopFileName
             
-            var fileView = Qt.createQmlObject('import Quickshell.Io; FileView { }', dock)
-            
-            // Try user path first
-            fileView.path = userPath
-            var content = ""
-            try {
-                content = fileView.text()
-            } catch (e) {
-                // Try system path if user path fails
-                fileView.path = systemPath
-                content = fileView.text()
-            }
-            
-            // Parse the desktop file to find Exec line
-            var lines = content.split('\n')
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim()
-                if (line.startsWith('Exec=')) {
-                    var execCommand = line.substring(5) // Remove 'Exec=' prefix
-                    // console.log("[DOCK DEBUG] Found Exec command for", desktopFileName + ":", execCommand)
-                    fileView.destroy()
-                    return execCommand
-                }
-            }
-            
-            fileView.destroy()
-            // console.log("[DOCK DEBUG] No Exec command found in", desktopFileName)
-            return ""
+            // Remove all dynamic QML FileView logic for desktop file reading
+            // Final fallback: use AppSearch.guessIcon() on the window class itself
+            var guessedIcon = AppSearch.guessIcon(desktopFileName)
+            // console.log('[DOCK DEBUG] Final fallback for', desktopFileName + ':', guessedIcon)
+            return guessedIcon || desktopFileName.toLowerCase()
         } catch (e) {
             // console.log("[DOCK DEBUG] Error reading desktop file", desktopFileName + ":", e)
             return ""
