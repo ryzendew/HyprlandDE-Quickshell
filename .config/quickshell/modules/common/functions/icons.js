@@ -9,6 +9,8 @@ const substitutions = {
     "wpsoffice": "wps-office2019-kprometheus",
     "footclient": "foot",
     "zen": "zen-browser",
+    "better-control": "settings",
+    "better_control.py": "settings",
     "ptyxis": () => {
         const homeDir = StandardPaths.writableLocation(StandardPaths.HomeLocation);
         return `${homeDir}/.local/share/icons/scalable/apps/org.gnome.Ptyxis.svg`;

@@ -59,6 +59,7 @@ Scope {
             "org.gnome.Nautilus",
             "vesktop",
             "cider",
+            "Cider.desktop",
             "steam-native",
             "lutris",
             "heroic",
@@ -108,7 +109,9 @@ Scope {
         "AffinityPhoto": "AffinityPhoto",
         "AffinityPhoto.desktop": "gtk-launch AffinityPhoto.desktop",
         "AffinityDesigner": "AffinityDesigner",
-        "AffinityDesigner.desktop": "gtk-launch AffinityDesigner.desktop"
+        "AffinityDesigner.desktop": "gtk-launch AffinityDesigner.desktop",
+        "cider": "bash -c 'source ~/.bashrc && Cider'",
+        "Cider.desktop": "bash -c 'source ~/.bashrc && Cider'"
     })
     
     // Watch for changes in blur settings
@@ -502,7 +505,8 @@ Scope {
                         'obs': ['obs', 'com.obsproject.studio'],
                         'cursor-cursor': ['cursor', 'Cursor'],
                         'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
-                        'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
+                        'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve'],
+                        'Cider.desktop': ['cider', 'Cider', 'Cider.exe']
                     };
                 var targetClass = windowClass.toLowerCase();
                 var possibleClasses = [targetClass];
@@ -516,18 +520,28 @@ Scope {
                         possibleClasses.push(key.toLowerCase());
                     }
                 }
-                return activeWindows.some(w => possibleClasses.includes(w.class.toLowerCase()));
+                log("debug", `[ISWINDOWACTIVE] Checking ${windowClass}, possible classes: ${JSON.stringify(possibleClasses)}`);
+                log("debug", `[ISWINDOWACTIVE] Active windows: ${JSON.stringify(activeWindows.map(w => w.class))}`);
+                var result = activeWindows.some(w => possibleClasses.includes(w.class.toLowerCase()));
+                log("debug", `[ISWINDOWACTIVE] Result for ${windowClass}: ${result}`);
+                return result;
             }
             
             function focusOrLaunchApp(appInfo) {
-                if (isWindowActive(appInfo.class)) {
+                log("debug", `[FOCUSORLAUNCH] Called with appInfo: ${JSON.stringify(appInfo)}`);
+                var isActive = isWindowActive(appInfo.class);
+                log("debug", `[FOCUSORLAUNCH] isWindowActive(${appInfo.class}) = ${isActive}`);
+                if (isActive) {
+                    log("debug", `[FOCUSORLAUNCH] Focusing window class: ${appInfo.class}`);
                     Hyprland.dispatch(`focuswindow class:${appInfo.class}`)
                 } else {
+                    log("debug", `[FOCUSORLAUNCH] Launching new instance`);
                     let cmd;
                     if (appInfo.class.endsWith('.desktop')) {
                         // For .desktop files, try DesktopEntries first
                         let entry = DesktopEntries.applications[appInfo.class];
                         if (entry && entry.execute) {
+                            log("debug", `[FOCUSORLAUNCH] Using DesktopEntries.execute()`);
                             entry.execute();
                             return; // Exit early since execute() handles the launch
                         }
@@ -546,6 +560,7 @@ Scope {
                         // For regular apps, use mapping or fallback
                         cmd = desktopIdToCommand[appInfo.class] || appInfo.class.toLowerCase();
                     }
+                    log("debug", `[FOCUSORLAUNCH] Executing command: ${cmd}`);
                     Hyprland.dispatch(`exec ${cmd}`)
                 }
             }

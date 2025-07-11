@@ -87,7 +87,9 @@ Item {
         "davinci-resolve-studio-20": "davinci-resolve",
         "DaVinci Resolve Studio 20": "davinci-resolve",
         "resolve": "davinci-resolve",
-        "com.blackmagicdesign.resolve": "davinci-resolve"
+        "com.blackmagicdesign.resolve": "davinci-resolve",
+        "better-control": "settings",
+        "better_control.py": "settings"
     }
     
     // Map window classes to their corresponding desktop files
@@ -96,7 +98,8 @@ Item {
         "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
         "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
         "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
-        "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop"
+        "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+        "better_control.py": "better-control.desktop"
     }
     
     // Get the best icon name to use for resolution
