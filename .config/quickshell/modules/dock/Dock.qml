@@ -437,18 +437,25 @@ Scope {
             function getIconForClass(windowClass) {
                 // console.log('[DOCK DEBUG] getIconForClass called with:', windowClass)
                 if (!windowClass) {
-                                          // console.log('[DOCK DEBUG] No windowClass provided, returning image-missing')
+                    // console.log('[DOCK DEBUG] No windowClass provided, returning image-missing')
                     return "image-missing"
                 }
                 
-                // First try to find a .desktop file for this window class
+                // Try to get iconUrl from DesktopEntries first (like hyprmenu does)
+                var desktopEntry = DesktopEntries.byId(windowClass)
+                if (desktopEntry && desktopEntry.iconUrl) {
+                    // console.log('[DOCK DEBUG] Found DesktopEntry iconUrl for', windowClass + ':', desktopEntry.iconUrl)
+                    return desktopEntry.iconUrl
+                }
+                
+                // If no desktop entry found, try to find a .desktop file for this window class
                 var desktopPaths = [
                     StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications",
                     "/usr/share/applications",
                     "/usr/local/share/applications"
                 ];
                 
-                                  // console.log('[DOCK DEBUG] Searching desktop paths:', desktopPaths)
+                // console.log('[DOCK DEBUG] Searching desktop paths:', desktopPaths)
                 
                 for (var p = 0; p < desktopPaths.length; p++) {
                     var systemPath = desktopPaths[p];
@@ -477,16 +484,20 @@ Scope {
                             if (line.startsWith('Icon=')) {
                                 var iconName = line.substring(5)
                                 fileView.destroy()
-                                var resolvedIcon = IconTheme.getIconPath(iconName, StandardPaths.writableLocation(StandardPaths.HomeLocation)) || iconName
-                                return resolvedIcon
+                                // Use AppSearch.guessIcon() for better icon resolution
+                                var guessedIcon = AppSearch.guessIcon(iconName)
+                                // console.log('[DOCK DEBUG] Found icon in desktop file:', iconName, 'guessed as:', guessedIcon)
+                                return guessedIcon || iconName
                             }
                         }
                     }
                     fileView.destroy()
                 }
                 
-                var resolvedIcon = IconTheme.getIconPath(windowClass, StandardPaths.writableLocation(StandardPaths.HomeLocation)) || windowClass.toLowerCase()
-                return resolvedIcon
+                // Final fallback: use AppSearch.guessIcon() on the window class itself
+                var guessedIcon = AppSearch.guessIcon(windowClass)
+                // console.log('[DOCK DEBUG] Final fallback for', windowClass + ':', guessedIcon)
+                return guessedIcon || windowClass.toLowerCase()
             }
             
             function isWindowActive(windowClass) {

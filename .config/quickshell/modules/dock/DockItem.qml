@@ -106,16 +106,42 @@ Rectangle {
 
     // --- Icon ---
     // The app icon, centered in the item
-    Image {
-        id: iconItem
+    Item {
+        id: iconContainer
         anchors.centerIn: parent
         width: parent.width * 0.75
         height: parent.width * 0.75
-        source: "image://icon/" + dockItem.icon
-        fillMode: Image.PreserveAspectFit
-        smooth: true
-        
-        // Icon debugging disabled
+
+        Image {
+            id: providerIcon
+            anchors.fill: parent
+            source: {
+                // Debug: Log what we're trying to resolve
+                console.log("[DOCK DEBUG] Trying to resolve icon for:", dockItem.icon)
+                
+                // Try to get iconUrl from DesktopEntries first (like hyprmenu does)
+                var desktopEntry = DesktopEntries.byId(dockItem.icon)
+                console.log("[DOCK DEBUG] DesktopEntry found:", desktopEntry ? "yes" : "no")
+                if (desktopEntry) {
+                    console.log("[DOCK DEBUG] DesktopEntry iconUrl:", desktopEntry.iconUrl)
+                    console.log("[DOCK DEBUG] DesktopEntry icon:", desktopEntry.icon)
+                }
+                
+                if (desktopEntry && desktopEntry.iconUrl) {
+                    console.log("[DOCK DEBUG] Using iconUrl:", desktopEntry.iconUrl)
+                    return desktopEntry.iconUrl
+                }
+                
+                // Fall back to image provider with AppSearch.guessIcon()
+                var guessedIcon = AppSearch.guessIcon(dockItem.icon)
+                console.log("[DOCK DEBUG] AppSearch.guessIcon result:", guessedIcon)
+                var fallbackSource = "image://icon/" + (guessedIcon || "application-x-executable")
+                console.log("[DOCK DEBUG] Using fallback source:", fallbackSource)
+                return fallbackSource
+            }
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+        }
     }
 
     // --- Tooltip (disabled) ---

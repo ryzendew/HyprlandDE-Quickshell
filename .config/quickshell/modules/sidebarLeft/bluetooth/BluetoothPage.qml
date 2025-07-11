@@ -8,7 +8,7 @@ import QtQuick.Layouts
 import Quickshell
 import "../"
 import Quickshell.Io
-import "../../../../lysec/Helpers/BluetoothManager.qml" as BluetoothManager
+import "../../../../helpers/BluetoothManager.qml" as BluetoothManager
 
 Rectangle {
     id: root
