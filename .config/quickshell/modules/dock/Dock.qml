@@ -374,7 +374,7 @@ Scope {
     }
     
     Variants {
-        model: Quickshell.screens.filter(screen => screen.name === "DP-1")
+        model: Quickshell.screens
 
         PanelWindow {
             id: dockRoot
@@ -672,7 +672,7 @@ Scope {
                                     // Arch Linux logo
                                     Image {
                                         anchors.centerIn: parent
-                                        source: "root:/logo/Nobara-linux-logo.svg"
+                                        source: "root:/logo/Arch-linux-logo.png"
                                         width: parent.width * 0.75
                                         height: parent.height * 0.75
                                         fillMode: Image.PreserveAspectFit
@@ -994,6 +994,7 @@ Scope {
     }
 
     // Background blur system - static blur approach inspired by Blur My Shell
+    /*
     PanelWindow {
         id: dockBackgroundBlur
         visible: dockRoot.visible
@@ -1064,6 +1065,7 @@ Scope {
         
 
     }
+    */
 
     // Function to extract Exec command from desktop file
     function getDesktopFileExecCommand(desktopFileName) {

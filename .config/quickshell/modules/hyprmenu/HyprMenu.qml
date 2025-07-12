@@ -80,8 +80,8 @@ Scope {
     }
 
     Variants {
-        // Only show on DP-1
-        model: Quickshell.screens.filter(screen => screen.name === "DP-1")
+        // Show on all screens
+        model: Quickshell.screens
         
         PanelWindow {
             id: menuWindow

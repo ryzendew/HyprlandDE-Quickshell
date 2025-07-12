@@ -12,15 +12,35 @@ import Quickshell.Services.Pipewire
 
 Item {
     id: root
+    function wrapAfterWords(str, n) {
+        if (!str) return "";
+        var words = str.split(/\s+/);
+        var lines = [];
+        for (var i = 0; i < words.length; i += n) {
+            lines.push(words.slice(i, i + n).join(" "));
+        }
+        return lines.join("\n");
+    }
     property bool showDeviceSelector: false
     property bool deviceSelectorInput
     property int dialogMargins: 16
     property PwNode selectedDevice
+    property var deviceSelectorTargetNode: null // null = system, or a node for per-app
+    property string deviceSelectorMode: "system" // "system" or "app"
 
     function showDeviceSelectorDialog(input) {
         root.selectedDevice = null
         root.showDeviceSelector = true
         root.deviceSelectorInput = input
+        root.deviceSelectorTargetNode = null;
+        root.deviceSelectorMode = "system";
+    }
+    function showAppDeviceSelectorDialog(node) {
+        root.selectedDevice = null;
+        root.showDeviceSelector = true;
+        root.deviceSelectorInput = false;
+        root.deviceSelectorTargetNode = node;
+        root.deviceSelectorMode = "app";
     }
 
     Keys.onPressed: (event) => {
@@ -39,6 +59,111 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         spacing: 8
+        
+        // Device Header Section
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 110
+            radius: Appearance.rounding.large
+            color: Qt.rgba(
+                Appearance.colors.colLayer1.r,
+                Appearance.colors.colLayer1.g,
+                Appearance.colors.colLayer1.b,
+                0.25
+            )
+            border.color: Qt.rgba(1, 1, 1, 0.10)
+            border.width: 1
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 0
+                anchors.leftMargin: 4
+                spacing: 0
+                // Output Section
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    anchors.margins: 0
+                    spacing: 4
+                    RowLayout {
+                        Layout.alignment: Qt.AlignHCenter
+                        spacing: 6
+                        MaterialSymbol {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "speaker"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colOnLayer1
+                            opacity: 0.85
+                        }
+                        StyledText {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: qsTr("Output")
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            font.weight: Font.DemiBold
+                            color: Appearance.colors.colOnLayer2
+                        }
+                    }
+                    StyledText {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignHCenter
+                        horizontalAlignment: Text.AlignHCenter
+                        text: Pipewire.defaultAudioSink?.description || Pipewire.defaultAudioSink?.name || qsTr("No device")
+                        font.pixelSize: Appearance.font.pixelSize.normal
+                        font.weight: Font.Bold
+                        color: Appearance.colors.colOnLayer1
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 3
+                        ToolTip.visible: hovered
+                        ToolTip.text: Pipewire.defaultAudioSink?.description || Pipewire.defaultAudioSink?.name || qsTr("No device")
+                    }
+                }
+                // Divider
+                Rectangle {
+                    Layout.preferredWidth: 1
+                    Layout.fillHeight: true
+                    color: Qt.rgba(1, 1, 1, 0.10)
+                }
+                // Input Section
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    anchors.margins: 0
+                    spacing: 4
+                    RowLayout {
+                        Layout.alignment: Qt.AlignHCenter
+                        spacing: 6
+                        MaterialSymbol {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "mic"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colOnLayer1
+                            opacity: 0.85
+                        }
+                        StyledText {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: qsTr("Input")
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            font.weight: Font.DemiBold
+                            color: Appearance.colors.colOnLayer2
+                        }
+                    }
+                    StyledText {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignHCenter
+                        horizontalAlignment: Text.AlignHCenter
+                        text: Pipewire.defaultAudioSource?.description || Pipewire.defaultAudioSource?.name || qsTr("No device")
+                        font.pixelSize: Appearance.font.pixelSize.normal
+                        font.weight: Font.Bold
+                        color: Appearance.colors.colOnLayer1
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 3
+                        ToolTip.visible: hovered
+                        ToolTip.text: Pipewire.defaultAudioSource?.description || Pipewire.defaultAudioSource?.name || qsTr("No device")
+                    }
+                }
+            }
+        }
         
         // Main Audio Controls Section
         Rectangle {
@@ -129,6 +254,7 @@ Item {
                             value: Pipewire.defaultAudioSink?.audio.volume ?? 0
                             enabled: !(Pipewire.defaultAudioSink?.audio.muted ?? false)
                             opacity: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 0.5 : 1.0
+                            scale: 0.45
                             onValueChanged: {
                                 if (Pipewire.defaultAudioSink?.audio) {
                                     Pipewire.defaultAudioSink.audio.volume = value
@@ -244,6 +370,7 @@ Item {
                             value: Pipewire.defaultAudioSource?.audio?.volume ?? 0
                             enabled: !(Pipewire.defaultAudioSource?.audio?.muted ?? false)
                             opacity: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 0.5 : 1.0
+                            scale: 0.45
                             onValueChanged: {
                                 if (Pipewire.defaultAudioSource?.audio) {
                                     Pipewire.defaultAudioSource.audio.volume = value
@@ -304,24 +431,34 @@ Item {
                 spacing: 6
                 
                 // Header
-                RowLayout {
+                Rectangle {
                     Layout.fillWidth: true
-                    spacing: 6
-                    
-                    MaterialSymbol {
-                        text: "tune"
-                        iconSize: Appearance.font.pixelSize.normal
-                        color: Appearance.colors.colOnLayer1
+                    radius: Appearance.rounding.large
+                    color: Qt.rgba(
+                        Appearance.colors.colLayer1.r,
+                        Appearance.colors.colLayer1.g,
+                        Appearance.colors.colLayer1.b,
+                        0.6
+                    )
+                    border.color: Qt.rgba(1, 1, 1, 0.15)
+                    border.width: 1
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    height: 40
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 8
+                        MaterialSymbol {
+                            text: "tune"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        StyledText {
+                            text: qsTr("Application Volume")
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.weight: Font.Bold
+                            color: Appearance.colors.colOnLayer1
+                        }
                     }
-                    
-                    StyledText {
-                        text: qsTr("Application Volume")
-                        font.pixelSize: Appearance.font.pixelSize.small
-                        font.weight: Font.Medium
-                        color: Appearance.colors.colOnLayer1
-                    }
-                    
-                    Item { Layout.fillWidth: true }
                 }
                 
                 // Scrollable content
@@ -359,13 +496,17 @@ Item {
                             }
 
                             Repeater {
-                                model: linkTracker.linkGroups
+                                // Filter out sd_dummy from the list
+                                model: linkTracker.linkGroups.filter(function(group) {
+                                    let node = group.source;
+                                    let appName = node?.properties?.["application.name"];
+                                    let process = node?.properties?.["application.process.binary"];
+                                    return appName !== "sd_dummy" && process !== "sd_dummy";
+                                })
 
                                 VolumeMixerEntry {
                                     Layout.fillWidth: true
-                                    // Get links to the default sink
                                     required property PwLinkGroup modelData
-                                    // Consider sources that output to the default sink
                                     node: modelData.source
                                     opacity: 0
                                     visible: opacity > 0
@@ -380,6 +521,10 @@ Item {
 
                                     Component.onCompleted: {
                                         opacity = 1
+                                    }
+
+                                    onRequestMoveToDevice: (node) => {
+                                        root.showAppDeviceSelectorDialog(node);
                                     }
                                 }
                             }
@@ -434,21 +579,11 @@ Item {
         }
     }
 
-    // Device selector dialog
+    // Device selector dialog (shared for system and per-app)
     Item {
         anchors.fill: parent
         z: 9999
-
-        visible: opacity > 0
-        opacity: root.showDeviceSelector ? 1 : 0
-        Behavior on opacity {
-            NumberAnimation { 
-                duration: Appearance.animation.elementMoveFast.duration
-                easing.type: Appearance.animation.elementMoveFast.type
-                easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
-            }
-        }
-
+        visible: root.showDeviceSelector
         Rectangle { // Scrim
             id: scrimOverlay
             anchors.fill: parent
@@ -461,7 +596,6 @@ Item {
                 propagateComposedEvents: false
             }
         }
-
         Rectangle { // The dialog
             id: dialog
             color: Appearance.m3colors.m3surfaceContainerHigh
@@ -471,13 +605,11 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             anchors.margins: 30
             implicitHeight: dialogColumnLayout.implicitHeight
-            
             transform: Scale {
                 origin.x: dialog.width / 2
                 origin.y: dialog.height / 2
                 xScale: root.showDeviceSelector ? 1 : 0.9
                 yScale: xScale
-
                 Behavior on xScale {
                     NumberAnimation {
                         duration: Appearance.animation.elementMoveFast.duration
@@ -486,12 +618,10 @@ Item {
                     }
                 }
             }
-            
             ColumnLayout {
                 id: dialogColumnLayout
                 anchors.fill: parent
                 spacing: 16
-
                 StyledText {
                     id: dialogTitle
                     Layout.topMargin: dialogMargins
@@ -500,9 +630,10 @@ Item {
                     Layout.alignment: Qt.AlignLeft
                     color: Appearance.m3colors.m3onSurface
                     font.pixelSize: Appearance.font.pixelSize.larger
-                    text: `Select ${root.deviceSelectorInput ? "input" : "output"} device`
+                    text: root.deviceSelectorMode === "app"
+                        ? qsTr("Assign Application to Output Device")
+                        : `Select ${root.deviceSelectorInput ? "input" : "output"} device`
                 }
-
                 Rectangle {
                     color: Appearance.m3colors.m3outline
                     implicitHeight: 1
@@ -510,37 +641,32 @@ Item {
                     Layout.leftMargin: dialogMargins
                     Layout.rightMargin: dialogMargins
                 }
-
                 Flickable {
                     id: dialogFlickable
                     Layout.fillWidth: true
                     clip: true
                     implicitHeight: Math.min(scrimOverlay.height - dialogMargins * 8 - dialogTitle.height - dialogButtonsRowLayout.height, devicesColumnLayout.implicitHeight)
-                    
                     contentHeight: devicesColumnLayout.implicitHeight
-
                     ColumnLayout {
                         id: devicesColumnLayout
                         anchors.fill: parent
                         Layout.fillWidth: true
                         spacing: 0
-
                         Repeater {
                             model: Pipewire.nodes.values.filter(node => {
                                 return !node.isStream && node.isSink !== root.deviceSelectorInput && node.audio
                             })
-
-                            // This could and should be refractored, but all data becomes null when passed wtf
                             delegate: RadioButton {
                                 id: radioButton
                                 Layout.leftMargin: root.dialogMargins
                                 Layout.rightMargin: root.dialogMargins
                                 Layout.fillWidth: true
                                 implicitHeight: 40
-                                checked: modelData.id === Pipewire.defaultAudioSink?.id
+                                checked: root.deviceSelectorMode === "app"
+                                    ? (modelData.id === (root.deviceSelectorTargetNode?.audio?.targetNodeId ?? ""))
+                                    : (modelData.id === Pipewire.defaultAudioSink?.id)
                                 opacity: 0
                                 visible: opacity > 0
-
                                 Behavior on opacity {
                                     NumberAnimation {
                                         duration: Appearance.animation.elementMoveFast.duration
@@ -548,29 +674,25 @@ Item {
                                         easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                                     }
                                 }
-
                                 Component.onCompleted: {
                                     opacity = 1
                                 }
-
                                 Connections {
                                     target: root
                                     function onShowDeviceSelectorChanged() {
                                         if(!root.showDeviceSelector) return;
-                                        radioButton.checked = (modelData.id === Pipewire.defaultAudioSink?.id)
+                                        radioButton.checked = root.deviceSelectorMode === "app"
+                                            ? (modelData.id === (root.deviceSelectorTargetNode?.audio?.targetNodeId ?? ""))
+                                            : (modelData.id === Pipewire.defaultAudioSink?.id)
                                     }
                                 }
-
                                 PointingHandInteraction {}
-
                                 onCheckedChanged: {
                                     if (checked) {
                                         root.selectedDevice = modelData
                                     }
                                 }
-
                                 indicator: Item{}
-                                
                                 contentItem: RowLayout {
                                     Layout.fillWidth: true
                                     spacing: 12
@@ -584,8 +706,6 @@ Item {
                                         border.color: checked ? Appearance.m3colors.m3primary : Appearance.m3colors.m3onSurfaceVariant
                                         border.width: 2
                                         color: "transparent"
-
-                                        // Checked indicator
                                         Rectangle {
                                             anchors.centerIn: parent
                                             width: checked ? 10 : 4
@@ -593,7 +713,6 @@ Item {
                                             radius: Appearance.rounding.full
                                             color: Appearance.m3colors.m3primary
                                             opacity: checked ? 1 : 0
-
                                             Behavior on opacity {
                                                 NumberAnimation {
                                                     duration: Appearance.animation.elementMoveFast.duration
@@ -615,10 +734,7 @@ Item {
                                                     easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                                                 }
                                             }
-
                                         }
-
-                                        // Hover
                                         Rectangle {
                                             anchors.centerIn: parent
                                             width: radioButton.hovered ? 40 : 20
@@ -626,7 +742,6 @@ Item {
                                             radius: Appearance.rounding.full
                                             color: Appearance.m3colors.m3onSurface
                                             opacity: radioButton.hovered ? 0.1 : 0
-
                                             Behavior on opacity {
                                                 NumberAnimation {
                                                     duration: Appearance.animation.elementMoveFast.duration
@@ -665,7 +780,6 @@ Item {
                         }
                     }
                 }
-
                 Rectangle {
                     color: Appearance.m3colors.m3outline
                     implicitHeight: 1
@@ -673,18 +787,18 @@ Item {
                     Layout.leftMargin: dialogMargins
                     Layout.rightMargin: dialogMargins
                 }
-
                 RowLayout {
                     id: dialogButtonsRowLayout
                     Layout.bottomMargin: dialogMargins
                     Layout.leftMargin: dialogMargins
                     Layout.rightMargin: dialogMargins
                     Layout.alignment: Qt.AlignRight
-
                     DialogButton {
                         buttonText: qsTr("Cancel")
                         onClicked: {
                             root.showDeviceSelector = false
+                            root.deviceSelectorTargetNode = null;
+                            root.deviceSelectorMode = "system";
                         }
                     }
                     DialogButton {
@@ -692,12 +806,18 @@ Item {
                         onClicked: {
                             root.showDeviceSelector = false
                             if (root.selectedDevice) {
-                                if (root.deviceSelectorInput) {
+                                if (root.deviceSelectorMode === "app" && root.deviceSelectorTargetNode) {
+                                    if (root.deviceSelectorTargetNode.audio) {
+                                        root.deviceSelectorTargetNode.audio.targetNodeId = root.selectedDevice.id;
+                                    }
+                                } else if (root.deviceSelectorInput) {
                                     Pipewire.preferredDefaultAudioSource = root.selectedDevice
                                 } else {
                                     Pipewire.preferredDefaultAudioSink = root.selectedDevice
                                 }
                             }
+                            root.deviceSelectorTargetNode = null;
+                            root.deviceSelectorMode = "system";
                         }
                     }
                 }

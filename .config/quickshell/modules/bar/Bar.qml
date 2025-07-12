@@ -85,7 +85,7 @@ Scope {
     }
 
     Variants {
-        model: Quickshell.screens.filter(screen => screen.name === "DP-1")
+        model: Quickshell.screens
 
         PanelWindow {
             id: barRoot
@@ -219,7 +219,7 @@ Scope {
                                     anchors.centerIn: parent
                                     width: 32
                                     height: 32
-                                    source: "root:/logo/Nobara-linux-logo.svg"
+                                    source: "root:/logo/Arch-linux-logo.png"
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
                                     antialiasing: true

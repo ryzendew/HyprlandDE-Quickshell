@@ -17,32 +17,51 @@ Item {
 
     implicitHeight: rowLayout.implicitHeight
 
+    signal requestMoveToDevice(var node)
+
     RowLayout {
         id: rowLayout
         anchors.fill: parent
         spacing: 10
 
-        Image {
-            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            sourceSize.width: 38
-            sourceSize.height: 38
-            source: {
-                const icon = Icons.noKnowledgeIconGuess(root.node.properties["application.icon-name"]);
-                return Quickshell.iconPath(icon, "image-missing");
-            }
-            opacity: 0
-            visible: opacity > 0
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: Appearance.animation.elementMoveFast.duration
-                    easing.type: Appearance.animation.elementMoveFast.type
-                    easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
+        // Only show the icon if not sd_dummy or fallback
+        Item {
+            Layout.preferredWidth: (root.node.properties["application.name"] === "sd_dummy" || root.node.properties["application.process.binary"] === "sd_dummy") ? 0 : 38
+            Layout.preferredHeight: 38
+            visible: !(root.node.properties["application.name"] === "sd_dummy" || root.node.properties["application.process.binary"] === "sd_dummy")
+            Image {
+                anchors.fill: parent
+                sourceSize.width: 38
+                sourceSize.height: 38
+                source: {
+                    let appName = root.node.properties["application.name"];
+                    let process = root.node.properties["application.process.binary"];
+                    let winClass = root.node.properties["window.class"];
+                    let icon = root.node.properties["application.icon-name"];
+                    let iconIdentifier = icon;
+                    if (process && process !== "chromium" && process !== "electron") {
+                        appName = process;
+                        if (!icon || icon === "chromium-browser") {
+                            iconIdentifier = process;
+                        }
+                    }
+                    if (process === "Cider" || winClass === "Cider") {
+                        appName = "Cider";
+                        iconIdentifier = "cider";
+                    }
+                    if (appName === "sd_dummy" || process === "sd_dummy" || iconIdentifier === "application-x-executable" || iconIdentifier === "settings") {
+                        return "";
+                    }
+                    var desktopEntry = DesktopEntries.byId(iconIdentifier);
+                    if (desktopEntry && desktopEntry.iconUrl) {
+                        return desktopEntry.iconUrl;
+                    }
+                    var guessedIcon = AppSearch.guessIcon(iconIdentifier);
+                    var finalIcon = "image://icon/" + (guessedIcon || "application-x-executable");
+                    return finalIcon;
                 }
-            }
-
-            Component.onCompleted: {
-                opacity = 1
+                opacity: (root.node.properties["application.name"] === "sd_dummy" || root.node.properties["application.process.binary"] === "sd_dummy" || source === "" ) ? 0 : 1
+                visible: opacity > 0
             }
         }
 
@@ -54,11 +73,25 @@ Item {
                     font.pixelSize: Appearance.font.pixelSize.normal
                     elide: Text.ElideRight
                     text: {
-                        // application.name -> description -> name
-                        const app = root.node.properties["application.name"] ?? (root.node.description != "" ? root.node.description : root.node.name);
+                        // Use application.process.binary for better app name detection
+                        let app = root.node.properties["application.name"] ?? (root.node.description != "" ? root.node.description : root.node.name);
+                        let process = root.node.properties["application.process.binary"];
+                        let winClass = root.node.properties["window.class"];
+                        
+                        // If we have a process binary, prefer it over application.name for better detection
+                        if (process && process !== "chromium" && process !== "electron") {
+                            app = process;
+                        }
+                        
+                        // Special case for Cider (Apple Music)
+                        if (process === "Cider" || winClass === "Cider") {
+                            app = "Cider";
+                        }
+                        
                         const media = root.node.properties["media.name"];
                         return media != undefined ? `${app} • ${media}` : app;
                     }
+                    color: "#fff"
                     opacity: 0
                     visible: opacity > 0
 
@@ -79,6 +112,7 @@ Item {
             RowLayout {
                 StyledSlider {
                     id: slider
+                    scale: 0.45
                     from: 0
                     to: 1.0
                     value: root.node.audio.volume
@@ -96,6 +130,26 @@ Item {
 
                     Component.onCompleted: {
                         opacity = 1
+                    }
+                }
+                // Settings cog for device assignment
+                Rectangle {
+                    width: 28; height: 28; radius: 14
+                    color: cogMouseArea.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent"
+                    border.color: Qt.rgba(1,1,1,0.12)
+                    border.width: 1
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "settings"
+                        iconSize: 18
+                        color: "#fff"
+                        opacity: 0.7
+                    }
+                    MouseArea {
+                        id: cogMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: root.requestMoveToDevice(root.node)
                     }
                 }
             }
