@@ -29,11 +29,11 @@ Item {
             Layout.preferredWidth: (root.node.properties["application.name"] === "sd_dummy" || root.node.properties["application.process.binary"] === "sd_dummy") ? 0 : 38
             Layout.preferredHeight: 38
             visible: !(root.node.properties["application.name"] === "sd_dummy" || root.node.properties["application.process.binary"] === "sd_dummy")
-            Image {
+        Image {
                 anchors.fill: parent
-                sourceSize.width: 38
-                sourceSize.height: 38
-                source: {
+            sourceSize.width: 38
+            sourceSize.height: 38
+            source: {
                     let appName = root.node.properties["application.name"];
                     let process = root.node.properties["application.process.binary"];
                     let winClass = root.node.properties["window.class"];

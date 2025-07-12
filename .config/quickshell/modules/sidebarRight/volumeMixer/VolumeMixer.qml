@@ -220,7 +220,7 @@ Item {
                             MaterialSymbol {
                                 anchors.centerIn: parent
                                 text: "settings"
-                                iconSize: Appearance.font.pixelSize.small
+                                iconSize: Appearance.font.pixelSize.normal
                                 color: Appearance.colors.colOnLayer1
                                 opacity: 0.7
                             }
@@ -336,7 +336,7 @@ Item {
                             MaterialSymbol {
                                 anchors.centerIn: parent
                                 text: "settings"
-                                iconSize: Appearance.font.pixelSize.small
+                                iconSize: Appearance.font.pixelSize.normal
                                 color: Appearance.colors.colOnLayer1
                                 opacity: 0.7
                             }
@@ -447,16 +447,16 @@ Item {
                     RowLayout {
                         anchors.centerIn: parent
                         spacing: 8
-                        MaterialSymbol {
-                            text: "tune"
-                            iconSize: Appearance.font.pixelSize.normal
-                            color: Appearance.colors.colOnLayer1
-                        }
-                        StyledText {
-                            text: qsTr("Application Volume")
+                    MaterialSymbol {
+                        text: "tune"
+                        iconSize: Appearance.font.pixelSize.normal
+                        color: Appearance.colors.colOnLayer1
+                    }
+                    StyledText {
+                        text: qsTr("Application Volume")
                             font.pixelSize: Appearance.font.pixelSize.normal
                             font.weight: Font.Bold
-                            color: Appearance.colors.colOnLayer1
+                        color: Appearance.colors.colOnLayer1
                         }
                     }
                 }

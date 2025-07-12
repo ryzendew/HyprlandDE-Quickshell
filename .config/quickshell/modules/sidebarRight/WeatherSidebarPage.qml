@@ -17,13 +17,13 @@ Item { // Root container for the weather sidebar page
                 Appearance.colors.colLayer1.r,
                 Appearance.colors.colLayer1.g,
                 Appearance.colors.colLayer1.b,
-                0.85
+                0.55 // was 0.85
             )}
             GradientStop { position: 1.0; color: Qt.rgba(
                 Appearance.colors.colLayer1.r,
                 Appearance.colors.colLayer1.g,
                 Appearance.colors.colLayer1.b,
-                0.75
+                0.40 // was 0.75
             )}
         }
         border.color: Qt.rgba(Appearance.colors.colOnLayer0.r, Appearance.colors.colOnLayer0.g, Appearance.colors.colOnLayer0.b, 0.08)

@@ -1,12 +1,12 @@
 import "root:/modules/common"
 import "root:/modules/common/widgets"
 import "root:/services"
-import "./calendar"
 import "./notifications"
 import "./todo"
 import "./volumeMixer"
 import "./performance"
 import "./bluetooth"
+import "./calendar"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts

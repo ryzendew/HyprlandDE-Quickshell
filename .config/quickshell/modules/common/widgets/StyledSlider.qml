@@ -18,9 +18,9 @@ Slider {
     property real handleHeight: 44 * scale
     property real handleLimit: root.backgroundDotMargins
     property real trackHeight: 30 * scale
-    property color highlightColor: Appearance.colors.colPrimary
-    property color trackColor: Appearance.m3colors.m3secondaryContainer
-    property color handleColor: Appearance.m3colors.m3onSecondaryContainer
+    property color highlightColor: Qt.rgba(1, 1, 1, 0.6)  // Semi-transparent white
+    property color trackColor: Qt.rgba(1, 1, 1, 0.3)       // More transparent white for unfilled track
+    property color handleColor: Qt.rgba(1, 1, 1, 0.8)      // More opaque white for handle
     property real trackRadius: Appearance.rounding.verysmall * scale
     property real unsharpenRadius: Appearance.rounding.unsharpen
 
@@ -61,6 +61,8 @@ Slider {
             width: root.handleLimit * 2 + root.visualPosition * root.limitedHandleRangeWidth - (root.handleMargins + root.handleWidth / 2)
             height: trackHeight
             color: root.highlightColor
+            border.color: Qt.rgba(1, 1, 1, 0.4)  // Semi-white border
+            border.width: 1
             topLeftRadius: root.trackRadius
             bottomLeftRadius: root.trackRadius
             topRightRadius: root.unsharpenRadius
@@ -74,6 +76,8 @@ Slider {
             width: root.handleLimit * 2 + (1 - root.visualPosition) * root.limitedHandleRangeWidth - (root.handleMargins + root.handleWidth / 2)
             height: trackHeight
             color: root.trackColor
+            border.color: Qt.rgba(1, 1, 1, 0.4)  // Semi-white border
+            border.width: 1
             topLeftRadius: root.unsharpenRadius
             bottomLeftRadius: root.unsharpenRadius
             topRightRadius: root.trackRadius
@@ -89,6 +93,8 @@ Slider {
             height: root.backgroundDotSize
             radius: Appearance.rounding.full
             color: root.handleColor
+            border.color: Qt.rgba(1, 1, 1, 0.4)  // Semi-white border
+            border.width: 1
         }
     }
 
@@ -100,6 +106,8 @@ Slider {
         implicitHeight: root.handleHeight
         radius: Appearance.rounding.full
         color: root.handleColor
+        border.color: Qt.rgba(1, 1, 1, 0.4)  // Semi-white border
+        border.width: 1
 
         Behavior on implicitWidth {
             animation: Appearance?.animation.elementMoveFast.numberAnimation.createObject(this)

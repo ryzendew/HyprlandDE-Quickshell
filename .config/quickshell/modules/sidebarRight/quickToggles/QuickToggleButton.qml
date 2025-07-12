@@ -33,9 +33,9 @@ Button {
         anchors.fill: parent
         radius: hasRightClickAction ? Appearance.rounding.medium : Appearance.rounding.full
         color: toggled ? 
-            (button.down ? Qt.rgba(0.90, 0.22, 0.21, 1.0) : // #e53935
-             button.hovered ? Qt.rgba(0.90, 0.22, 0.21, 0.85) : 
-             Qt.rgba(0.90, 0.22, 0.21, 0.95)) :
+            (button.down ? Qt.rgba(1, 1, 1, 0.45) : // semi-transparent white when pressed
+             button.hovered ? Qt.rgba(1, 1, 1, 0.35) : 
+             Qt.rgba(1, 1, 1, 0.28)) :
             (button.down ? Qt.rgba(Appearance.colors.colLayer1Active.r, Appearance.colors.colLayer1Active.g, Appearance.colors.colLayer1Active.b, 0.8) : 
              button.hovered ? Qt.rgba(Appearance.colors.colLayer1Hover.r, Appearance.colors.colLayer1Hover.g, Appearance.colors.colLayer1Hover.b, 0.8) : 
              Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.8))
