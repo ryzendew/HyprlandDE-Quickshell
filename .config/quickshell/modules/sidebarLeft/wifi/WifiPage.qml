@@ -21,8 +21,8 @@ Rectangle {
 
     // Auto-scan timer based on config
     Timer {
-        interval: ConfigOptions.networking.wifi.scanInterval
-        running: ConfigOptions.networking.wifi.autoScan && Network.wifiEnabled
+        interval: ConfigOptions.networking?.wifi?.scanInterval || 30000
+        running: (ConfigOptions.networking?.wifi?.autoScan || false) && Network.wifiEnabled
         repeat: true
         onTriggered: {
             if (Network.wifiEnabled) {
@@ -66,10 +66,10 @@ Rectangle {
                 QuickToggleButton {
                     toggled: Network.wifiEnabled
                     buttonIcon: Network.wifiEnabled ? (
-                        Network.networkStrength > 80 ? "signal_wifi_4_bar" :
-                        Network.networkStrength > 60 ? "network_wifi_3_bar" :
-                        Network.networkStrength > 40 ? "network_wifi_2_bar" :
-                        Network.networkStrength > 20 ? "network_wifi_1_bar" :
+                        (Network.networkStrength ?? 0) > 80 ? "signal_wifi_4_bar" :
+                        (Network.networkStrength ?? 0) > 60 ? "network_wifi_3_bar" :
+                        (Network.networkStrength ?? 0) > 40 ? "network_wifi_2_bar" :
+                        (Network.networkStrength ?? 0) > 20 ? "network_wifi_1_bar" :
                         "signal_wifi_0_bar"
                     ) : "signal_wifi_off"
                     implicitWidth: 36
@@ -90,14 +90,14 @@ Rectangle {
                     spacing: 0
                     Layout.alignment: Qt.AlignVCenter
                     StyledText {
-                        text: Network.networkName.length > 0 ? Network.networkName : qsTr("Wired connection 1")
+                        text: (Network.networkName || "").length > 0 ? Network.networkName : qsTr("Wired connection 1")
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.colors.colSubtext
                     }
                     StyledText {
-                        visible: Network.networkStrength > 0
-                        text: qsTr("Signal: %1%").arg(Network.networkStrength)
-                            font.pixelSize: Appearance.font.pixelSize.tiny
+                        visible: (Network.networkStrength ?? 0) > 0
+                        text: qsTr("Signal: %1%").arg(Network.networkStrength ?? 0)
+                        font.pixelSize: Appearance.font.pixelSize.tiny
                         color: Appearance.colors.colSubtext
                     }
                 }
@@ -126,7 +126,7 @@ Rectangle {
                     implicitHeight: 32
                     Layout.alignment: Qt.AlignVCenter
                     onClicked: {
-                        Hyprland.dispatch(`exec ${ConfigOptions.apps.network}`);
+                        Hyprland.dispatch(`exec ${ConfigOptions.apps?.network || "nm-connection-editor"}`);
                         GlobalStates.sidebarLeftOpen = false;
                     }
                     StyledToolTip {
@@ -234,7 +234,7 @@ Rectangle {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 4
-            visible: Network.networks.filter(function(n) { return n.connected; }).length > 0
+            visible: (Network.networks || []).filter(function(n) { return n.connected; }).length > 0
             Text {
                 text: qsTr("Connected")
                 font.pixelSize: Appearance.font.pixelSize.small
@@ -244,8 +244,8 @@ Rectangle {
             }
             ListView {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.max(72, 72 * Network.networks.filter(function(n) { return n.connected; }).length)
-                model: Network.networks.filter(function(n) { return n.connected; })
+                Layout.preferredHeight: Math.max(72, 72 * (Network.networks || []).filter(function(n) { return n.connected; }).length)
+                model: (Network.networks || []).filter(function(n) { return n.connected; })
                 spacing: 4
                 delegate: Rectangle {
                     width: networkListView.width
@@ -278,10 +278,10 @@ Rectangle {
 
                             // Signal strength icon
                             MaterialSymbol {
-                                text: modelData.signal > 80 ? "signal_wifi_4_bar" :
-                                      modelData.signal > 60 ? "network_wifi_3_bar" :
-                                      modelData.signal > 40 ? "network_wifi_2_bar" :
-                                      modelData.signal > 20 ? "network_wifi_1_bar" :
+                                text: (modelData.signal ?? 0) > 80 ? "signal_wifi_4_bar" :
+                                      (modelData.signal ?? 0) > 60 ? "network_wifi_3_bar" :
+                                      (modelData.signal ?? 0) > 40 ? "network_wifi_2_bar" :
+                                      (modelData.signal ?? 0) > 20 ? "network_wifi_1_bar" :
                                       "signal_wifi_0_bar"
                                 iconSize: 24
                                 color: modelData.connected ? "#4CAF50" : Appearance.colors.colOnLayer1
@@ -333,7 +333,7 @@ Rectangle {
                                         font.weight: Font.Medium
                                     }
                                     StyledText {
-                                        visible: ConfigOptions.networking.wifi.showSecurityType
+                                        visible: ConfigOptions.networking?.wifi?.showSecurityType || false
                                         text: modelData.security
                                         font.pixelSize: Appearance.font.pixelSize.tiny
                                         color: Appearance.colors.colSubtext
@@ -341,8 +341,8 @@ Rectangle {
                                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                     }
                                     StyledText {
-                                        visible: ConfigOptions.networking.wifi.showSignalStrength
-                                        text: modelData.signal + "%"
+                                        visible: ConfigOptions.networking?.wifi?.showSignalStrength || false
+                                        text: (modelData.signal ?? 0) + "%"
                                         font.pixelSize: Appearance.font.pixelSize.tiny
                                         color: Appearance.colors.colSubtext
                                         horizontalAlignment: Text.AlignLeft
@@ -416,7 +416,7 @@ Rectangle {
                     Item { Layout.fillWidth: true }
 
                     StyledText {
-                        text: Network.networks.filter(function(n) { return !n.connected; }).length + " networks"
+                        text: ((Network.networks || []).filter(function(n) { return !n.connected; }).length || 0) + " networks"
                         font.pixelSize: Appearance.font.pixelSize.tiny
                         color: Appearance.colors.colSubtext
                     }
@@ -430,7 +430,7 @@ Rectangle {
 
                     ListView {
                         id: networkListView
-                        model: Network.networks.filter(function(n) { return !n.connected; })
+                        model: (Network.networks || []).filter(function(n) { return !n.connected; })
                         spacing: 4
                         delegate: Rectangle {
                             width: networkListView.width
@@ -463,10 +463,10 @@ Rectangle {
 
                                     // Signal strength icon
                                     MaterialSymbol {
-                                        text: modelData.signal > 80 ? "signal_wifi_4_bar" :
-                                              modelData.signal > 60 ? "network_wifi_3_bar" :
-                                              modelData.signal > 40 ? "network_wifi_2_bar" :
-                                              modelData.signal > 20 ? "network_wifi_1_bar" :
+                                        text: (modelData.signal ?? 0) > 80 ? "signal_wifi_4_bar" :
+                                              (modelData.signal ?? 0) > 60 ? "network_wifi_3_bar" :
+                                              (modelData.signal ?? 0) > 40 ? "network_wifi_2_bar" :
+                                              (modelData.signal ?? 0) > 20 ? "network_wifi_1_bar" :
                                               "signal_wifi_0_bar"
                                         iconSize: 24
                                         color: modelData.connected ? "#4CAF50" : Appearance.colors.colOnLayer1
@@ -518,7 +518,7 @@ Rectangle {
                                             font.weight: Font.Medium
                                         }
                                             StyledText {
-                                                visible: ConfigOptions.networking.wifi.showSecurityType
+                                                visible: ConfigOptions.networking?.wifi?.showSecurityType || false
                                                 text: modelData.security
                                                 font.pixelSize: Appearance.font.pixelSize.tiny
                                                 color: Appearance.colors.colSubtext
@@ -526,8 +526,8 @@ Rectangle {
                                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                             }
                                             StyledText {
-                                                visible: ConfigOptions.networking.wifi.showSignalStrength
-                                                text: modelData.signal + "%"
+                                                visible: ConfigOptions.networking?.wifi?.showSignalStrength || false
+                                                text: (modelData.signal ?? 0) + "%"
                                                 font.pixelSize: Appearance.font.pixelSize.tiny
                                                 color: Appearance.colors.colSubtext
                                                 horizontalAlignment: Text.AlignLeft
@@ -613,7 +613,7 @@ Rectangle {
                     Appearance.colors.colLayer1.b * 0.85,
                     1.0
                 )
-                radius: Qt.binding(function() { return Appearance.rounding.normal; })
+                radius: Appearance.rounding.normal
                 border.color: Qt.rgba(1, 1, 1, 0.08)
                 border.width: 0
                 StyledText {
@@ -626,11 +626,9 @@ Rectangle {
             }
 
             ColumnLayout {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.topMargin: 12
-                anchors.bottomMargin: 12
-                anchors.left: parent.left
-                anchors.right: parent.right
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 12
+                Layout.bottomMargin: 12
                 spacing: 16
                 Layout.fillWidth: true
 
@@ -646,7 +644,7 @@ Rectangle {
                     id: passwordField
                     Layout.fillWidth: true
                     placeholderText: qsTr("Password")
-                    echoMode: ConfigOptions.networking.wifi.connection.showPassword ? TextInput.Normal : TextInput.Password
+                    echoMode: (ConfigOptions.networking?.wifi?.connection?.showPassword || false) ? TextInput.Normal : TextInput.Password
                     text: passwordInput
                     onTextChanged: passwordInput = text
                     onAccepted: connectButton.clicked()

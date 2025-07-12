@@ -10,22 +10,20 @@ import Quickshell.Hyprland
 import "root:/modules/common"
 import "root:/modules/common/widgets"
 import "root:/services"
-import "../common/widgets/SystemIcon.qml"
+
 
 Rectangle {
     id: dockItem
     
     // --- Properties ---
-    // The icon to display for this dock item
-    property string icon: ""
+    // The desktop entry or app info for this dock item
+    property var appData: null
     // Tooltip text for this item (shows app class or title)
-    property string tooltip: isPinned ? appInfo.class || "" : (appInfo.title || appInfo.class || "")
+    property string tooltip: isPinned ? (appData?.name || appData?.desktopId || "") : (appData?.title || appData?.class || appData?.name || "")
     // Whether this item is currently active (focused window)
     property bool isActive: false
     // Whether the right-click menu is shown for this item
     property bool showMenu: false
-    // Information about the app this item represents
-    property var appInfo: ({})
     // Whether this app is pinned to the dock
     property bool isPinned: false
     // The index of this item in the layout (for ordering)
@@ -105,42 +103,62 @@ Rectangle {
     }
 
     // --- Icon ---
-    // The app icon, centered in the item
+    // The app icon, centered in the item using proper Quickshell icon handling
     Item {
         id: iconContainer
         anchors.centerIn: parent
         width: parent.width * 0.75
         height: parent.width * 0.75
 
+        // Use proper icon source resolution according to Quickshell docs
         Image {
-            id: providerIcon
+            id: appIcon
             anchors.fill: parent
-            source: {
-                // Debug: Log what we're trying to resolve
-                console.log("[DOCK DEBUG] Trying to resolve icon for:", dockItem.icon)
-                
-                // Try to get iconUrl from DesktopEntries first (like hyprmenu does)
-                var desktopEntry = DesktopEntries.byId(dockItem.icon)
-                console.log("[DOCK DEBUG] DesktopEntry found:", desktopEntry ? "yes" : "no")
-                if (desktopEntry) {
-                    console.log("[DOCK DEBUG] DesktopEntry iconUrl:", desktopEntry.iconUrl)
-                    console.log("[DOCK DEBUG] DesktopEntry icon:", desktopEntry.icon)
+            property string resolvedSource: (function() {
+                if (!appData) {
+                    console.log('[DOCK DEBUG] appData is null/undefined for DockItem');
+                    return "image://icon/application-x-executable";
                 }
-                
-                if (desktopEntry && desktopEntry.iconUrl) {
-                    console.log("[DOCK DEBUG] Using iconUrl:", desktopEntry.iconUrl)
-                    return desktopEntry.iconUrl
+                // For desktop entries, use iconUrl or fallback to icon name
+                if (appData.iconUrl) {
+                    console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source:', appData.iconUrl);
+                    return appData.iconUrl;
                 }
-                
-                // Fall back to image provider with AppSearch.guessIcon()
-                var guessedIcon = AppSearch.guessIcon(dockItem.icon)
-                console.log("[DOCK DEBUG] AppSearch.guessIcon result:", guessedIcon)
-                var fallbackSource = "image://icon/" + (guessedIcon || "application-x-executable")
-                console.log("[DOCK DEBUG] Using fallback source:", fallbackSource)
-                return fallbackSource
-            }
-            fillMode: Image.PreserveAspectFit
+                if (appData.icon) {
+                    console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source:', "image://icon/" + appData.icon);
+                    return "image://icon/" + appData.icon;
+                }
+                if (appData.class && !isPinned) {
+                    var desktopEntry = DesktopEntries.byId(appData.class);
+                    if (desktopEntry) {
+                        var src = desktopEntry.iconUrl || "image://icon/" + (desktopEntry.icon || "application-x-executable");
+                        console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'desktopEntry:', JSON.stringify(desktopEntry), 'icon source:', src);
+                        return src;
+                    }
+                    for (var i = 0; i < AppSearch.list.length; i++) {
+                        var app = AppSearch.list[i];
+                        if (app.desktopId === appData.class) {
+                            var src2 = app.iconUrl || "image://icon/" + (app.icon || "application-x-executable");
+                            console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'AppSearch match:', JSON.stringify(app), 'icon source:', src2);
+                            return src2;
+                        }
+                    }
+                    var guessedIcon = AppSearch.guessIcon(appData.class);
+                    var src3 = "image://icon/" + (guessedIcon || "application-x-executable");
+                    console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'guessed icon:', guessedIcon, 'icon source:', src3);
+                    return src3;
+                }
+                // Final fallback
+                if (isPinned) {
+                    console.log('[DOCK DEBUG] PINNED FALLBACK: modelData:', modelData, 'appData:', JSON.stringify(appData), 'icon source: fallback image://icon/application-x-executable');
+                } else {
+                    console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source: fallback image://icon/application-x-executable');
+                }
+                return "image://icon/application-x-executable";
+            })()
+            source: resolvedSource
             smooth: true
+            mipmap: true
         }
     }
 
@@ -336,23 +354,23 @@ Rectangle {
             } else if (mouse.button === Qt.RightButton) {
                 // Use the existing dock context menu function
                 if (dock && dock.openDockContextMenu) {
-                    dock.openDockContextMenu(dockItem.appInfo, dockItem.isPinned, dockItem, mouse)
+                    dock.openDockContextMenu(dockItem.appData, dockItem.isPinned, dockItem, mouse)
                 }
             }
         }
         
         // Track mouse over state for dock hover logic
         onEntered: {
-            // console.log("[DOCK ITEM DEBUG] Mouse entered dock item for:", appInfo?.class || "unknown");
+            // console.log("[DOCK ITEM DEBUG] Mouse entered dock item for:", appData?.class || "unknown");
             dock.mouseOverDockItem = true
             
             // DISABLED: Show window previews if this app has multiple windows
-            // if (appInfo && appInfo.class && !showMenu) {
-            //     console.log("[DOCK ITEM DEBUG] Calling showWindowPreviews for:", appInfo.class);
+            // if (appData && appData.class && !showMenu) {
+            //     console.log("[DOCK ITEM DEBUG] Calling showWindowPreviews for:", appData.class);
             //     const position = dockItem.mapToItem(null, dockItem.width / 2, 0);
-            //     dock.showWindowPreviews(appInfo.class, position, dockItem.width);
+            //     dock.showWindowPreviews(appData.class, position, dockItem.width);
             // } else {
-            //     console.log("[DOCK ITEM DEBUG] Not calling showWindowPreviews - appInfo:", !!appInfo, "class:", appInfo?.class, "showMenu:", showMenu);
+            //     console.log("[DOCK ITEM DEBUG] Not calling showWindowPreviews - appInfo:", !!appData, "class:", appData?.class, "showMenu:", showMenu);
             // }
         }
         

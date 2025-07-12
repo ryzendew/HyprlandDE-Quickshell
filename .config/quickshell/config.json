@@ -29,9 +29,17 @@
     "hoverRegionHeight": 3,
     "pinnedOnStartup": false,
     "hoverToReveal": false,
+    "enable": true,
     "pinnedApps": [
-      "org.kde.dolphin",
-      "kitty"
+      "microsoft-edge-dev",
+      "org.gnome.Nautilus",
+      "vesktop",
+      "cider",
+      "steam-native",
+      "lutris",
+      "heroic",
+      "obs",
+      "org.gnome.Ptyxis"
     ]
   },
   "networking": {

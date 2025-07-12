@@ -8,7 +8,7 @@ import Quickshell.Hyprland
 
 Rectangle {
     id: root
-    property bool borderless: ConfigOptions.bar.borderless
+    property bool borderless: ConfigOptions.bar?.borderless || false
     Layout.alignment: Qt.AlignVCenter
     implicitWidth: rowLayout.implicitWidth + rowLayout.spacing * 2
     implicitHeight: 32
@@ -23,7 +23,7 @@ Rectangle {
 
         CircleUtilButton {
             Layout.alignment: Qt.AlignVCenter
-            visible: ConfigOptions.bar.utilButtons.showScreenSnip
+            visible: ConfigOptions.bar?.utilButtons?.showScreenSnip || false
             onClicked: Hyprland.dispatch("exec hyprshot --freeze --clipboard-only --mode region --silent")
 
             MaterialSymbol {
@@ -38,7 +38,7 @@ Rectangle {
 
         CircleUtilButton {
             Layout.alignment: Qt.AlignVCenter
-            visible: ConfigOptions.bar.utilButtons.showColorPicker
+            visible: ConfigOptions.bar?.utilButtons?.showColorPicker || false
             onClicked: Hyprland.dispatch("exec hyprpicker -a")
 
             MaterialSymbol {
@@ -53,7 +53,7 @@ Rectangle {
 
         CircleUtilButton {
             Layout.alignment: Qt.AlignVCenter
-            visible: ConfigOptions.bar.utilButtons.showKeyboardToggle
+            visible: ConfigOptions.bar?.utilButtons?.showKeyboardToggle || false
             onClicked: Hyprland.dispatch("global quickshell:oskToggle")
 
             MaterialSymbol {
@@ -68,7 +68,7 @@ Rectangle {
 
         CircleUtilButton {
             Layout.alignment: Qt.AlignVCenter
-            visible: ConfigOptions.bar.utilButtons.showMicToggle
+            visible: ConfigOptions.bar?.utilButtons?.showMicToggle || false
             onClicked: Hyprland.dispatch("global quickshell:micToggle")
 
             MaterialSymbol {
@@ -83,7 +83,7 @@ Rectangle {
 
         CircleUtilButton {
             Layout.alignment: Qt.AlignVCenter
-            visible: ConfigOptions.bar.utilButtons.showDarkModeToggle
+            visible: ConfigOptions.bar?.utilButtons?.showDarkModeToggle || false
             onClicked: Hyprland.dispatch("global quickshell:toggleDarkMode")
 
             MaterialSymbol {

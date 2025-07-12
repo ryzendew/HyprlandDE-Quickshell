@@ -3,12 +3,14 @@
     "microsoft-edge-dev",
     "org.gnome.Nautilus",
     "vesktop",
-    "Cider",
+    "cider",
     "steam-native",
-    "net.lutris.Lutris",
+    "lutris",
     "heroic",
-    "com.obsproject.Studio",
-    "org.gnome.Ptyxis"
+    "obs",
+    "org.gnome.Ptyxis",
+    "AffinityPhoto.desktop",
+    "AffinityDesigner.desktop"
   ],
   "autoHide": false
 }

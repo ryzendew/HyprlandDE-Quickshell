@@ -27,17 +27,6 @@ Rectangle {
     // Debug mode - prevent closing
     property bool debugMode: false  // Set to false to disable debug mode
 
-    // Block ALL closing attempts while in debug mode
-    Connections {
-        target: Quickshell
-        function onSidebarRightCloseRequested() {
-            if (debugMode) {
-                return
-            }
-            Hyprland.dispatch("global quickshell:sidebarRightClose")
-        }
-    }
-
     // Block escape key
     Keys.onEscapePressed: {
         if (debugMode) {
@@ -58,16 +47,6 @@ Rectangle {
         {"icon": "cloud", "name": qsTr("Weather")},
         {"icon": "calendar_month", "name": qsTr("Calendar")}
     ]
-
-    // Intercept the close signal
-    Connections {
-        target: Quickshell
-        function onSidebarRightCloseRequested() {
-            if (!root.preventClosing) {
-                Hyprland.dispatch("global quickshell:sidebarRightClose")
-            }
-        }
-    }
 
     Keys.onPressed: (event) => {
         if (event.key === Qt.Key_PageDown || event.key === Qt.Key_PageUp) {

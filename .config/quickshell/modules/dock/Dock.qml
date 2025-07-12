@@ -13,7 +13,7 @@ import "root:/modules/common/widgets"
 import "root:/services"
 import Qt.labs.platform
 import "root:/modules/bar"
-import "root:/modules/common/functions/icon_theme.js" as IconTheme
+
 
 Scope {
     id: dock
@@ -120,38 +120,41 @@ Scope {
     Connections {
         target: AppearanceSettingsState
         function onDockBlurAmountChanged() {
-            // Update Hyprland blur rules for dock
-            if (AppearanceSettingsState.blurEnabled) {
-                Hyprland.dispatch(`setvar decoration:blur:size ${AppearanceSettingsState.dockBlurAmount}`)
-            }
+            // Skip Hyprland commands since layer rules are already defined in config
+            // This prevents the "Invalid dispatcher" warnings
             // Reload Quickshell - this might be for other theming aspects tied to blur amount
-            Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            try {
+                Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            } catch (e) {
+                console.log("Failed to reload quickshell:", e)
+            }
         }
         function onDockBlurPassesChanged() {
-            if (AppearanceSettingsState.blurEnabled) {
-                Hyprland.dispatch(`setvar decoration:blur:passes ${AppearanceSettingsState.dockBlurPasses}`)
-            }
+            // Skip Hyprland commands since layer rules are already defined in config
             // Reload Quickshell - this might be for other theming aspects
-            Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            try {
+                Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            } catch (e) {
+                console.log("Failed to reload quickshell:", e)
+            }
         }
         function onDockTransparencyChanged() {
             // Reload Quickshell
-            Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            try {
+                Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            } catch (e) {
+                console.log("Failed to reload quickshell:", e)
+            }
         }
         // Add onBlurEnabledChanged if needed to unset layerrule or disable blur
         function onBlurEnabledChanged() {
-            if (!AppearanceSettingsState.blurEnabled) {
-                // This will remove the blur rule for the dock if blur is globally disabled
-                Hyprland.dispatch(`layerrule unset,^(quickshell:dock:blur)$`)
-            } else {
-                // This will re-apply blur rules if blur is re-enabled
-                // AppearanceSettingsState.updateDockBlurSettings() should handle this if called
-                // For now, just ensure size and passes are set if blur is on
-                Hyprland.dispatch(`setvar decoration:blur:size ${AppearanceSettingsState.dockBlurAmount}`)
-                Hyprland.dispatch(`setvar decoration:blur:passes ${AppearanceSettingsState.dockBlurPasses}`)
-                Hyprland.dispatch(`layerrule blur,^(quickshell:dock:blur)$`)
+            // Skip Hyprland commands since layer rules are already defined in config
+            // The blur settings are handled by the Hyprland config files
+            try {
+                Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
+            } catch (e) {
+                console.log("Failed to reload quickshell:", e)
             }
-             Hyprland.dispatch("exec killall -SIGUSR2 quickshell")
         }
     }
     
@@ -161,7 +164,7 @@ Scope {
     // FileView to monitor Qt6 theme settings changes
     FileView {
         id: qt6SettingsView
-        path: Qt.binding(() => StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/qt6ct/qt6ct.conf")
+        path: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/qt6ct/qt6ct.conf"
         
         property string lastTheme: ""
         
@@ -353,9 +356,8 @@ Scope {
         // Load config when component is ready
         dockConfigView.reload()
         
-        // Apply initial blur settings
-        Hyprland.dispatch(`keyword decoration:blur:passes ${AppearanceSettingsState.dockBlurPasses}`)
-        Hyprland.dispatch(`keyword decoration:blur:size ${AppearanceSettingsState.dockBlurAmount}`)
+        // Skip Hyprland blur commands since they're already configured in config files
+        // This prevents the "Invalid dispatcher" warnings
         
         // Initialize icon theme system
         IconTheme.initializeIconTheme(StandardPaths.writableLocation(StandardPaths.HomeLocation));
@@ -429,8 +431,7 @@ Scope {
             function updateActiveWindows() {
                 // Show apps from ALL monitors/workspaces instead of filtering by current monitor
                 const windows = HyprlandData.windowList.filter((window, idx, arr) => {
-                    var icon = dockRoot.getIconForClass(window.class);
-                    log("debug", `[FILTER] Checking window: class='${window.class}', title='${window.title}', icon='${icon}'`);
+                    log("debug", `[FILTER] Checking window: class='${window.class}', title='${window.title}'`);
                     // Skip windows without a valid class
                     if (!window.class || window.class.trim() === '') {
                         log("debug", `[FILTER] Excluded: missing or empty class`);
@@ -452,18 +453,8 @@ Scope {
                         log("debug", `[FILTER] Excluded: missing or empty title`);
                         return false;
                     }
-                    // Skip windows that would resolve to 'image-missing' icon unless they are the only window of their class
-                    if (icon === 'image-missing') {
-                        var hasValidIcon = arr.some((w, i) => w.class === window.class && i !== idx && dockRoot.getIconForClass(w.class) !== 'image-missing');
-                        if (hasValidIcon) {
-                            log("debug", `[FILTER] Excluded: image-missing icon and another window of same class has valid icon`);
-                            return false;
-                        } else {
-                            log("debug", `[FILTER] Included: image-missing icon but only window of its class`);
-                        }
-                    } else {
-                        log("debug", `[FILTER] Included: valid icon`);
-                    }
+                    // Icon resolution is now handled in DockItem.qml, so we don't need to filter by icon here
+                    log("debug", `[FILTER] Included: valid window`);
                     return true;
                 })
                 
@@ -474,24 +465,7 @@ Scope {
                 }
             }
             
-            function getIconForClass(windowClass) {
-                // console.log('[DOCK DEBUG] getIconForClass called with:', windowClass)
-                if (!windowClass) {
-                    // console.log('[DOCK DEBUG] No windowClass provided, returning image-missing')
-                    return "image-missing"
-                }
-                // Try to get iconUrl from DesktopEntries first (like hyprmenu does)
-                var desktopEntry = DesktopEntries.byId(windowClass)
-                if (desktopEntry && desktopEntry.iconUrl) {
-                    // console.log('[DOCK DEBUG] Found DesktopEntry iconUrl for', windowClass + ':', desktopEntry.iconUrl)
-                    return desktopEntry.iconUrl
-                }
-                // Remove all dynamic QML FileView logic for desktop file reading
-                // Final fallback: use AppSearch.guessIcon() on the window class itself
-                var guessedIcon = AppSearch.guessIcon(windowClass)
-                // console.log('[DOCK DEBUG] Final fallback for', windowClass + ':', guessedIcon)
-                return guessedIcon || windowClass.toLowerCase()
-            }
+
             
             function isWindowActive(windowClass) {
                 // Map .desktop files to possible window classes and vice versa
@@ -706,14 +680,122 @@ Scope {
                                 
                                 DockItem {
                                     property var parentRepeater: pinnedAppsRepeater  // Add reference to the repeater
-                                    icon: modelData.endsWith('.desktop') ? dockRoot.getIconForClass(modelData) : modelData  // Use getIconForClass only for .desktop files
+                                    appData: {
+                                        var pinnedId = modelData;
+                                        var lowerPinnedId = pinnedId.toLowerCase();
+                                        var base = pinnedId.replace(/\.desktop$/i, "");
+                                        var lowerBase = base.toLowerCase();
+                                        var found = null;
+                                        
+                                        if (lowerPinnedId.indexOf('affinity') !== -1) {
+                                            console.log('[AFFINITY DEBUG] pinnedId:', pinnedId, 'base:', base, 'lowerBase:', lowerBase);
+                                            console.log('[AFFINITY DEBUG] Searching AppSearch.list for Affinity entries...');
+                                            for (var j = 0; j < AppSearch.list.length; j++) {
+                                                var searchApp = AppSearch.list[j];
+                                                if ((searchApp.desktopId && searchApp.desktopId.toLowerCase().indexOf('affinity') !== -1) ||
+                                                    (searchApp.name && searchApp.name.toLowerCase().indexOf('affinity') !== -1) ||
+                                                    (searchApp.exec && searchApp.exec.toLowerCase().indexOf('affinity') !== -1)) {
+                                                    console.log('[AFFINITY DEBUG] Found potential match:', JSON.stringify(searchApp));
+                                                }
+                                            }
+                                        }
+                                        
+                                        // 1. Try exact desktopId (case-insensitive, with and without .desktop)
+                                        for (var i = 0; i < AppSearch.list.length; i++) {
+                                            var app = AppSearch.list[i];
+                                            if (app.desktopId && (
+                                                app.desktopId.toLowerCase() === lowerPinnedId ||
+                                                app.desktopId.toLowerCase() === lowerBase + ".desktop" ||
+                                                app.desktopId.toLowerCase() === lowerBase
+                                            )) {
+                                                found = app;
+                                                if (lowerPinnedId.indexOf('affinity') !== -1) {
+                                                    console.log('[AFFINITY DEBUG] [1] Found by desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                                }
+                                                break;
+                                            }
+                                        }
+                                        
+                                        // 2. Try name (case-insensitive)
+                                        if (!found) {
+                                            for (var i = 0; i < AppSearch.list.length; i++) {
+                                                var app = AppSearch.list[i];
+                                                if (app.name && app.name.toLowerCase() === lowerBase) {
+                                                    found = app;
+                                                    if (lowerPinnedId.indexOf('affinity') !== -1) {
+                                                        console.log('[AFFINITY DEBUG] [2] Found by name:', app.name, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // 3. Try exec (contains, case-insensitive)
+                                        if (!found) {
+                                            for (var i = 0; i < AppSearch.list.length; i++) {
+                                                var app = AppSearch.list[i];
+                                                if (app.exec && app.exec.toLowerCase().indexOf(lowerBase) !== -1) {
+                                                    found = app;
+                                                    if (lowerPinnedId.indexOf('affinity') !== -1) {
+                                                        console.log('[AFFINITY DEBUG] [3] Found by exec:', app.exec, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // 4. Try fuzzy name matching (for cases like "AffinityPhoto.desktop" -> "Affinity Photo")
+                                        if (!found) {
+                                            for (var i = 0; i < AppSearch.list.length; i++) {
+                                                var app = AppSearch.list[i];
+                                                if (app.name && (
+                                                    app.name.toLowerCase().indexOf(lowerBase) !== -1 ||
+                                                    app.name.toLowerCase().replace(/\s+/g, '') === lowerBase ||
+                                                    (app.id && app.id.toLowerCase() === lowerBase)
+                                                )) {
+                                                    found = app;
+                                                    if (lowerPinnedId.indexOf('affinity') !== -1) {
+                                                        console.log('[AFFINITY DEBUG] [4] Found by fuzzy name/id:', app.name, 'id:', app.id, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // 5. If found, ensure icon is valid
+                                        if (found) {
+                                            // If icon is missing or empty, guess
+                                            if (!found.icon || found.icon === "") {
+                                                found.icon = AppSearch.guessIcon(pinnedId);
+                                                if (lowerPinnedId.indexOf('affinity') !== -1) {
+                                                    console.log('[AFFINITY DEBUG] [5] Guessed icon:', found.icon);
+                                                }
+                                            }
+                                            if (!found.iconUrl) {
+                                                found.iconUrl = null;
+                                            }
+                                            if (lowerPinnedId.indexOf('affinity') !== -1) {
+                                                console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(found));
+                                            }
+                                            return found;
+                                        }
+                                        
+                                        // 6. Final fallback
+                                        var fallback = {
+                                            desktopId: pinnedId,
+                                            name: pinnedId,
+                                            icon: AppSearch.guessIcon(pinnedId),
+                                            iconUrl: null
+                                        };
+                                        if (lowerPinnedId.indexOf('affinity') !== -1) {
+                                            console.log('[AFFINITY DEBUG] [6] Fallback guessIcon:', fallback.icon);
+                                            console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(fallback));
+                                        }
+                                        return fallback;
+                                    }
                                     tooltip: modelData  // Use the app class name for pinned apps
                                     isActive: dockRoot.isWindowActive(modelData)
                                     isPinned: true
-                                    appInfo: ({
-                                        class: modelData,
-                                        command: modelData.toLowerCase()
-                                    })
                                     onClicked: {
                                         // Special-case handling for OBS and DaVinci Resolve
                                         if (modelData === "com.obsproject.Studio") {
@@ -849,9 +931,8 @@ Scope {
                                     for (var i = 0; i < dockRoot.activeWindows.length; i++) {
                                         var activeWindow = dockRoot.activeWindows[i]
                                         log("debug", `[UNPINNED][FULL] Window properties: ${JSON.stringify(activeWindow)}`);
-                                        var icon = dockRoot.getIconForClass(activeWindow.class);
-                                        log("debug", `[UNPINNED] Checking window: class='${activeWindow.class}', title='${activeWindow.title}', icon='${icon}'`);
-                                        // Additional filtering for unpinned apps to prevent windows without proper class names or icons
+                                        log("debug", `[UNPINNED] Checking window: class='${activeWindow.class}', title='${activeWindow.title}'`);
+                                        // Additional filtering for unpinned apps to prevent windows without proper class names
                                         if (!pinnedClasses.has(activeWindow.class.toLowerCase())) {
                                             // Hide if this window's class matches a pinned app
                                             var isPinnedClass = false;
@@ -863,11 +944,6 @@ Scope {
                                                 }
                                             }
                                             if (isPinnedClass) {
-                                                continue;
-                                            }
-                                            // Hide if the resolved icon is 'zenity'
-                                            if (icon === 'zenity') {
-                                                log("debug", `[UNPINNED] Excluded: icon is 'zenity'`);
                                                 continue;
                                             }
                                             // Skip windows with empty or invalid class names
@@ -895,18 +971,8 @@ Scope {
                                                 continue;
                                             }
                                             
-                                            // Skip windows that would resolve to 'image-missing' icon unless they are the only window of their class
-                                            if (icon === 'image-missing') {
-                                                var hasValidIcon = dockRoot.activeWindows.some((w, j) => w.class === activeWindow.class && j !== i && dockRoot.getIconForClass(w.class) !== 'image-missing');
-                                                if (hasValidIcon) {
-                                                    log("debug", `[UNPINNED] Excluded: image-missing icon and another window of same class has valid icon`);
-                                                    continue;
-                                                } else {
-                                                    log("debug", `[UNPINNED] Included: image-missing icon but only window of its class`);
-                                                }
-                                            } else {
-                                                log("debug", `[UNPINNED] Included: valid icon`);
-                                            }
+                                            // Icon resolution is now handled in DockItem.qml, so we don't need to filter by icon here
+                                            log("debug", `[UNPINNED] Included: valid window`);
                                             nonPinnedApps.push(activeWindow)
                                         }
                                     }
@@ -915,27 +981,16 @@ Scope {
                                 }
                                 
                                 DockItem {
-                                    icon: {
-                                        // If this window's class matches a pinned app, use the pinned app's icon
-                                        var pinnedIcon = null;
-                                        for (var i = 0; i < dock.pinnedApps.length; i++) {
-                                            if (modelData.class && dock.pinnedApps[i].toLowerCase() === modelData.class.toLowerCase()) {
-                                                pinnedIcon = dockRoot.getIconForClass(dock.pinnedApps[i]);
-                                                break;
-                                            }
-                                        }
-                                        if (pinnedIcon) {
-                                            return pinnedIcon;
-                                        }
-                                        // Otherwise, use the normal icon resolution
-                                        return dockRoot.getIconForClass(modelData.class);
+                                    appData: {
+                                        // For unpinned apps, use the window data directly
+                                        // The icon resolution is now handled in DockItem.qml
+                                        return modelData
                                     }
                                     tooltip: modelData.title || modelData.class
                                     isActive: true
                                     isPinned: false
-                                    appInfo: modelData
                                     Component.onCompleted: {
-                                        // console.log("[DOCK DEBUG] Unpinned DockItem created for class:", modelData.class, "icon property set to:", icon);
+                                        // console.log("[DOCK DEBUG] Unpinned DockItem created for class:", modelData.class);
                                     }
                                     
                                     onClicked: {

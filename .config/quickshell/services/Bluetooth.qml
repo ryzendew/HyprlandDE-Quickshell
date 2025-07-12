@@ -28,9 +28,9 @@ Singleton {
             if (!running) {
                 if (discoverableProcess.exitCode === 0) {
                     root.discoverable = discoverableProcess._pendingDiscoverable;
-                    console.log('[BT SERVICE] Discoverable set to', root.discoverable);
+                    // console.log('[BT SERVICE] Discoverable set to', root.discoverable);
                 } else {
-                    console.log('[BT SERVICE] Failed to set discoverable:', discoverableProcess.stderr);
+                    // console.log('[BT SERVICE] Failed to set discoverable:', discoverableProcess.stderr);
                 }
             }
         }
@@ -46,21 +46,21 @@ Singleton {
         // Only allow MAC addresses for real devices
         const macPattern = /^([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}$/;
         
-        console.log(`[BT SERVICE] isRealDevice check: address='${address}', name='${name}'`)
-        console.log(`[BT SERVICE] MAC pattern match:`, macPattern.test(address))
+        // console.log(`[BT SERVICE] isRealDevice check: address='${address}', name='${name}'`)
+        // console.log(`[BT SERVICE] MAC pattern match:`, macPattern.test(address))
         
         if (!macPattern.test(address)) {
-            console.log(`[BT SERVICE] Device filtered out: invalid address format (not MAC)`)
+            // console.log(`[BT SERVICE] Device filtered out: invalid address format (not MAC)`)
             return false;
         }
         if (!name || name.trim() === '') {
-            console.log(`[BT SERVICE] Device filtered out: no name`)
+            // console.log(`[BT SERVICE] Device filtered out: no name`)
             return false;
         }
         
         // Filter out the adapter itself (Media device)
         if (name === "Media") {
-            console.log(`[BT SERVICE] Device filtered out: adapter device`)
+            // console.log(`[BT SERVICE] Device filtered out: adapter device`)
             return false;
         }
         
@@ -69,17 +69,17 @@ Singleton {
         const addressWithUnderscores = address.replace(/:/g, '_');
         const addressNoSeparators = address.replace(/:/g, '');
         if (name === addressWithDashes || name === addressWithUnderscores || name === addressNoSeparators) {
-            console.log(`[BT SERVICE] Device filtered out: name is just address repeated`)
+            // console.log(`[BT SERVICE] Device filtered out: name is just address repeated`)
             return false;
         }
         
         // Filter out very short names that are likely not real device names
         if (name.length < 2) {
-            console.log(`[BT SERVICE] Device filtered out: name too short`)
+            // console.log(`[BT SERVICE] Device filtered out: name too short`)
             return false;
         }
         
-        console.log(`[BT SERVICE] Device accepted: ${name}`)
+        // console.log(`[BT SERVICE] Device accepted: ${name}`)
         return true;
     }
 
@@ -89,19 +89,19 @@ Singleton {
         let lines = data.split('\n')
         let currentDevice = null
         
-        console.log("[BT SERVICE] Parsing data:", data)
-        console.log("[BT SERVICE] Number of lines:", lines.length)
+        // console.log("[BT SERVICE] Parsing data:", data)
+        // console.log("[BT SERVICE] Number of lines:", lines.length)
         
         for (let line of lines) {
             line = line.trim()
             if (!line) continue
             
-            console.log("[BT SERVICE] Processing line:", line)
+            // console.log("[BT SERVICE] Processing line:", line)
             
             // New device line - handle both formats
             let deviceMatch = line.match(/Device\s+(([A-F0-9]{2}:){5}[A-F0-9]{2})\s+(.+)/)
             if (deviceMatch) {
-                console.log("[BT SERVICE] Device match found:", deviceMatch)
+                // console.log("[BT SERVICE] Device match found:", deviceMatch)
                 if (currentDevice && isRealDevice(currentDevice.address, currentDevice.name)) {
                     devices.push(currentDevice)
                 }
@@ -120,7 +120,7 @@ Singleton {
             // Handle [NEW] format from bluetoothctl - only for real devices, not adapters
             let newDeviceMatch = line.match(/\[NEW\]\s+Device\s+([A-F0-9]{2}:[A-F0-9]{2}:[A-F0-9]{2}:[A-F0-9]{2}:[A-F0-9]{2}:[A-F0-9]{2})\s+(.+)/)
             if (newDeviceMatch) {
-                console.log("[BT SERVICE] [NEW] Device match found:", newDeviceMatch)
+                // console.log("[BT SERVICE] [NEW] Device match found:", newDeviceMatch)
                 if (currentDevice && isRealDevice(currentDevice.address, currentDevice.name)) {
                     devices.push(currentDevice)
                 }
@@ -139,7 +139,7 @@ Singleton {
             if (!deviceMatch && !newDeviceMatch) {
                 let permissiveMatch = line.match(/([A-F0-9]{2}:[A-F0-9]{2}:[A-F0-9]{2}:[A-F0-9]{2}:[A-F0-9]{2}:[A-F0-9]{2})\s+(.+)/)
                 if (permissiveMatch) {
-                    console.log("[BT SERVICE] Permissive match found:", permissiveMatch)
+                    // console.log("[BT SERVICE] Permissive match found:", permissiveMatch)
                     if (currentDevice && isRealDevice(currentDevice.address, currentDevice.name)) {
                         devices.push(currentDevice)
                     }
@@ -203,7 +203,7 @@ Singleton {
         if (!bluetoothEnabled) return
         scanning = true
         availableDevices = []
-        console.log("[BT SERVICE] Starting 60s scan...")
+        // console.log("[BT SERVICE] Starting 60s scan...")
         scanProcess.running = true
     }
 
@@ -217,7 +217,7 @@ Singleton {
                 collectedOutput += data + "\n"
                 // Parse for [NEW] Device lines
                 if (data.indexOf('[NEW] Device') !== -1) {
-                    console.log('[BT SERVICE] New device found:', data)
+                    // console.log('[BT SERVICE] New device found:', data)
                     // Optionally, parse and add to availableDevices here
                     // let device = root.parseDeviceInfo(data)
                     // root.availableDevices.push(device)
@@ -226,7 +226,7 @@ Singleton {
         }
         onRunningChanged: {
             if (!running) {
-                console.log('[BT SERVICE] 60s scan finished')
+                // console.log('[BT SERVICE] 60s scan finished')
                 scanning = false
                 updateDevices.running = true // Always refresh full device list after scan
             }
@@ -271,23 +271,23 @@ Singleton {
 
     // Debug function to test scanning manually
     function debugScan() {
-        console.log("[BT SERVICE] === DEBUG SCAN START ===")
-        console.log("[BT SERVICE] Bluetooth enabled:", bluetoothEnabled)
-        console.log("[BT SERVICE] Currently scanning:", scanning)
-        console.log("[BT SERVICE] Available devices count:", availableDevices.length)
-        console.log("[BT SERVICE] Paired devices count:", pairedDevices.length)
-        console.log("[BT SERVICE] Connected devices count:", connectedDevices.length)
+        // console.log("[BT SERVICE] === DEBUG SCAN START ===")
+        // console.log("[BT SERVICE] Bluetooth enabled:", bluetoothEnabled)
+        // console.log("[BT SERVICE] Currently scanning:", scanning)
+        // console.log("[BT SERVICE] Available devices count:", availableDevices.length)
+        // console.log("[BT SERVICE] Paired devices count:", pairedDevices.length)
+        // console.log("[BT SERVICE] Connected devices count:", connectedDevices.length)
         
         // Force a device list update
         updateDevices.running = true
         
         // Also test scan output parsing
-        console.log("[BT SERVICE] Testing scan output parsing...")
+        // console.log("[BT SERVICE] Testing scan output parsing...")
         let testOutput = "[NEW] Device AA:BB:CC:DD:EE:FF TestDevice\n[NEW] Media /org/bluez/hci0\nSupportedUUIDs: 0000110a-0000-1000-8000-00805f9b34fb"
         let testDevices = parseDeviceInfo(testOutput)
-        console.log("[BT SERVICE] Test parse result:", testDevices.length, "devices")
+        // console.log("[BT SERVICE] Test parse result:", testDevices.length, "devices")
         for (let i = 0; i < testDevices.length; i++) {
-            console.log(`[BT SERVICE] Test device ${i}:`, testDevices[i])
+            // console.log(`[BT SERVICE] Test device ${i}:`, testDevices[i])
         }
     }
 
@@ -326,12 +326,12 @@ Singleton {
         
         onRunningChanged: {
             if (!running) {
-                console.log("[BT SERVICE] Complete bluetoothctl devices output:", updateDevices.stdout.collectedOutput)
+                // console.log("[BT SERVICE] Complete bluetoothctl devices output:", updateDevices.stdout.collectedOutput)
                 let devices = root.parseDeviceInfo(updateDevices.stdout.collectedOutput)
-                console.log("[BT SERVICE] Parsed devices:", devices.length)
+                // console.log("[BT SERVICE] Parsed devices:", devices.length)
                 for (let i = 0; i < devices.length; i++) {
                     let d = devices[i]
-                    console.log(`[BT SERVICE] Device ${i}: name='${d.name}', address='${d.address}', connected=${d.connected}, paired=${d.paired}`)
+                    // console.log(`[BT SERVICE] Device ${i}: name='${d.name}', address='${d.address}', connected=${d.connected}, paired=${d.paired}`)
                 }
                 // Deduplicate by address
                 let uniqueDevices = [];
@@ -347,9 +347,9 @@ Singleton {
                 root.pairedDevices = devices.filter(d => d.paired && !d.connected)
                 root.connectedDevices = devices.filter(d => d.connected)
                 
-                console.log("[BT SERVICE] Available devices:", root.availableDevices.length)
-                console.log("[BT SERVICE] Paired devices:", root.pairedDevices.length)
-                console.log("[BT SERVICE] Connected devices:", root.connectedDevices.length)
+                // console.log("[BT SERVICE] Available devices:", root.availableDevices.length)
+                // console.log("[BT SERVICE] Paired devices:", root.pairedDevices.length)
+                // console.log("[BT SERVICE] Connected devices:", root.connectedDevices.length)
                 
                 // Update connected device info
                 if (root.connectedDevices.length > 0) {
@@ -375,7 +375,7 @@ Singleton {
         command: ["bash", "-c", "source /etc/environment && export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep -u $USER -f dbus-daemon)/environ | tr -d '\\0' | cut -d= -f2-) && bluetoothctl power on"]
         onRunningChanged: {
             if (!running) {
-                console.log("Bluetooth powered on")
+                // console.log("Bluetooth powered on")
                 update()
             }
         }
@@ -387,7 +387,7 @@ Singleton {
         command: ["bash", "-c", "source /etc/environment && export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep -u $USER -f dbus-daemon)/environ | tr -d '\\0' | cut -d= -f2-) && bluetoothctl power off"]
         onRunningChanged: {
             if (!running) {
-                console.log("Bluetooth powered off")
+                // console.log("Bluetooth powered off")
                 update()
             }
         }
@@ -399,7 +399,7 @@ Singleton {
         command: ["bash", "-c", "source /etc/environment && export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep -u $USER -f dbus-daemon)/environ | tr -d '\\0' | cut -d= -f2-) && bluetoothctl scan off"]
         onRunningChanged: {
             if (!running) {
-                console.log("Scan stopped")
+                // console.log("Scan stopped")
                 root.scanning = false
                 update()
             }
@@ -411,7 +411,7 @@ Singleton {
         id: connectDeviceProcess
         onRunningChanged: {
             if (!running) {
-                console.log("Connect command completed")
+                // console.log("Connect command completed")
                 update()
             }
         }
@@ -422,7 +422,7 @@ Singleton {
         id: disconnectDeviceProcess
         onRunningChanged: {
             if (!running) {
-                console.log("Disconnect command completed")
+                // console.log("Disconnect command completed")
                 update()
             }
         }
@@ -433,7 +433,7 @@ Singleton {
         id: pairDeviceProcess
         onRunningChanged: {
             if (!running) {
-                console.log("Pair command completed")
+                // console.log("Pair command completed")
                 update()
             }
         }
@@ -444,7 +444,7 @@ Singleton {
         id: removeDeviceProcess
         onRunningChanged: {
             if (!running) {
-                console.log("Remove command completed")
+                // console.log("Remove command completed")
                 update()
             }
         }

@@ -19,6 +19,8 @@ Scope {
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 8
     property bool pinned: false
+    property real slideOffset: 0
+    property bool isAnimating: false
 
     Loader {
         id: sidebarLoader
@@ -40,8 +42,10 @@ Scope {
             visible: sidebarLoader.active
 
             // Animation properties for slide effect
-            property real slideOffset: sidebarWidth
+            property real slideOffset: 0
             property bool isAnimating: false
+            property real x: 0
+            property real opacity: 1.0
 
             function hide() {
                 if (!pinned) {
@@ -118,6 +122,7 @@ Scope {
             // Initialize position when component is created
             Component.onCompleted: {
                 x = 0
+                opacity = 1.0
             }
 
             exclusiveZone: 0

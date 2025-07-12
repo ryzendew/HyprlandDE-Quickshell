@@ -66,15 +66,26 @@ QtObject {
 
     // Helper function to safely dispatch Hyprland commands
     function safeDispatch(command) {
+        // Skip Hyprland commands since layer rules are already defined in config
+        // This prevents the "Invalid dispatcher" warnings
+        if (command.includes("layerrule") || command.includes("setvar")) {
+            return;
+        }
+        
         if (!hyprlandAvailable) return;
         
         try {
+            // Check if Hyprland is actually available before sending commands
+            if (typeof Hyprland === 'undefined' || !Hyprland.dispatch) {
+                hyprlandAvailable = false;
+                return;
+            }
+            
+            // Only send non-layerrule commands
             Hyprland.dispatch(command);
         } catch (e) {
-            // If we get too many errors, assume Hyprland is not available
-            if (command.includes("setvar") && command.includes("decoration:blur")) {
-                hyprlandAvailable = false;
-            }
+            // If we get errors, assume Hyprland is not available or doesn't support these commands
+            console.log("Hyprland command failed:", command, e);
         }
     }
 
@@ -213,9 +224,13 @@ QtObject {
 
     // Apply initial settings
     Component.onCompleted: {
-        // Check if Hyprland is available by trying a simple command
+        // Check if Hyprland is available by checking if the object exists
         try {
-            Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
+            if (typeof Hyprland !== 'undefined' && Hyprland.dispatch) {
+                hyprlandAvailable = true;
+            } else {
+                hyprlandAvailable = false;
+            }
         } catch (e) {
             hyprlandAvailable = false;
         }

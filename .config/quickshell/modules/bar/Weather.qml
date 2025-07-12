@@ -2,12 +2,14 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "root:/modules/common"
-import Qt.labs.settings 1.1
+import QtCore
 
 Item {
     id: weatherWidget
     width: weatherRow.width
     height: parent.height
+    implicitWidth: weatherRow.implicitWidth
+    implicitHeight: 40
 
     property string weatherLocation: "auto"
     property var weatherData: ({
@@ -17,10 +19,16 @@ Item {
     })
     property int cacheDurationMs: 15 * 60 * 1000 // 15 minutes
     Settings {
-        id: weatherCache
+        id: weatherSettings
+        category: "weather"
+        property string apiKey: ""
+        property string city: ""
+        property string units: "metric"
+        property int updateInterval: 1800000 // 30 minutes
+        property bool enabled: true
         property string lastWeatherJson: ""
-        property double lastWeatherTimestamp: 0
         property string lastLocation: ""
+        property int lastWeatherTimestamp: 0
     }
 
     Timer {
@@ -31,9 +39,6 @@ Item {
     }
 
     Component.onCompleted: {
-        Qt.application.organizationName = "Quickshell";
-        Qt.application.organizationDomain = "quickshell.org";
-        Qt.application.name = "Quickshell";
         loadWeather();
     }
 
@@ -165,9 +170,9 @@ Item {
     function loadWeather() {
         var now = Date.now();
         var locationKey = weatherLocation.trim().toLowerCase();
-        if (weatherCache.lastWeatherJson && weatherCache.lastLocation === locationKey && (now - weatherCache.lastWeatherTimestamp) < cacheDurationMs) {
+        if (weatherSettings.lastWeatherJson && weatherSettings.lastLocation === locationKey && (now - weatherSettings.lastWeatherTimestamp) < weatherSettings.updateInterval) {
             // Use cached data
-            parseWeatherOpenMeteo(JSON.parse(weatherCache.lastWeatherJson));
+            parseWeatherOpenMeteo(JSON.parse(weatherSettings.lastWeatherJson));
             return;
         }
         
@@ -247,9 +252,9 @@ Item {
                                         var data = JSON.parse(xhr.responseText);
                                         var now = Date.now();
                                         var locationKey = weatherLocation.trim().toLowerCase();
-                                        weatherCache.lastWeatherJson = xhr.responseText;
-                                        weatherCache.lastWeatherTimestamp = now;
-                                        weatherCache.lastLocation = locationKey;
+                                        weatherSettings.lastWeatherJson = xhr.responseText;
+                                        weatherSettings.lastWeatherTimestamp = now;
+                                        weatherSettings.lastLocation = locationKey;
                                         parseWeatherOpenMeteo(data);
                                     } catch (e) {
                                         // console.log("[BAR WEATHER] Parse error:", e);
@@ -301,9 +306,9 @@ Item {
                         var data = JSON.parse(xhr.responseText);
                         var now = Date.now();
                         var locationKey = weatherLocation.trim().toLowerCase();
-                        weatherCache.lastWeatherJson = xhr.responseText;
-                        weatherCache.lastWeatherTimestamp = now;
-                        weatherCache.lastLocation = locationKey;
+                        weatherSettings.lastWeatherJson = xhr.responseText;
+                        weatherSettings.lastWeatherTimestamp = now;
+                        weatherSettings.lastLocation = locationKey;
                         parseWeatherOpenMeteo(data);
                     } catch (e) {
                         // console.log("[BAR WEATHER] Parse error:", e);

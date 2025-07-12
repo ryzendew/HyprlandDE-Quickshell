@@ -447,11 +447,14 @@ Item { // Player instance
                 }
 
                 // Show player icon when no album art is available
-                SystemIcon {
+                Image {
                     anchors.centerIn: parent
-                    iconName: playerController.getPlayerIcon()
-                    iconSize: 48
-                    iconColor: blendedColors.colOnSecondaryContainer
+                    width: 48
+                    height: 48
+                    source: "image://icon/" + (playerController.getPlayerIcon() || "multimedia-player")
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: true
                     visible: !playerController.downloaded || mediaArt.status !== Image.Ready
                 }
             }

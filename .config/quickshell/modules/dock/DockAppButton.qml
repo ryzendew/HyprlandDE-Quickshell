@@ -24,6 +24,8 @@ DockButton {
     property bool appIsActive: appToplevel.toplevels.find(t => (t.activated == true)) !== undefined
     property real mouseX: 0
     property real mouseY: 0
+    property var control: null
+    property var dockVisualBackground: null
 
     property bool isSeparator: appToplevel.appId === "SEPARATOR"
     property var desktopEntry: DesktopEntries.byId(appToplevel.appId)
@@ -80,8 +82,8 @@ DockButton {
         active: isSeparator
         anchors {
             fill: parent
-            topMargin: dockVisualBackground.margin + dockRow.padding + Appearance.rounding.normal
-            bottomMargin: dockVisualBackground.margin + dockRow.padding + Appearance.rounding.normal
+            topMargin: (dockVisualBackground ? dockVisualBackground.margin : 0) + (dockRow ? dockRow.padding : 0) + Appearance.rounding.normal
+            bottomMargin: (dockVisualBackground ? dockVisualBackground.margin : 0) + (dockRow ? dockRow.padding : 0) + Appearance.rounding.normal
         }
         sourceComponent: DockSeparator {}
     }
@@ -90,7 +92,7 @@ Menu {
     id: contextMenu
     palette {
         window: Qt.rgba(1, 1, 1, 0.08)      // dark background
-        windowText: Qt.rgb(255, 255, 255)   // white text
+        windowText: Qt.rgba(255, 255, 255, 0.08)   // white text
         button: Qt.rgba(1, 1, 1, 0.08)
         buttonText: Qt.rgba(1, 1, 1, 0.08)
         highlight: Qt.rgba(1, 1, 1, 0.08)
@@ -104,7 +106,7 @@ Menu {
             font.bold: true
         }
         background: Rectangle {
-            color: control.highlighted ? Qt.rgba(1, 1, 1, 0.08) : "transparent" // subtle white highlight
+            color: control ? control.highlighted ? Qt.rgba(1, 1, 1, 0.08) : "transparent" : "transparent" // subtle white highlight
             radius: 8 // rounded corners
         }
         // The rest of your onTriggered logic goes here

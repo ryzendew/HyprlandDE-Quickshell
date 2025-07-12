@@ -11,7 +11,7 @@ import Quickshell.Hyprland
 
 Item {
     id: root
-    property bool borderless: ConfigOptions.bar.borderless
+    property bool borderless: ConfigOptions.bar?.borderless ?? false
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || qsTr("No media")
 
@@ -93,7 +93,7 @@ Item {
             displayPosition = 0
             lastValidPosition = 0
             positionStartTime = Date.now()
-            console.log("[BarMedia] New track detected, resetting position")
+            // console.log("[BarMedia] New track detected, resetting position")
         }
     }
     
@@ -176,7 +176,7 @@ Item {
             
             // If we detect a jump of more than 3 seconds, it's likely seeking
             if (isValidJump && positionJump > 3) {
-                console.log("[BarMedia] Seeking detected! Jump from", lastValidPosition, "to", currentMprisPosition)
+                // console.log("[BarMedia] Seeking detected! Jump from", lastValidPosition, "to", currentMprisPosition)
                 displayPosition = Math.max(0, currentMprisPosition)
                 lastValidPosition = currentMprisPosition
                 positionStartTime = Date.now()
@@ -219,7 +219,7 @@ Item {
         interval: 2000  // Check every 2 seconds
         repeat: true
         onTriggered: {
-            console.log("[BarMedia] Retrying album art download for:", root.artUrl)
+            // console.log("[BarMedia] Retrying album art download for:", root.artUrl)
             if (root.artUrl && root.artUrl.length > 0 && root.artFilePath && root.artFilePath.length > 0) {
                 coverArtDownloader.running = true
             }
@@ -260,15 +260,15 @@ Item {
     }
 
     onArtUrlChanged: {
-        console.log("[BarMedia] Art URL changed to:", root.artUrl)
+        // console.log("[BarMedia] Art URL changed to:", root.artUrl)
         if (root.artUrl && root.artUrl.length > 0 && root.artFilePath && root.artFilePath.length > 0) {
             root.downloaded = false
-            console.log("[BarMedia] Starting download for:", root.artUrl)
-            console.log("[BarMedia] File path will be:", root.artFilePath)
+            // console.log("[BarMedia] Starting download for:", root.artUrl)
+            // console.log("[BarMedia] File path will be:", root.artFilePath)
             coverArtDownloader.running = true
         } else {
             root.downloaded = false
-            console.log("[BarMedia] No art URL provided or invalid file path")
+            // console.log("[BarMedia] No art URL provided or invalid file path")
         }
     }
 
@@ -277,12 +277,12 @@ Item {
         property string targetFile: root.artUrl
         command: [ "bash", "-c", `mkdir -p '${root.artDownloadLocation}' && curl -sSL --max-time 10 --retry 2 '${root.artUrl}' -o '${root.artFilePath}' && [ -s '${root.artFilePath}' ]` ]
         onExited: (exitCode, exitStatus) => {
-            console.log("[BarMedia] Download process exited with code:", exitCode)
+            // console.log("[BarMedia] Download process exited with code:", exitCode)
             if (exitCode === 0) {
-                console.log("[BarMedia] Download successful, setting downloaded = true")
+                // console.log("[BarMedia] Download successful, setting downloaded = true")
                 root.downloaded = true
             } else {
-                console.log("[BarMedia] Download failed for:", root.artUrl)
+                // console.log("[BarMedia] Download failed for:", root.artUrl)
                 root.downloaded = false
             }
         }
@@ -293,7 +293,7 @@ Item {
     Connections {
         target: activePlayer
         function onTrackArtUrlChanged() { 
-            console.log("[BarMedia] Track art URL changed via signal:", activePlayer?.trackArtUrl)
+            // console.log("[BarMedia] Track art URL changed via signal:", activePlayer?.trackArtUrl)
             root.artUrl = activePlayer?.trackArtUrl || "" 
         }
         function onTrackTitleChanged() { 
@@ -307,14 +307,14 @@ Item {
         }
         function onTrackAlbumChanged() {
             // Sometimes album art URL is updated when album info changes
-            console.log("[BarMedia] Track album changed, checking for art URL updates")
+            // console.log("[BarMedia] Track album changed, checking for art URL updates")
             if (activePlayer?.trackArtUrl && activePlayer.trackArtUrl !== root.artUrl) {
                 root.artUrl = activePlayer.trackArtUrl
             }
         }
         function onTrackArtistChanged() {
             // Sometimes album art URL is updated when artist info changes
-            console.log("[BarMedia] Track artist changed, checking for art URL updates")
+            // console.log("[BarMedia] Track artist changed, checking for art URL updates")
             if (activePlayer?.trackArtUrl && activePlayer.trackArtUrl !== root.artUrl) {
                 root.artUrl = activePlayer.trackArtUrl
             }
@@ -375,21 +375,24 @@ Item {
                 
                 onStatusChanged: {
                     if (status === Image.Error) {
-                        console.log("[BarMedia] Image load error for:", source)
+                        // console.log("[BarMedia] Image load error for:", source)
                         // Mark as not downloaded so the fallback icon shows
                         root.downloaded = false
                     } else if (status === Image.Ready) {
-                        console.log("[BarMedia] Successfully loaded album art:", source)
+                        // console.log("[BarMedia] Successfully loaded album art:", source)
                     }
                 }
             }
             
             // Show player icon when no album art is available
-            SystemIcon {
+            Image {
                 anchors.centerIn: parent
-                iconName: root.getPlayerIcon()
-                iconSize: 20
-                iconColor: Appearance.m3colors.m3onSecondaryContainer
+                width: 20
+                height: 20
+                source: "image://icon/" + (root.getPlayerIcon() || "multimedia-player")
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true
                 visible: !root.downloaded || albumArtContainer.children[0].status !== Image.Ready
             }
         }

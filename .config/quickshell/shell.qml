@@ -28,8 +28,19 @@ import "./services/"
 ShellRoot {
     id: root
     
-    // Enable/disable modules here. False = not loaded at all, so rest assured
-    // no unnecessary stuff will take up memory if you decide to only use, say, the overview.
+    // Configure QSettings
+    Component.onCompleted: {
+        Qt.application.organizationName = "Quickshell"
+        Qt.application.organizationDomain = "quickshell.org"
+        Qt.application.applicationName = "Quickshell"
+        
+        // Force initialization of some singletons
+        MaterialThemeLoader.reapplyTheme()
+        ConfigLoader.loadConfig()
+        PersistentStateManager.loadStates()
+        Cliphist.refresh()
+        FirstRunExperience.load()
+    }
     property bool enableBar: true
     property bool enableCheatsheet: true
     property bool enableDock: ConfigOptions.dock.enable
@@ -47,15 +58,6 @@ ShellRoot {
     property bool enableSidebarRight: true
     property bool enableSidebarLeft: true
     property bool enableHyprMenu: true
-
-    // Force initialization of some singletons
-    Component.onCompleted: {
-        MaterialThemeLoader.reapplyTheme()
-        ConfigLoader.loadConfig()
-        PersistentStateManager.loadStates()
-        Cliphist.refresh()
-        FirstRunExperience.load()
-    }
 
     // Weather service for widgets
     property var weatherService: Weather {

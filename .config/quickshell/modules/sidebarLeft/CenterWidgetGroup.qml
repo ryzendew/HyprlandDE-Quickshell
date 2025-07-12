@@ -23,7 +23,8 @@ Rectangle {
     property int selectedTab: 0
     property var tabButtonList: [
         {"icon": "wifi", "name": qsTr("WiFi")},
-        {"icon": "bluetooth", "name": qsTr("Bluetooth")}
+        {"icon": "bluetooth", "name": qsTr("Bluetooth")},
+        {"icon": "settings", "name": qsTr("System Status")}
     ]
 
     Keys.onPressed: (event) => {
@@ -70,6 +71,7 @@ Rectangle {
                 switch(root.selectedTab) {
                     case 0: return wifiComponent;
                     case 1: return bluetoothComponent;
+                    case 2: return fanControlComponent;
                     default: return wifiComponent;
                 }
             }
@@ -77,5 +79,6 @@ Rectangle {
 
         Component { id: wifiComponent; WifiPage {} }
         Component { id: bluetoothComponent; BluetoothPage {} }
+        Component { id: fanControlComponent; FanControlPage {} }
     }
 } 

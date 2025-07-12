@@ -43,39 +43,63 @@ Item {
         }
 
         model: ScriptModel {
-            objectProp: "appId"
+            objectProp: "desktopId"
             values: {
-                var map = new Map();
-
-                // Pinned apps
+                var values = [];
                 const pinnedApps = ConfigOptions?.dock.pinnedApps ?? [];
+                // 1. Pinned apps: preserve order, robust matching
                 for (const appId of pinnedApps) {
-                    if (!map.has(appId.toLowerCase())) map.set(appId.toLowerCase(), ({
+                    var appObj = AppSearch.list.find(a =>
+                        (a.desktopId && a.desktopId.toLowerCase() === appId.toLowerCase()) ||
+                        (a.exec && a.exec.toLowerCase().includes(appId.toLowerCase())) ||
+                        (a.name && a.name.toLowerCase() === appId.toLowerCase())
+                    );
+                    if (!appObj) {
+                        // Fallback: minimal object
+                        appObj = {
+                            desktopId: appId,
+                            name: appId,
+                            icon: AppSearch.guessIcon(appId),
+                            iconUrl: null,
                         pinned: true,
                         toplevels: []
-                    }));
+                        };
+                    } else {
+                        appObj = Object.assign({}, appObj, { pinned: true, toplevels: [] });
+                    }
+                    values.push(appObj);
                 }
-
-                // Separator
+                // 2. Separator if needed
                 if (pinnedApps.length > 0) {
-                    map.set("SEPARATOR", { pinned: false, toplevels: [] });
+                    values.push({ desktopId: "SEPARATOR", name: "", icon: "", iconUrl: null, pinned: false, toplevels: [] });
                 }
-                
-                // Open windows
+                // 3. Running (unpinned) apps: robust matching, skip if already in pinned
+                var pinnedSet = new Set(pinnedApps.map(a => a.toLowerCase()));
                 for (const toplevel of ToplevelManager.toplevels.values) {
-                    if (!map.has(toplevel.appId.toLowerCase())) map.set(toplevel.appId.toLowerCase(), ({
+                    // Try to find DesktopEntry for this window
+                    var appObj = AppSearch.list.find(a =>
+                        (a.desktopId && a.desktopId.toLowerCase() === toplevel.appId.toLowerCase()) ||
+                        (a.exec && a.exec.toLowerCase().includes(toplevel.appId.toLowerCase())) ||
+                        (a.name && a.name.toLowerCase() === toplevel.appId.toLowerCase())
+                    );
+                    // Skip if already in pinned
+                    if (pinnedSet.has(toplevel.appId.toLowerCase())) continue;
+                    if (!appObj) {
+                        // Fallback: minimal object
+                        appObj = {
+                            desktopId: toplevel.appId,
+                            name: toplevel.appId,
+                            icon: AppSearch.guessIcon(toplevel.appId),
+                            iconUrl: null,
                         pinned: false,
                         toplevels: []
-                    }));
-                    map.get(toplevel.appId.toLowerCase()).toplevels.push(toplevel);
+                        };
+                    } else {
+                        appObj = Object.assign({}, appObj, { pinned: false, toplevels: [] });
+                    }
+                    appObj.toplevels = [toplevel];
+                    values.push(appObj);
                 }
-
-                var values = [];
-
-                for (const [key, value] of map) {
-                    values.push({ appId: key, toplevels: value.toplevels, pinned: value.pinned });
-                }
-
                 return values;
             }
         }
@@ -218,7 +242,7 @@ Item {
                                     }
                                     GroupButton {
                                         id: closeButton
-                                        colBackground: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer)
+                                        colBackground: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer) ?? Qt.rgba(0, 0, 0, 0.1)
                                         baseWidth: windowControlsHeight
                                         baseHeight: windowControlsHeight
                                         buttonRadius: Appearance.rounding.full

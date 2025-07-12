@@ -34,12 +34,9 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        // Check if Hyprland is available
-        try {
-            Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
-        } catch (e) {
-            hyprlandAvailable = false;
-        }
+        // Skip Hyprland availability test since it causes warnings
+        // Assume Hyprland is available since config is set up
+        hyprlandAvailable = true;
     }
     
     // Mouse area only for the indicators section
@@ -128,10 +125,10 @@ Rectangle {
                     color: "transparent"
                     visible: Network.networkType === "wifi"
 
-                    SystemIcon {
+                    Image {
                         id: wifiIcon
                         anchors.fill: parent
-                        iconName: Network.wifiEnabled ? (
+                        source: "image://icon/" + (Network.wifiEnabled ? (
                             Network.networkStrength >= 90 ? "network-wireless-signal-excellent" :
                             Network.networkStrength >= 80 ? "network-wireless-signal-good" :
                             Network.networkStrength >= 65 ? "network-wireless-signal-ok" :
@@ -139,18 +136,11 @@ Rectangle {
                             Network.networkStrength >= 25 ? "network-wireless-signal-none" :
                             Network.networkStrength >= 10 ? "network-wireless-signal-none" :
                             "network-wireless-signal-none"
-                        ) : "network-wireless-offline"
-                        iconSize: parent.width
-                        iconColor: Appearance.colors.colOnLayer0
-                        fallbackIcon: "network-wireless"
+                        ) : "network-wireless-offline") || "network-wireless"
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
                         opacity: Network.wifiEnabled ? 1.0 : 0.5
-                    
-                        Behavior on iconName {
-                            PropertyAnimation {
-                            duration: Appearance.animation.elementMoveFast.duration
-                            easing.type: Appearance.animation.elementMoveFast.type
-                        }
-                    }
                     }
 
                     MouseArea {

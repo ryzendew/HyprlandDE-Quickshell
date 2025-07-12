@@ -8,12 +8,12 @@ import Quickshell.Services.UPower
 
 Rectangle {
     id: root
-    property bool borderless: ConfigOptions.bar.borderless
+    property bool borderless: ConfigOptions.bar?.borderless || false
     readonly property var chargeState: UPower.displayDevice.state
     readonly property bool isCharging: chargeState == UPowerDeviceState.Charging
     readonly property bool isPluggedIn: isCharging || chargeState == UPowerDeviceState.PendingCharge
     readonly property real percentage: UPower.displayDevice.percentage
-    readonly property bool isLow: percentage <= ConfigOptions.battery.low / 100
+    readonly property bool isLow: percentage <= (ConfigOptions.battery?.low || 20) / 100
     readonly property color batteryLowBackground: Appearance.m3colors.darkmode ? Appearance.m3colors.m3error : Appearance.m3colors.m3errorContainer
     readonly property color batteryLowOnBackground: Appearance.m3colors.darkmode ? Appearance.m3colors.m3errorContainer : Appearance.m3colors.m3error
 

@@ -263,11 +263,14 @@ Scope {
                             }
                             
                             // Fallback icon when no album art
-                            SystemIcon {
+                            Image {
                                 anchors.centerIn: parent
-                                iconName: root.getPlayerIcon()
-                                iconSize: 120
-                                iconColor: "#ffffff"
+                                width: 120
+                                height: 120
+                                source: "image://icon/" + (root.getPlayerIcon() || "multimedia-player")
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
                                 visible: !root.downloaded || albumArtContainer.children[0].status !== Image.Ready
                             }
                         }

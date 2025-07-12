@@ -183,11 +183,14 @@ Rectangle {
                 visible: root.downloaded && status === Image.Ready
                 onStatusChanged: { if (status === Image.Error) root.downloaded = false }
             }
-            SystemIcon {
+            Image {
                 anchors.centerIn: parent
-                iconName: "music_note"
-                iconSize: 48
-                iconColor: "#ffffff"
+                width: 48
+                height: 48
+                source: "image://icon/music_note"
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true
                 visible: !root.downloaded || albumArtContainer.children[0].status !== Image.Ready
             }
         }

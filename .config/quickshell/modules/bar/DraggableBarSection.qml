@@ -11,7 +11,7 @@ RowLayout {
     property string section: "left" // "left", "right", "center"
     property var moduleManager: null
     property var bar: null
-    property bool enableDragAndDrop: ConfigOptions.bar.modules.enableDragAndDrop
+    property bool enableDragAndDrop: ConfigOptions.bar?.modules?.enableDragAndDrop || false
     
     // Layout properties
     spacing: section === "center" ? 8 : 10

@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt.labs.settings 1.1
+import QtCore
 
 // Weather service (Open-Meteo API)
 Item {
@@ -22,16 +22,16 @@ Item {
     
     // Settings for caching
     Settings {
-        id: weatherCache
+        id: weatherSettings
+        category: "weather"
+        property string apiKey: ""
+        property string city: ""
+        property string units: "metric"
+        property int updateInterval: 1800000 // 30 minutes
+        property bool enabled: true
         property string lastWeatherJson: ""
-        property double lastWeatherTimestamp: 0
         property string lastLocation: ""
-        
-        Component.onCompleted: {
-            Qt.application.organizationName = "Quickshell";
-            Qt.application.organizationDomain = "quickshell.org";
-            Qt.application.name = "Quickshell";
-        }
+        property int lastWeatherTimestamp: 0
     }
     
     // Initialize on component completion
@@ -57,11 +57,11 @@ Item {
         var locationKey = location ? location.trim().toLowerCase() : "auto";
         
         // Use cached data if available and fresh
-        if (weatherCache.lastWeatherJson && 
-            weatherCache.lastLocation === locationKey && 
-            (now - weatherCache.lastWeatherTimestamp) < cacheDurationMs) {
+        if (weatherSettings.lastWeatherJson && 
+            weatherSettings.lastLocation === locationKey && 
+            (now - weatherSettings.lastWeatherTimestamp) < cacheDurationMs) {
             try {
-                parseWeather(JSON.parse(weatherCache.lastWeatherJson));
+                parseWeather(JSON.parse(weatherSettings.lastWeatherJson));
                 // console.log("Using cached weather data")
                 return;
             } catch (e) {
@@ -225,9 +225,9 @@ Item {
                         var data = JSON.parse(_xhr.responseText);
                         
                         // Cache the response
-                        weatherCache.lastWeatherJson = _xhr.responseText;
-                        weatherCache.lastWeatherTimestamp = Date.now();
-                        weatherCache.lastLocation = location.trim().toLowerCase();
+                        weatherSettings.lastWeatherJson = _xhr.responseText;
+                        weatherSettings.lastWeatherTimestamp = Date.now();
+                        weatherSettings.lastLocation = location.trim().toLowerCase();
                         
                         // Parse the weather data
                         parseWeather(data, locationDisplay);
@@ -337,8 +337,8 @@ Item {
     }
     
     function clearCache() {
-        weatherCache.lastWeatherJson = "";
-        weatherCache.lastWeatherTimestamp = 0;
-        weatherCache.lastLocation = "";
+        weatherSettings.lastWeatherJson = "";
+        weatherSettings.lastWeatherTimestamp = 0;
+        weatherSettings.lastLocation = "";
     }
 } 

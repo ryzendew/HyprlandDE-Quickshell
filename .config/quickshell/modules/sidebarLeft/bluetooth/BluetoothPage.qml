@@ -8,7 +8,7 @@ import QtQuick.Layouts
 import Quickshell
 import "../"
 import Quickshell.Io
-import "../../../../helpers/BluetoothManager.qml" as BluetoothManager
+import "../../../helpers/BluetoothManager.qml" as BluetoothManager
 
 Rectangle {
     id: root
@@ -63,11 +63,11 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        console.log('[BT SIMPLE TEST] Using custom Bluetooth service')
-        console.log('[BT SIMPLE TEST] Bluetooth.bluetoothEnabled:', Bluetooth.bluetoothEnabled)
-        console.log('[BT SIMPLE TEST] Connected devices:', Bluetooth.connectedDevices.length)
-        console.log('[BT SIMPLE TEST] Available devices:', Bluetooth.availableDevices.length)
-        console.log('[BT SIMPLE TEST] Paired devices:', Bluetooth.pairedDevices.length)
+//         console.log('[BT SIMPLE TEST] Using custom Bluetooth service')
+//         console.log('[BT SIMPLE TEST] Bluetooth.bluetoothEnabled:', Bluetooth.bluetoothEnabled)
+//         console.log('[BT SIMPLE TEST] Connected devices:', Bluetooth.connectedDevices.length)
+//         console.log('[BT SIMPLE TEST] Available devices:', Bluetooth.availableDevices.length)
+//         console.log('[BT SIMPLE TEST] Paired devices:', Bluetooth.pairedDevices.length)
         // Do not auto-start scan
         refreshDevices();
     }
@@ -78,21 +78,19 @@ Rectangle {
         running: true
         repeat: true
         onTriggered: {
-            console.log("[BT DEBUG] Bluetooth.bluetoothEnabled:", Bluetooth.bluetoothEnabled, "scanning:", Bluetooth.scanning)
-            console.log("[BT DEBUG] Connected devices:", Bluetooth.connectedDevices.length)
-            console.log("[BT DEBUG] Available devices:", Bluetooth.availableDevices.length)
-            console.log("[BT DEBUG] Paired devices:", Bluetooth.pairedDevices.length)
-            
+//             console.log("[BT DEBUG] Bluetooth.bluetoothEnabled:", Bluetooth.bluetoothEnabled, "scanning:", Bluetooth.scanning)
+//             console.log("[BT DEBUG] Connected devices:", Bluetooth.connectedDevices.length)
+//             console.log("[BT DEBUG] Available devices:", Bluetooth.availableDevices.length)
+//             console.log("[BT DEBUG] Paired devices:", Bluetooth.pairedDevices.length)
             // Log connected devices
             for (let i = 0; i < Bluetooth.connectedDevices.length; ++i) {
                 let d = Bluetooth.connectedDevices[i]
-                console.log(`[BT DEBUG] Connected Device ${i}: name='${d.name}', address='${d.address}', type='${d.type}'`)
+//                 console.log(`[BT DEBUG] Connected Device ${i}: name='${d.name}', address='${d.address}', type='${d.type}'`)
             }
-            
             // Log available devices
             for (let i = 0; i < Bluetooth.availableDevices.length; ++i) {
                 let d = Bluetooth.availableDevices[i]
-                console.log(`[BT DEBUG] Available Device ${i}: name='${d.name}', address='${d.address}', type='${d.type}'`)
+//                 console.log(`[BT DEBUG] Available Device ${i}: name='${d.name}', address='${d.address}', type='${d.type}'`)
             }
         }
     }

@@ -64,16 +64,9 @@ Scope {
 
     // Initial blur setup
     Component.onCompleted: {
-        // Check if Hyprland is available
-        try {
-            Hyprland.dispatch("keyword monitor,desc:dummy,disabled");
-        } catch (e) {
-            hyprlandAvailable = false;
-        }
-        
-        if (hyprlandAvailable) {
-            AppearanceSettingsState.updateBarBlurSettings()
-        }
+        // Skip Hyprland availability test since it causes warnings
+        // The blur settings are already configured in Hyprland config files
+        hyprlandAvailable = true; // Assume available since config is set up
     }
 
     component VerticalBarSeparator: Rectangle {
@@ -369,32 +362,32 @@ Scope {
                                             }
                                             
                                             onWheel: function(wheel) {
-                                                console.log("Volume scroll detected:", wheel.angleDelta.y)
+                                                // console.log("Volume scroll detected:", wheel.angleDelta.y)
                                                 if (Audio.sink?.audio) {
                                                     var currentVolume = Audio.sink.audio.volume;
-                                                    console.log("Current volume before change:", currentVolume)
+                                                    // console.log("Current volume before change:", currentVolume)
                                                     
                                                     var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05  // 5% steps
                                                     var newVolume = Math.max(0, Math.min(1, currentVolume + delta))
                                                     
-                                                    console.log("Calculated new volume:", newVolume)
-                                                    console.log("Setting Audio.sink.audio.volume to:", newVolume)
+                                                    // console.log("Calculated new volume:", newVolume)
+                                                    // console.log("Setting Audio.sink.audio.volume to:", newVolume)
                                                     
                                                     // Try different methods to set volume
                                                     if (typeof Audio.sink.audio.setVolume === 'function') {
-                                                        console.log("Using setVolume method")
+                                                        // console.log("Using setVolume method")
                                                         Audio.sink.audio.setVolume(newVolume)
                                                     } else {
-                                                        console.log("Using direct property assignment")
+                                                        // console.log("Using direct property assignment")
                                                         Audio.sink.audio.volume = newVolume
                                                     }
                                                     
                                                     // Check if it actually changed
                                                     Qt.callLater(() => {
-                                                        console.log("Volume after setting:", Audio.sink.audio.volume)
+                                                        // console.log("Volume after setting:", Audio.sink.audio.volume)
                                                     })
                                                 } else {
-                                                    console.log("No audio sink available")
+                                                    // console.log("No audio sink available")
                                             }
                                         }
                                         }
@@ -430,32 +423,32 @@ Scope {
                                             }
                                             
                                             onWheel: function(wheel) {
-                                                console.log("Volume scroll detected:", wheel.angleDelta.y)
+                                                // console.log("Volume scroll detected:", wheel.angleDelta.y)
                                                 if (Audio.sink?.audio) {
                                                     var currentVolume = Audio.sink.audio.volume;
-                                                    console.log("Current volume before change:", currentVolume)
+                                                    // console.log("Current volume before change:", currentVolume)
                                                     
                                                     var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05  // 5% steps
                                                     var newVolume = Math.max(0, Math.min(1, currentVolume + delta))
                                                     
-                                                    console.log("Calculated new volume:", newVolume)
-                                                    console.log("Setting Audio.sink.audio.volume to:", newVolume)
+                                                    // console.log("Calculated new volume:", newVolume)
+                                                    // console.log("Setting Audio.sink.audio.volume to:", newVolume)
                                                     
                                                     // Try different methods to set volume
                                                     if (typeof Audio.sink.audio.setVolume === 'function') {
-                                                        console.log("Using setVolume method")
+                                                        // console.log("Using setVolume method")
                                                         Audio.sink.audio.setVolume(newVolume)
                                                     } else {
-                                                        console.log("Using direct property assignment")
+                                                        // console.log("Using direct property assignment")
                                                         Audio.sink.audio.volume = newVolume
                                                     }
                                                     
                                                     // Check if it actually changed
                                                     Qt.callLater(() => {
-                                                        console.log("Volume after setting:", Audio.sink.audio.volume)
+                                                        // console.log("Volume after setting:", Audio.sink.audio.volume)
                                                     })
                                                 } else {
-                                                    console.log("No audio sink available")
+                                                    // console.log("No audio sink available")
                                                 }
                                             }
                                         }
@@ -486,17 +479,17 @@ Scope {
                                             }
                                             
                                             onWheel: function(wheel) {
-                                                console.log("=== MIC MUTED SCROLL ===")
+                                                // console.log("=== MIC MUTED SCROLL ===")
                                                 if (Audio.source?.audio) {
                                                     var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05
                                                     var newVol = Math.max(0, Math.min(1, Audio.source.audio.volume + delta))
-                                                    console.log("Setting mic volume to:", newVol)
+                                                    // console.log("Setting mic volume to:", newVol)
                                                     Audio.source.audio.volume = newVol
                                                     
                                                     // Trigger microphone OSD
                                                     Hyprland.dispatch("global quickshell:osdMicrophone:trigger")
                                                 } else {
-                                                    console.log("No mic")
+                                                    // console.log("No mic")
                                             }
                                         }
                                         }
@@ -526,17 +519,17 @@ Scope {
                                             }
                                             
                                             onWheel: function(wheel) {
-                                                console.log("=== MIC ACTIVE SCROLL ===")
+                                                // console.log("=== MIC ACTIVE SCROLL ===")
                                                 if (Audio.source?.audio) {
                                                     var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05
                                                     var newVol = Math.max(0, Math.min(1, Audio.source.audio.volume + delta))
-                                                    console.log("Setting mic volume to:", newVol)
+                                                    // console.log("Setting mic volume to:", newVol)
                                                     Audio.source.audio.volume = newVol
                                                     
                                                     // Trigger microphone OSD
                                                     Hyprland.dispatch("global quickshell:osdMicrophone:trigger")
                                                 } else {
-                                                    console.log("No mic")
+                                                    // console.log("No mic")
                                         }
                                     }
                                         }
@@ -563,16 +556,16 @@ Scope {
                                             }
                                             
                                             onWheel: function(wheel) {
-                                                console.log("Brightness scroll detected:", wheel.angleDelta.y)
+                                                // console.log("Brightness scroll detected:", wheel.angleDelta.y)
                                                 if (barRoot.brightnessMonitor?.ready) {
                                                     var currentBrightness = barRoot.brightnessMonitor.brightness;
-                                                    console.log("Current brightness before change:", currentBrightness)
+                                                    // console.log("Current brightness before change:", currentBrightness)
                                                     
                                                     var delta = wheel.angleDelta.y > 0 ? 0.05 : -0.05  // 5% steps
                                                     var newBrightness = Math.max(0.01, Math.min(1, currentBrightness + delta))
                                                     
-                                                    console.log("Calculated new brightness:", newBrightness)
-                                                    console.log("Setting brightness to:", newBrightness)
+                                                    // console.log("Calculated new brightness:", newBrightness)
+                                                    // console.log("Setting brightness to:", newBrightness)
                                                     
                                                     barRoot.brightnessMonitor.setBrightness(newBrightness)
                                                     
@@ -581,10 +574,10 @@ Scope {
                                                     
                                                     // Check if it actually changed
                                                     Qt.callLater(() => {
-                                                        console.log("Brightness after setting:", barRoot.brightnessMonitor.brightness)
+                                                        // console.log("Brightness after setting:", barRoot.brightnessMonitor.brightness)
                                                     })
                                                 } else {
-                                                    console.log("No brightness monitor available")
+                                                    // console.log("No brightness monitor available")
                                                 }
                                             }
                                         }
@@ -613,8 +606,9 @@ Scope {
 
                             Item {
                                 width: 120 // Reserve more space for weather
+                                height: 40 // Ensure proper height
                                 Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
-                                visible: ConfigOptions.bar.weather.enable
+                                visible: ConfigOptions.bar?.weather?.enable || false
                                 BarComponents.Weather {
                                     anchors.centerIn: parent
                                     weatherLocation: "Halifax"

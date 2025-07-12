@@ -10,6 +10,7 @@ import Quickshell.Widgets
 Item {
     id: root
     property list<NotificationWidget> notificationWidgetList: []
+    property int maxNotifications: ConfigOptions.notifications ? ConfigOptions.notifications.maxCount : 10
 
     // Signal handlers to add/remove notifications
     Connections {
@@ -129,11 +130,11 @@ Item {
                     Item { Layout.fillWidth: true }
 
                     StyledText {
-                        text: `${notificationWidgetList.length} notification${notificationWidgetList.length > 1 ? "s" : ""}`
+                        text: `${(notificationWidgetList?.length ?? 0)} notification${(notificationWidgetList?.length ?? 0) > 1 ? "s" : ""}`
                         font.pixelSize: Appearance.font.pixelSize.tiny
                         color: Appearance.colors.colOnLayer1
                         opacity: 0.7
-                        visible: notificationWidgetList.length > 0
+                        visible: (notificationWidgetList?.length ?? 0) > 0
                     }
 
                     NotificationStatusButton {
@@ -167,8 +168,7 @@ Item {
 
                         ColumnLayout {
                             id: columnLayout
-                            anchors.left: parent.left
-                            anchors.right: parent.right
+                            width: parent.width
                             spacing: 0
 
                             // Notifications are added by the above signal handlers
@@ -179,7 +179,7 @@ Item {
                     Item {
                         anchors.fill: flickable
                         visible: opacity > 0
-                        opacity: (root.notificationWidgetList.length === 0) ? 1 : 0
+                        opacity: (root.notificationWidgetList ? root.notificationWidgetList.length : 0) === 0 ? 1 : 0
 
                         Behavior on opacity {
                             NumberAnimation {
@@ -225,24 +225,4 @@ Item {
         //     }
         // }
     }
-
-    // Placeholder when list is empty
-    Item {
-        anchors.fill: flickable
-
-        visible: opacity > 0
-        opacity: (root.notificationWidgetList.length === 0) ? 1 : 0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Appearance.animation.menuDecel.duration
-                easing.type: Appearance.animation.menuDecel.type
-            }
-        }
-
-        
-        
-    }
-
-
 }

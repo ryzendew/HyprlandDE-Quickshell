@@ -10,20 +10,20 @@ Item {
     width: 30
     height: 30
     
-    SystemIcon {
+    Image {
         id: iconImage
         anchors.fill: parent
-        iconName: {
-            var potentialPath = "";
+        source: {
             if (root.source && root.source.startsWith("/")) {
-                potentialPath = root.source;
+                return root.source;
             } else if (iconFolder && root.source) {
-                potentialPath = root.source;
+                return root.source;
             } else {
-                potentialPath = root.source;
+                return "image://icon/" + (root.source || "application-x-executable");
             }
-            return potentialPath;
         }
-        iconSize: Math.min(root.width, root.height)
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+        mipmap: true
     }
 }

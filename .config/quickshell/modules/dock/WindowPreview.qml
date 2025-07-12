@@ -221,17 +221,14 @@ PanelWindow {
                             }
                             
                             // Window icon
-                            SystemIcon {
+                            Image {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                iconSize: 32
-                                iconName: {
-                                    if (windowData.class) {
-                                        // Use a simple icon mapping instead of AppSearch
-                                        return windowData.class.toLowerCase();
-                                    }
-                                    return "window";
-                                }
-                                iconColor: "transparent"
+                                width: 32
+                                height: 32
+                                source: "image://icon/" + (windowData.class ? windowData.class.toLowerCase() : "window")
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
                             }
                             
                             // Window title

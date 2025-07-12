@@ -703,10 +703,10 @@ Scope {
             Component.onCompleted: {
                 updateFilteredApps()
                 // Connect to the global signal for manual refresh
-                GlobalSignals.connect(Quickshell, "hyprmenuRefreshApps", () => {
-                    // console.log("[HYPRMENU] Manual refresh requested")
-                    refreshApps()
-                })
+                // GlobalSignals.connect(Quickshell, "hyprmenuRefreshApps", () => {
+                //     // console.log("[HYPRMENU] Manual refresh requested")
+                //     refreshApps()
+                // })
             }
             
             // Close on escape key

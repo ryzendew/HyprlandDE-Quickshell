@@ -9,7 +9,8 @@ import Quickshell.Services.UPower
 Singleton {
     // Basic battery detection
     property bool available: UPower.displayDevice.isLaptopBattery || hasBatteryDevices
-    property bool hasBatteryDevices: UPower.devices.some(device => device.isLaptopBattery)
+    // Fix remaining array operation errors with better null checks
+    property bool hasBatteryDevices: UPower.devices && UPower.devices.length > 0 ? UPower.devices.some(device => device && device.isLaptopBattery) : false
     
     // Primary battery (display device)
     property var primaryBattery: UPower.displayDevice
@@ -31,8 +32,8 @@ Singleton {
     property string timeToFull: primaryBattery.timeToFull > 0 ? formatTime(primaryBattery.timeToFull) : ""
     
     // Multiple battery support
-    property var allBatteries: UPower.devices.filter(device => device.isLaptopBattery)
-    property int batteryCount: allBatteries.length
+    property var allBatteries: UPower.devices && UPower.devices.length > 0 ? UPower.devices.filter(device => device && device.isLaptopBattery) : []
+    property int batteryCount: allBatteries ? allBatteries.length : 0
     property real averagePercentage: batteryCount > 0 ? 
         allBatteries.reduce((sum, battery) => sum + battery.percentage, 0) / batteryCount : 0
     

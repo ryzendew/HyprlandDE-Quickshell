@@ -4,10 +4,15 @@
     "org.gnome.Nautilus",
     "vesktop",
     "cider",
+    "Cider.desktop",
     "steam-native",
     "lutris",
     "heroic",
-    "obs"
+    "obs",
+    "com.blackmagicdesign.resolve.desktop",
+    "net.lutris.davinci-resolve-studio-20-1.desktop",
+    "AffinityPhoto.desktop",
+    "ptyxis"
   ],
   "autoHide": false
 }

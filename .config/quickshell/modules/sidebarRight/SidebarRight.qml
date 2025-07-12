@@ -24,10 +24,14 @@ Scope {
     property string currentSystemProfile: ""
     property bool showBluetoothDialog: false
     property bool pinned: false
+    property real slideOffset: 0
+    property bool isAnimating: false
+    // Fix undefined QUrl assignments with default values
+    property url wallpaperUrl: ConfigOptions.appearance?.wallpaper ?? ""
 
     // Refresh system profile from powerprofilesctl
     function refreshSystemProfile() {
-        getProfileProcess.start()
+        getProfileProcess.running = true
     }
 
     Process {
@@ -47,7 +51,7 @@ Scope {
 
     Connections {
         target: PowerProfiles
-        onProfileChanged: {
+        function onProfileChanged() {
             console.log("[Sidebar] PowerProfiles.profile changed:", PowerProfiles.profile)
             refreshSystemProfile()
         }
@@ -65,7 +69,7 @@ Scope {
             visible: sidebarLoader.active
 
             // Animation properties for slide effect
-            property real slideOffset: sidebarWidth
+            property real slideOffset: 0
             property bool isAnimating: false
 
             function hide() {
@@ -143,6 +147,7 @@ Scope {
             // Initialize position when component is created
             Component.onCompleted: {
                 x = 0
+                opacity = 1.0
             }
 
             exclusiveZone: 0
@@ -507,15 +512,11 @@ Scope {
         active: showBluetoothDialog
         visible: showBluetoothDialog
         z: 9999
-        source: showBluetoothDialog ? "quickToggles/BluetoothConnectModule.qml" : undefined
+        source: showBluetoothDialog ? "quickToggles/BluetoothConnectModule.qml" : ""
         onStatusChanged: {
             if (status === Loader.Error) {
                 console.log("Bluetooth dialog failed to load:", errorString);
             }
         }
-    }
-    Connections {
-        target: bluetoothToggle
-        onRequestBluetoothDialog: showBluetoothDialog = true
     }
 }

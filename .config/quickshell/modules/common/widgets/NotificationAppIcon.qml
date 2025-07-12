@@ -33,14 +33,15 @@ Rectangle {
     radius: Appearance.rounding.full
     color: Appearance.m3colors.m3secondaryContainer
 
-    SystemIcon {
+    Image {
         id: icon
         anchors.centerIn: parent
         width: parent.width * 0.8
         height: parent.height * 0.8
-        iconName: root.iconName
-        fallbackIcon: root.fallbackIcon
-        iconColor: Appearance.colors.colOnLayer2
+        source: "image://icon/" + (root.iconName || root.fallbackIcon)
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+        mipmap: true
     }
 
     Loader {

@@ -5,7 +5,8 @@ import QtQuick
 import QtQuick.Layouts
 
 Rectangle {
-    property bool borderless: ConfigOptions.bar.borderless
+    property bool borderless: ConfigOptions.bar?.borderless ?? false
+    property bool showSeconds: ConfigOptions.clock?.showSeconds ?? false
     implicitWidth: colLayout.implicitWidth + 2.1
     implicitHeight: 28
     color: "transparent"
