@@ -61,10 +61,10 @@ Singleton {
     // Function to refresh the desktop database
     function refresh() {
         return new Promise((resolve, reject) => {
-            // For now, just trigger the signal to update the UI
-            // The actual desktop database update would need to be done externally
-            console.log("[APPSEARCH] Refreshing application list...")
-            root.applicationsRefreshed()
+                    // For now, just trigger the signal to update the UI
+        // The actual desktop database update would need to be done externally
+        // console.log("[APPSEARCH] Refreshing application list...")
+        root.applicationsRefreshed()
             
             // Small delay to ensure UI updates
             Qt.callLater(() => {

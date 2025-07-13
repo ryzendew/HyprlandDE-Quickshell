@@ -20,7 +20,7 @@ ColumnLayout {
         command: ["bash", "-c", FileUtils.trimFileProtocol(`${Directories.config}/quickshell/scripts/colors/random_konachan_wall.sh`)]
         stdout: SplitParser {
             onRead: data => {
-// console.log(`Konachan wall proc output: ${data}`);
+                console.log(`Konachan wall proc output: ${data}`);
                 konachanWallProc.status = data.trim();
             }
         }
@@ -275,7 +275,7 @@ ColumnLayout {
                         anchors.fill: parent
                         hoverEnabled: true
                     onClicked: {
-// console.log(konachanWallProc.command.join(" "))
+                        console.log(konachanWallProc.command.join(" "))
                         konachanWallProc.running = true;
                     }
                     }

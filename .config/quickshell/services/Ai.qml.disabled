@@ -253,9 +253,9 @@ Singleton {
 
                     root.modelList = Object.keys(root.models);
 
-                } catch (e) {
-                    console.log("Could not fetch Ollama models:", e);
-                }
+                        } catch (e) {
+            // console.log("Could not fetch Ollama models:", e);
+        }
             }
         }
     }
@@ -548,7 +548,7 @@ Singleton {
                 requester.message.annotations = annotations;
                 // console.log(JSON.stringify(requester.message, null, 2));
             } catch (e) {
-                console.log("[AI] Could not parse response from stream: ", e);
+                // console.log("[AI] Could not parse response from stream: ", e);
                 requester.message.content += requester.geminiBuffer
             } finally {
                 requester.geminiBuffer = "";
@@ -624,11 +624,11 @@ Singleton {
                         requester.handleOpenAIResponseLine(data);
                     }
                     else {
-                        console.log("Unknown API format: ", requester.apiFormat);
+                        // console.log("Unknown API format: ", requester.apiFormat);
                         requester.message.content += data;
                     }
                 } catch (e) {
-                    console.log("[AI] Could not parse response from stream: ", e);
+                    // console.log("[AI] Could not parse response from stream: ", e);
                     requester.message.content += data;
                 }
             }

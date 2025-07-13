@@ -76,11 +76,30 @@ Singleton {
         property bool pinnedOnStartup: false
         property bool hoverToReveal: false // When false, only reveals on empty workspace
         property bool enable: true
+        property real radius: 12 // Dock corner radius
+        property real iconSize: 48 // Size of dock icons
+        property real spacing: 8 // Spacing between dock items
+        property bool autoHide: false // Auto-hide dock when not in use
+        property int hideDelay: 200 // Delay before hiding (ms)
+        property int showDelay: 50 // Delay before showing (ms)
+        property bool showPreviews: true // Show window previews on hover
+        property bool showLabels: false // Show app labels under icons
+        property real transparency: 0.9 // Dock background transparency (0.0-1.0)
         property list<string> pinnedApps: [ // IDs of pinned entries
             "org.kde.dolphin",
             "kitty",
         ]
     }
+
+    // Remove the dockEnabled property and handlers
+    // property bool dockEnabled: dock.enable
+    // onDockChanged: {
+    //     dockEnabled = dock.enable
+    //     console.log("[CONFIG DEBUG] dockEnabled updated to:", dockEnabled)
+    // }
+    // onDockEnabledChanged: {
+    //     console.log("[CONFIG DEBUG] dockEnabled changed to:", dockEnabled)
+    // }
 
     property QtObject language: QtObject {
         property QtObject translator: QtObject {

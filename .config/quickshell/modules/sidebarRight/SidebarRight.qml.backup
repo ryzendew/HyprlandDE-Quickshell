@@ -45,14 +45,14 @@ Scope {
     }
 
     Component.onCompleted: {
-// console.log("[Sidebar] PowerProfiles.profile on load:", PowerProfiles.profile)
+        console.log("[Sidebar] PowerProfiles.profile on load:", PowerProfiles.profile)
         refreshSystemProfile()
     }
 
     Connections {
         target: PowerProfiles
         function onProfileChanged() {
-// console.log("[Sidebar] PowerProfiles.profile changed:", PowerProfiles.profile)
+            console.log("[Sidebar] PowerProfiles.profile changed:", PowerProfiles.profile)
             refreshSystemProfile()
         }
     }
@@ -515,7 +515,7 @@ Scope {
         source: showBluetoothDialog ? "quickToggles/BluetoothConnectModule.qml" : ""
         onStatusChanged: {
             if (status === Loader.Error) {
-// console.log("Bluetooth dialog failed to load:", errorString);
+                console.log("Bluetooth dialog failed to load:", errorString);
             }
         }
     }

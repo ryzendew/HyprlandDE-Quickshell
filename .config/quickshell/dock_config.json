@@ -11,6 +11,5 @@
     "org.gnome.Ptyxis",
     "AffinityPhoto.desktop",
     "AffinityDesigner.desktop"
-  ],
-  "autoHide": false
+  ]
 }

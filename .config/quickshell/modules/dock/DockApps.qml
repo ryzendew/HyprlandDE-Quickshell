@@ -30,7 +30,7 @@ Item {
     
     StyledListView {
         id: listView
-        spacing: 2
+        spacing: ConfigOptions.dock.spacing
         orientation: ListView.Horizontal
         anchors {
             top: parent.top
@@ -250,7 +250,7 @@ Item {
                                             anchors.centerIn: parent
                                             horizontalAlignment: Text.AlignHCenter
                                             text: "close"
-                                            iconSize: Appearance.font.pixelSize.normal
+                                            iconSize: ConfigOptions.dock.iconSize * 0.4 // Scale down for close button
                                             color: Appearance.m3colors.m3onSurface
                                         }
                                         onClicked: {

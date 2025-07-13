@@ -85,7 +85,7 @@ QtObject {
             Hyprland.dispatch(command);
         } catch (e) {
             // If we get errors, assume Hyprland is not available or doesn't support these commands
-// console.log("Hyprland command failed:", command, e);
+            console.log("Hyprland command failed:", command, e);
         }
     }
 

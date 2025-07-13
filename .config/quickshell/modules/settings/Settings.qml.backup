@@ -285,21 +285,21 @@ Scope {
                                         hoverEnabled: true
                                         enabled: ConfigLoader.hasPendingChanges
                                         onClicked: {
-// console.log("[Settings] Save button clicked");
-// console.log("[Settings] Has pending changes:", ConfigLoader.hasPendingChanges);
-// console.log("[Settings] Pending changes count:", ConfigLoader.getPendingChangesCount());
+                                            console.log("[Settings] Save button clicked");
+                                            console.log("[Settings] Has pending changes:", ConfigLoader.hasPendingChanges);
+                                            console.log("[Settings] Pending changes count:", ConfigLoader.getPendingChangesCount());
                                             
                                             if (ConfigLoader.hasPendingChanges) {
                                                 const saved = ConfigLoader.savePendingChanges();
                                                 if (saved) {
                                                     Hyprland.dispatch(`exec notify-send "${qsTr("Settings saved")}" "${qsTr("Configuration changes have been saved")}"`);
-// console.log("[Settings] Save completed and notification sent");
+                                                    console.log("[Settings] Save completed and notification sent");
                                                 } else {
                                                     Hyprland.dispatch(`exec notify-send "${qsTr("Save failed")}" "${qsTr("Failed to save configuration changes")}"`);
-// console.log("[Settings] Save failed");
+                                                    console.log("[Settings] Save failed");
                                                 }
                                             } else {
-// console.log("[Settings] No changes to save");
+                                                console.log("[Settings] No changes to save");
                                                 Hyprland.dispatch(`exec notify-send "${qsTr("No changes")}" "${qsTr("No settings changes to save")}"`);
                                             }
                                         }
@@ -326,7 +326,7 @@ Scope {
                                             // Debug: force update when hasPendingChanges changes
                                             property bool debugHasChanges: ConfigLoader.hasPendingChanges
                                             onDebugHasChangesChanged: {
-// console.log("[Settings] UI updated - hasPendingChanges:", ConfigLoader.hasPendingChanges);
+                                                console.log("[Settings] UI updated - hasPendingChanges:", ConfigLoader.hasPendingChanges);
                                             }
                                         }
                                     }
@@ -348,11 +348,11 @@ Scope {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                         onClicked: {
-// console.log("[Settings] Close button clicked");
-// console.log("[Settings] Has pending changes:", ConfigLoader.hasPendingChanges);
+                                            console.log("[Settings] Close button clicked");
+                                            console.log("[Settings] Has pending changes:", ConfigLoader.hasPendingChanges);
                                             if (ConfigLoader.hasPendingChanges) {
                                                 // Auto-save changes before closing
-// console.log("[Settings] Auto-saving changes before close");
+                                                console.log("[Settings] Auto-saving changes before close");
                                                 const saved = ConfigLoader.savePendingChanges();
                                                 if (saved) {
                                                     Hyprland.dispatch(`exec notify-send "${qsTr("Settings saved")}" "${qsTr("Configuration changes have been saved")}"`);

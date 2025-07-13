@@ -35,7 +35,7 @@ Scope {
     readonly property bool autoHide: ConfigOptions.dock.autoHide
     
     onAutoHideChanged: {
-// console.log("[DOCK DEBUG] autoHide property changed to:", autoHide, "ConfigOptions.dock.autoHide:", ConfigOptions.dock.autoHide)
+        console.log("[DOCK DEBUG] autoHide property changed to:", autoHide, "ConfigOptions.dock.autoHide:", ConfigOptions.dock.autoHide)
     }
     property int hideDelay: ConfigOptions.dock.hideDelay
     property int showDelay: ConfigOptions.dock.showDelay
@@ -146,7 +146,7 @@ Scope {
         
         function onAutoHideChanged() {
             // Auto-hide behavior will update automatically due to property bindings
-// console.log("[DOCK DEBUG] Auto-hide setting changed to:", autoHide)
+            console.log("[DOCK DEBUG] Auto-hide setting changed to:", autoHide)
         }
         
         function onHideDelayChanged() {
@@ -362,7 +362,7 @@ Scope {
         // pinnedOnStartup behavior is handled in the settings UI
         
         // Auto-hide initialization is now handled in PanelWindow.onCompleted
-// console.log("[DOCK DEBUG] Component completed, autoHide value:", autoHide)
+        console.log("[DOCK DEBUG] Component completed, autoHide value:", autoHide)
         
         // Debug: Show what's in pinnedApps
     }
@@ -395,7 +395,7 @@ Scope {
             property bool reveal: !dock.autoHide || dockMouseArea.containsMouse
             
             onRevealChanged: {
-// console.log("[DOCK DEBUG] Reveal changed to:", reveal, "autoHide:", dock.autoHide, "dockMouseArea.containsMouse:", dockMouseArea.containsMouse)
+                console.log("[DOCK DEBUG] Reveal changed to:", reveal, "autoHide:", dock.autoHide, "dockMouseArea.containsMouse:", dockMouseArea.containsMouse)
             }
 
             // Basic configuration
@@ -404,7 +404,7 @@ Scope {
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
             
             onExclusiveZoneChanged: {
-// console.log("[DOCK DEBUG] Exclusive zone changed to:", exclusiveZone, "autoHide:", dock.autoHide, "implicitHeight:", implicitHeight)
+                console.log("[DOCK DEBUG] Exclusive zone changed to:", exclusiveZone, "autoHide:", dock.autoHide, "implicitHeight:", implicitHeight)
             }
 
 
@@ -561,7 +561,7 @@ Scope {
                     var margin = dockRoot.reveal ? 0 : 
                         dock.autoHide ? (dockRoot.implicitHeight - dock.approachRegionHeight) :
                         (dockRoot.implicitHeight + 1)
-// console.log("[DOCK DEBUG] topMargin calculated:", margin, "reveal:", dockRoot.reveal, "autoHide:", dock.autoHide, "implicitHeight:", dockRoot.implicitHeight, "approachRegionHeight:", dock.approachRegionHeight)
+                    console.log("[DOCK DEBUG] topMargin calculated:", margin, "reveal:", dockRoot.reveal, "autoHide:", dock.autoHide, "implicitHeight:", dockRoot.implicitHeight, "approachRegionHeight:", dock.approachRegionHeight)
                     return margin
                 }
                     
@@ -570,11 +570,11 @@ Scope {
                 hoverEnabled: true
 
                 onEntered: {
-// console.log("[DOCK DEBUG] Mouse area entered, autoHide:", dock.autoHide, "reveal:", dockRoot.reveal)
+                    console.log("[DOCK DEBUG] Mouse area entered, autoHide:", dock.autoHide, "reveal:", dockRoot.reveal)
                 }
                 
                 onExited: {
-// console.log("[DOCK DEBUG] Mouse area exited, autoHide:", dock.autoHide, "reveal:", dockRoot.reveal)
+                    console.log("[DOCK DEBUG] Mouse area exited, autoHide:", dock.autoHide, "reveal:", dockRoot.reveal)
                 }
 
                 Behavior on anchors.topMargin {

@@ -187,8 +187,8 @@ Rectangle {
                             spacing: 12
                             Layout.alignment: Qt.AlignVCenter
 
-                                                                // Signal strength icon
-                                    MaterialSymbol {
+                            // Signal strength icon
+                            MaterialSymbol {
                                         text: {
                                             const signal = safeSignal(modelData.signal);
                                             return signal > 80 ? "signal_wifi_4_bar" :
@@ -607,7 +607,7 @@ Rectangle {
                         text: qsTr("Connect")
                         enabled: passwordInput.length > 0
                         onClicked: {
-                            console.log("[WiFi] Attempting to connect to", selectedNetwork, "with password", passwordInput)
+                            // console.log("[WiFi] Attempting to connect to", selectedNetwork, "with password", passwordInput)
                             Network.connectToNetwork(selectedNetwork, passwordInput);
                             showPasswordDialog = false;
                             selectedNetwork = "";

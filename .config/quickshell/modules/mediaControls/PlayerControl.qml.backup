@@ -100,7 +100,7 @@ Item { // Player instance
             displayPosition = 0
             lastValidPosition = 0
             positionStartTime = Date.now()
-// console.log("[PlayerControl] New track detected, resetting position")
+            console.log("[PlayerControl] New track detected, resetting position")
         }
     }
     
@@ -183,7 +183,7 @@ Item { // Player instance
             
             // If we detect a jump of more than 3 seconds, it's likely seeking
             if (isValidJump && positionJump > 3) {
-// console.log("[PlayerControl] Seeking detected! Jump from", lastValidPosition, "to", currentMprisPosition)
+                console.log("[PlayerControl] Seeking detected! Jump from", lastValidPosition, "to", currentMprisPosition)
                 displayPosition = Math.max(0, currentMprisPosition)
                 lastValidPosition = currentMprisPosition
                 positionStartTime = Date.now()
@@ -214,7 +214,7 @@ Item { // Player instance
                 displayPosition = Math.max(0, newPosition)
                 lastValidPosition = newPosition
                 positionStartTime = Date.now()
-// console.log("[PlayerControl] Position changed - updated to:", displayPosition, "diff:", positionDifference)
+                console.log("[PlayerControl] Position changed - updated to:", displayPosition, "diff:", positionDifference)
             }
         }
     }
@@ -226,7 +226,7 @@ Item { // Player instance
         interval: 2000  // Check every 2 seconds
         repeat: true
         onTriggered: {
-// console.log("[PlayerControl] Retrying album art download for:", playerController.artUrl)
+            console.log("[PlayerControl] Retrying album art download for:", playerController.artUrl)
             if (playerController.artUrl && playerController.artUrl.length > 0 && playerController.artFilePath && playerController.artFilePath.length > 0) {
                 coverArtDownloader.running = true
             }
@@ -239,7 +239,7 @@ Item { // Player instance
             playerController.downloaded = false
             return;
         }
-// console.log("[PlayerControl] Art URL changed to:", playerController.artUrl)
+        console.log("[PlayerControl] Art URL changed to:", playerController.artUrl)
         playerController.downloaded = false
         
         // Check if file already exists before downloading
@@ -266,7 +266,7 @@ Item { // Player instance
     Connections {
         target: playerController.player
         function onTrackArtUrlChanged() { 
-// console.log("[PlayerControl] Track art URL changed via signal:", playerController.player?.trackArtUrl)
+            console.log("[PlayerControl] Track art URL changed via signal:", playerController.player?.trackArtUrl)
             playerController.artUrl = playerController.player?.trackArtUrl || ""
         }
         function onTrackTitleChanged() { 
@@ -279,14 +279,14 @@ Item { // Player instance
         }
         function onTrackAlbumChanged() {
             // Sometimes album art URL is updated when album info changes
-// console.log("[PlayerControl] Track album changed, checking for art URL updates")
+            console.log("[PlayerControl] Track album changed, checking for art URL updates")
             if (playerController.player?.trackArtUrl && playerController.player.trackArtUrl !== playerController.artUrl) {
                 playerController.artUrl = playerController.player.trackArtUrl
             }
         }
         function onTrackArtistChanged() {
             // Sometimes album art URL is updated when artist info changes
-// console.log("[PlayerControl] Track artist changed, checking for art URL updates")
+            console.log("[PlayerControl] Track artist changed, checking for art URL updates")
             if (playerController.player?.trackArtUrl && playerController.player.trackArtUrl !== playerController.artUrl) {
                 playerController.artUrl = playerController.player.trackArtUrl
             }
@@ -307,7 +307,7 @@ Item { // Player instance
             if (exitCode === 0) {
                 playerController.downloaded = true
             } else {
-// console.log("[PlayerControl] Failed to download album art for:", playerController.artUrl)
+                console.log("[PlayerControl] Failed to download album art for:", playerController.artUrl)
                 playerController.downloaded = false
             }
         }
@@ -378,7 +378,7 @@ Item { // Player instance
             
             onStatusChanged: {
                 if (status === Image.Error) {
-// console.log("[PlayerControl] Blurred art load error for:", source)
+                    console.log("[PlayerControl] Blurred art load error for:", source)
                 }
             }
 
@@ -438,10 +438,10 @@ Item { // Player instance
                     
                     onStatusChanged: {
                         if (status === Image.Error) {
-// console.log("[PlayerControl] Image load error for:", source)
+                            console.log("[PlayerControl] Image load error for:", source)
                             playerController.downloaded = false
                         } else if (status === Image.Ready) {
-// console.log("[PlayerControl] Successfully loaded album art:", source)
+                            console.log("[PlayerControl] Successfully loaded album art:", source)
                         }
                     }
                 }

@@ -15,7 +15,7 @@ Singleton {
     
     // Function to manually trigger a refresh
     function requestRefresh() {
-        console.log("[DESKTOPWATCHER] Manual refresh requested")
+        // console.log("[DESKTOPWATCHER] Manual refresh requested")
         root.refreshRequested()
     }
 } 

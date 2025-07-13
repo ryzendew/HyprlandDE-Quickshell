@@ -26,7 +26,7 @@ Item {
 
     // Filtered and sorted task list
     property var filteredTasks: {
-// console.log("[TodoWidget] Total tasks:", Todo.list.length)
+        console.log("[TodoWidget] Total tasks:", Todo.list.length)
         let tasks = Todo.list
             .filter(item => item && typeof item.content === 'string' && item.content.trim() !== "")
             .map(function(item, i) { 

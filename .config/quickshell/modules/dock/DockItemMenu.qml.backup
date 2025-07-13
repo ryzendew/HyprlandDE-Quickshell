@@ -67,7 +67,7 @@ Menu {
         }
         
         onTriggered: {
-// console.log("[DOCK DEBUG] Pin/Unpin triggered", isPinned)
+            console.log("[DOCK DEBUG] Pin/Unpin triggered", isPinned)
             if (isPinned) {
                 dockItemMenu.unpinApp()
             } else {
@@ -98,7 +98,7 @@ Menu {
         }
         
         onTriggered: {
-// console.log("[DOCK DEBUG] Launch new instance triggered", appInfo.class)
+            console.log("[DOCK DEBUG] Launch new instance triggered", appInfo.class)
             // Use the mapped command from desktopIdToCommand if available
             var command = ""
             if (appInfo.class) {
@@ -115,7 +115,7 @@ Menu {
                     command = appInfo.command || appInfo.class.toLowerCase()
                 }
             }
-// console.log("Launching new instance with command:", command)
+            console.log("Launching new instance with command:", command)
             Hyprland.dispatch(`exec ${command}`)
         }
     }
@@ -155,7 +155,7 @@ Menu {
         }
         
         onTriggered: {
-// console.log("[DOCK DEBUG] Move to workspace triggered", appInfo.address)
+            console.log("[DOCK DEBUG] Move to workspace triggered", appInfo.address)
             if (appInfo.address) {
                 // TODO: Add workspace selection submenu
                 // For now just move to next workspace
@@ -186,7 +186,7 @@ Menu {
         }
         
         onTriggered: {
-// console.log("[DOCK DEBUG] Toggle floating triggered", appInfo.address)
+            console.log("[DOCK DEBUG] Toggle floating triggered", appInfo.address)
             if (appInfo.address) {
                 Hyprland.dispatch(`togglefloating address:${appInfo.address}`)
             }
@@ -228,7 +228,7 @@ Menu {
         }
         
         onTriggered: {
-// console.log("[DOCK DEBUG] Close triggered", appInfo.address, appInfo.pid, appInfo.class)
+            console.log("[DOCK DEBUG] Close triggered", appInfo.address, appInfo.pid, appInfo.class)
             if (appInfo.address) {
                 Hyprland.dispatch(`closewindow address:${appInfo.address}`)
             } else if (appInfo.pid) {

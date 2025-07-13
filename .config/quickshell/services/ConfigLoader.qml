@@ -91,7 +91,13 @@ Singleton {
             }
         }
 
-        obj[keys[keys.length - 1]] = convertedValue;
+        // Set the property and emit change signal if possible
+        var lastKey = keys[keys.length - 1];
+        if (obj.hasOwnProperty(lastKey) && obj.setProperty) {
+            obj.setProperty(lastKey, convertedValue);
+        } else {
+            obj[lastKey] = convertedValue;
+        }
     }
 
     function saveConfig() {

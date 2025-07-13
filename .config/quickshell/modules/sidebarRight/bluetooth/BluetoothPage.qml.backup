@@ -371,7 +371,7 @@ Rectangle {
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-// console.log("Selected device:", modelData.name)
+                                    console.log("Selected device:", modelData.name)
                                 }
                             }
                         }

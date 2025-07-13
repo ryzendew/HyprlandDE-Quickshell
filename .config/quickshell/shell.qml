@@ -40,10 +40,19 @@ ShellRoot {
         PersistentStateManager.loadStates()
         Cliphist.refresh()
         FirstRunExperience.load()
+        
+        // Initialize enableDock
+        // root.enableDock = ConfigOptions.dock.enable
     }
     property bool enableBar: true
     property bool enableCheatsheet: true
-    property bool enableDock: ConfigOptions.dock.enable
+    property bool enableDock: true
+    // property bool enableDock: false // Will be set by connection
+    
+    // Force reactivity by watching the property
+    // onEnableDockChanged: {
+    //     console.log("[SHELL DEBUG] enableDock changed to:", enableDock)
+    // }
     property bool enableMediaControls: true
     property bool enableSimpleMediaPlayer: true
     property bool enableNotificationPopup: true
@@ -67,10 +76,21 @@ ShellRoot {
     property alias weatherData: weatherService.weatherData
     property alias weatherLoading: weatherService.loading
 
+    // Watch for dock enable/disable changes
+    // Connections {
+    //     target: ConfigOptions.dock
+    //     function onEnableChanged() {
+    //         console.log("[SHELL DEBUG] Dock enable changed to:", ConfigOptions.dock.enable)
+    //         root.enableDock = ConfigOptions.dock.enable
+    //     }
+    // }
+    
+
+    
     // Modules
     Loader { active: enableBar; sourceComponent: Bar {} }
     Loader { active: enableCheatsheet; sourceComponent: Cheatsheet {} }
-    Loader { active: enableDock; sourceComponent: Dock {} }
+    Loader { active: enableDock && Config.options.dock.enable; sourceComponent: Dock {} }
     Loader { active: enableMediaControls; sourceComponent: MediaControls {} }
     Loader { active: enableSimpleMediaPlayer; sourceComponent: SimpleMediaPlayer {} }
     Loader { active: enableNotificationPopup; sourceComponent: NotificationPopup {} }

@@ -77,7 +77,7 @@ Rectangle {
             downloaded = false
             return;
         }
-// console.log("[SimpleMediaPlayerSidebar] Art URL changed to:", artUrl)
+        console.log("[SimpleMediaPlayerSidebar] Art URL changed to:", artUrl)
         downloaded = false
         
         // Check if file already exists before downloading
@@ -108,7 +108,7 @@ Rectangle {
             if (exitCode === 0) {
                 root.downloaded = true
             } else {
-// console.log("[SimpleMediaPlayerSidebar] Failed to download album art for:", root.artUrl)
+                console.log("[SimpleMediaPlayerSidebar] Failed to download album art for:", root.artUrl)
                 root.downloaded = false
             }
         }
@@ -241,7 +241,7 @@ Rectangle {
                 enabled: activePlayer
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: // console.log("Shuffle button clicked", activePlayer)
+                    onClicked: console.log("Shuffle button clicked", activePlayer)
                     cursorShape: Qt.PointingHandCursor
                 }
             }
@@ -251,7 +251,7 @@ Rectangle {
                 toggled: false
                 enabled: activePlayer?.canGoPrevious ?? false
                 onClicked: {
-// console.log("Previous button: dispatching activePlayer.previous()", activePlayer)
+                    console.log("Previous button: dispatching activePlayer.previous()", activePlayer)
                     activePlayer?.previous()
                 }
             }
@@ -261,7 +261,7 @@ Rectangle {
                 toggled: activePlayer?.playbackState == MprisPlaybackState.Playing
                 enabled: activePlayer?.canTogglePlaying ?? false
                 onClicked: {
-// console.log("Play/Pause button: dispatching activePlayer.togglePlaying()", activePlayer)
+                    console.log("Play/Pause button: dispatching activePlayer.togglePlaying()", activePlayer)
                     activePlayer?.togglePlaying()
                 }
             }
@@ -271,7 +271,7 @@ Rectangle {
                 toggled: false
                 enabled: activePlayer?.canGoNext ?? false
                 onClicked: {
-// console.log("Next button: dispatching activePlayer.next()", activePlayer)
+                    console.log("Next button: dispatching activePlayer.next()", activePlayer)
                     activePlayer?.next()
                 }
             }
@@ -284,7 +284,7 @@ Rectangle {
                 enabled: activePlayer
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: // console.log("Repeat button clicked", activePlayer)
+                    onClicked: console.log("Repeat button clicked", activePlayer)
                     cursorShape: Qt.PointingHandCursor
                 }
             }
@@ -302,7 +302,7 @@ Rectangle {
                     activePlayer.position = value
                 }
             }
-                            onPressedChanged: // console.log("Progress slider pressed changed", pressed)
+            onPressedChanged: console.log("Progress slider pressed changed", pressed)
             enabled: activePlayer && activePlayer.length > 0
             visible: activePlayer
             highlightColor: "#ffffff"
@@ -332,11 +332,11 @@ Rectangle {
                 value: Audio.sink?.audio?.volume || 0
                 onValueChanged: {
                     if (Audio.sink?.audio) {
-// console.log("Volume slider: dispatching Audio.sink.audio.volume =", value, Audio.sink.audio)
+                        console.log("Volume slider: dispatching Audio.sink.audio.volume =", value, Audio.sink.audio)
                         Audio.sink.audio.volume = value
                     }
                 }
-                onPressedChanged: // console.log("Volume slider pressed changed", pressed)
+                onPressedChanged: console.log("Volume slider pressed changed", pressed)
                 highlightColor: "#ffffff"
                 trackColor: Qt.rgba(1, 1, 1, 0.3)
                 handleColor: "#ffffff"
@@ -360,7 +360,7 @@ Rectangle {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-// console.log("Background MouseArea clicked, dispatching Hyprland popup")
+                console.log("Background MouseArea clicked, dispatching Hyprland popup")
                 Hyprland.dispatch("global quickshell:simpleMediaPlayer:toggle")
             }
         }

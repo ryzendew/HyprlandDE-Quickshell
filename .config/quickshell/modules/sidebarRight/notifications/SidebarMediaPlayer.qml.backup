@@ -78,7 +78,7 @@ Rectangle {
             if (exitCode === 0) {
                 root.downloaded = true
             } else {
-// console.log("[SidebarMediaPlayer] Failed to download album art for:", root.artUrl)
+                console.log("[SidebarMediaPlayer] Failed to download album art for:", root.artUrl)
                 root.downloaded = false
             }
         }

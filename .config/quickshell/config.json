@@ -1,10 +1,10 @@
 {
   "logging": {
-    "enabled": false,
-    "debug": false,
-    "info": false,
-    "warning": false,
-    "error": false,
+    "enabled": true,
+    "debug": true,
+    "info": true,
+    "warning": true,
+    "error": true,
     "suppressIconWarnings": true,
     "suppressQmlWarnings": true,
     "suppressHyprlandWarnings": true
@@ -26,10 +26,10 @@
   },
   "dock": {
     "height": 60,
-    "hoverRegionHeight": 3,
+    "hoverRegionHeight": 20,
     "pinnedOnStartup": false,
     "hoverToReveal": false,
-    "enable": true,
+    "enable": false,
     "pinnedApps": [
       "microsoft-edge-dev",
       "org.gnome.Nautilus",
@@ -40,7 +40,16 @@
       "heroic",
       "obs",
       "org.gnome.Ptyxis"
-    ]
+    ],
+    "radius": 12,
+    "iconSize": 48,
+    "spacing": 8,
+    "autoHide": true,
+    "hideDelay": 200,
+    "showDelay": 50,
+    "showPreviews": true,
+    "showLabels": false,
+    "transparency": 0.9
   },
   "networking": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -63,4 +72,4 @@
   "hacks": {
     "arbitraryRaceConditionDelay": 20
   }
-} 
+}

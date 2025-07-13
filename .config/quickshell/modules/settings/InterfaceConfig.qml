@@ -36,8 +36,6 @@ ColumnLayout {
             // Section header
             RowLayout {
                 spacing: 16
-                anchors.left: parent.left
-                anchors.leftMargin: 0
                 Layout.topMargin: 24
 
                 Rectangle {
@@ -215,8 +213,8 @@ ColumnLayout {
                     columns: 2
                     columnSpacing: 32
                     rowSpacing: 16
-                    anchors.left: parent.left
-                    anchors.leftMargin: 0
+                    // anchors.left: parent.left
+                    // anchors.leftMargin: 0
 
                     RowLayout {
                         spacing: 12
@@ -320,8 +318,6 @@ ColumnLayout {
             // Section header
             RowLayout {
                 spacing: 16
-                anchors.left: parent.left
-                anchors.leftMargin: 0
                 Layout.topMargin: 24
 
                 Rectangle {
@@ -377,7 +373,7 @@ ColumnLayout {
         }
     }
 
-    // Dock & Overview Section
+        // Overview Section
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: childrenRect.height + 40
@@ -399,8 +395,6 @@ ColumnLayout {
             // Section header
             RowLayout {
                 spacing: 16
-                anchors.left: parent.left
-                anchors.leftMargin: 0
                 Layout.topMargin: 24
 
                 Rectangle {
@@ -409,54 +403,25 @@ ColumnLayout {
                     color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.1)
                     MaterialSymbol {
                         anchors.centerIn: parent
-                        text: "dock"
+                        text: "grid_view"
                         iconSize: 20
                         color: "#000"
-            }
-        }
+                    }
+                }
                 ColumnLayout {
                     spacing: 4
                     StyledText {
-                        text: "Dock & Overview"
+                        text: "Overview Layout"
                         font.pixelSize: Appearance.font.pixelSize.large
                         font.weight: Font.Bold
                         color: "#fff"
                     }
                     StyledText {
-                        text: "Configure application dock and window overview"
+                        text: "Configure window overview grid layout"
                         font.pixelSize: Appearance.font.pixelSize.normal
                         color: "#fff"
                         opacity: 0.9
                     }
-                }
-            }
-
-            // Dock settings
-            ColumnLayout {
-                spacing: 16
-                anchors.left: parent.left
-                anchors.leftMargin: 0
-
-                RowLayout {
-                    spacing: 12
-                    ConfigSwitch {
-                        checked: ConfigOptions.dock.enable
-                        onCheckedChanged: { ConfigLoader.setConfigValue("dock.enable", checked); }
-            }
-                    StyledText {
-                        text: "Enable dock"
-                        font.pixelSize: Appearance.font.pixelSize.normal
-                        color: "#fff"
-                    }
-                }
-
-                StyledText {
-                    text: "Show a dock for quick access to frequently used applications"
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    color: "#fff"
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    Layout.topMargin: 8
                 }
             }
 
@@ -466,19 +431,12 @@ ColumnLayout {
                 anchors.left: parent.left
                 anchors.leftMargin: 0
 
-                StyledText {
-                    text: "Overview Layout"
-                    font.pixelSize: Appearance.font.pixelSize.normal
-                    font.weight: Font.Medium
-                    color: "#fff"
-                }
-
                 GridLayout {
                     columns: 2
                     columnSpacing: 24
                     rowSpacing: 16
-                    anchors.left: parent.left
-                    anchors.leftMargin: 0
+                    // anchors.left: parent.left
+                    // anchors.leftMargin: 0
 
             ConfigSpinBox {
                 text: "Rows"

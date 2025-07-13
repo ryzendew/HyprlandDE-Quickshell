@@ -54,7 +54,7 @@ Rectangle {
                     buttonIcon: "refresh"
                     onClicked: {
                         // Refresh WiFi networks
-// console.log("Refreshing WiFi networks...")
+                        console.log("Refreshing WiFi networks...")
                     }
                     StyledToolTip {
                         content: qsTr("Refresh networks")
@@ -240,7 +240,7 @@ Rectangle {
                                 anchors.fill: parent
                                 onClicked: {
                                     if (!connected) {
-// console.log("Connecting to:", ssid)
+                                        console.log("Connecting to:", ssid)
                                         // In a real implementation, this would trigger connection
                                     }
                                 }

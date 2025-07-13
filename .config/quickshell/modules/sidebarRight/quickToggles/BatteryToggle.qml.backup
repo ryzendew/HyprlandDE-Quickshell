@@ -21,11 +21,11 @@ QuickToggleButton {
         onClicked: (mouse) => {
             if (mouse.button === Qt.LeftButton) {
                 // Could open battery settings or show detailed info
-// console.log("Battery clicked")
+                console.log("Battery clicked")
             }
             if (mouse.button === Qt.RightButton) {
                 // Could show battery menu or settings
-// console.log("Battery right-clicked")
+                console.log("Battery right-clicked")
             }
         }
         hoverEnabled: false

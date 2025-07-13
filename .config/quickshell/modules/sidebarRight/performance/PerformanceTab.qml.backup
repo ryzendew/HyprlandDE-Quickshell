@@ -82,7 +82,7 @@ ColumnLayout {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     PowerProfiles.profile = PowerProfile.Performance
-// console.log("Performance button clicked")
+                    console.log("Performance button clicked")
                 }
             }
         }
@@ -123,7 +123,7 @@ ColumnLayout {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     PowerProfiles.profile = PowerProfile.Balanced
-// console.log("Balanced button clicked")
+                    console.log("Balanced button clicked")
                 }
             }
         }
@@ -164,7 +164,7 @@ ColumnLayout {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     PowerProfiles.profile = PowerProfile.PowerSaver
-// console.log("Power Saver button clicked")
+                    console.log("Power Saver button clicked")
                 }
             }
         }

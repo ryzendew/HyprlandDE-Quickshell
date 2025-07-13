@@ -107,8 +107,8 @@ Rectangle {
     Item {
         id: iconContainer
         anchors.centerIn: parent
-        width: parent.width * 0.75
-        height: parent.width * 0.75
+        width: ConfigOptions.dock.iconSize
+        height: ConfigOptions.dock.iconSize
 
         // Use proper icon source resolution according to Quickshell docs
         Image {

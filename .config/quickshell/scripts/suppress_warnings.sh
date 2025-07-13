@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Environment variables to suppress Qt warnings
-export QT_LOGGING_RULES="*.debug=false;qt.qpa.*=false;qt.svg.*=false;qt.scenegraph.*=false;qt.quick.*=false;qt.qml.*=false"
+# Environment variables to suppress Qt warnings and debug logs
+export QT_LOGGING_RULES="*.debug=false;qt.qpa.*=false;qt.svg.*=false;qt.scenegraph.*=false;qt.quick.*=false;qt.qml.*=false;*.info=false"
 export QT_QUICK_CONTROLS_STYLE=Basic
 export QT_QUICK_CONTROLS2_STYLE=Basic
 

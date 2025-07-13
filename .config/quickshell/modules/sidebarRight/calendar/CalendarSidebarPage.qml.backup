@@ -91,37 +91,37 @@ Item {
     function updateTodoTasks() {
         todoTasks = {};
         if (Todo && Todo.list) {
-// console.log('=== TODO DEBUG ===');
-// console.log('Updating todo tasks, total tasks:', Todo.list.length);
-// console.log('Current year/month:', currentYear, currentMonth);
+            console.log('=== TODO DEBUG ===');
+            console.log('Updating todo tasks, total tasks:', Todo.list.length);
+            console.log('Current year/month:', currentYear, currentMonth);
             
             Todo.list.forEach(function(task, index) {
-// console.log(`Task ${index}:`, task.content, 'dueDate:', task.dueDate, 'done:', task.done, 'priority:', task.priority);
+                console.log(`Task ${index}:`, task.content, 'dueDate:', task.dueDate, 'done:', task.done, 'priority:', task.priority);
                 if (task.dueDate && !task.done) {
                     // Check if the task is for the current month
                     let taskDate = new Date(task.dueDate);
                     let taskYear = taskDate.getFullYear();
                     let taskMonth = taskDate.getMonth();
                     
-// console.log(`Task date parsed: year=${taskYear}, month=${taskMonth}, day=${taskDate.getDate()}`);
+                    console.log(`Task date parsed: year=${taskYear}, month=${taskMonth}, day=${taskDate.getDate()}`);
                     
                     if (taskYear === currentYear && taskMonth === currentMonth) {
                         if (!todoTasks[task.dueDate]) {
                             todoTasks[task.dueDate] = [];
                         }
                         todoTasks[task.dueDate].push(task);
-// console.log('✅ Added task for date:', task.dueDate, 'content:', task.content);
+                        console.log('✅ Added task for date:', task.dueDate, 'content:', task.content);
                     } else {
-// console.log('❌ Task not in current month:', task.dueDate);
+                        console.log('❌ Task not in current month:', task.dueDate);
                     }
                 } else {
-// console.log('❌ Task skipped - no due date or done:', task.dueDate, task.done);
+                    console.log('❌ Task skipped - no due date or done:', task.dueDate, task.done);
                 }
             });
-// console.log('Final todo tasks by date:', todoTasks);
-// console.log('=== END TODO DEBUG ===');
+            console.log('Final todo tasks by date:', todoTasks);
+            console.log('=== END TODO DEBUG ===');
         } else {
-// console.log('Todo service not available or no tasks');
+            console.log('Todo service not available or no tasks');
         }
     }
     
@@ -261,7 +261,7 @@ Item {
         let monthKey = `${year}-${(month+1).toString().padStart(2, '0')}`;
         if (moonPhaseCache[monthKey]) {
             moonPhases = Object.assign({}, moonPhaseCache[monthKey]);
-// console.log('Loaded moon phases from cache for', monthKey);
+            console.log('Loaded moon phases from cache for', monthKey);
             return;
         }
         moonPhases = {};
@@ -282,13 +282,11 @@ Item {
                                 // Save to cache
                                 if (!moonPhaseCache[monthKey]) moonPhaseCache[monthKey] = {};
                                 moonPhaseCache[monthKey][dateStr] = moonPhases[dateStr];
-// console.log('Moon phase for', dateStr, ':', data[0].Phase, 'illum:', illum, 'icon:', getMoonEmoji(data[0].Phase, illum));
+                                console.log('Moon phase for', dateStr, ':', data[0].Phase, 'illum:', illum, 'icon:', getMoonEmoji(data[0].Phase, illum));
                             }
-                        } catch (e) {
-                            // console.log('Moon phase parse error', e);
-                        }
+                        } catch (e) { console.log('Moon phase parse error', e); }
                     } else {
-// console.log('Moon phase API error', xhr.status, url);
+                        console.log('Moon phase API error', xhr.status, url);
                     }
                 }
             }
@@ -422,12 +420,10 @@ Item {
                     let data = JSON.parse(xhr.responseText);
                     if (data && data.country) {
                         userCountry = data.country;
-// console.log('Detected country:', userCountry);
+                        console.log('Detected country:', userCountry);
                         fetchHolidays(currentYear, userCountry);
                     }
-                } catch (e) {
-                    // console.log('Country parse error', e);
-                }
+                } catch (e) { console.log('Country parse error', e); }
             }
         }
         xhr.send();
@@ -437,7 +433,7 @@ Item {
         let cacheKey = `${country}-${year}`;
         if (holidayCache[cacheKey]) {
             holidays = Object.assign({}, holidayCache[cacheKey]);
-// console.log('Loaded holidays from cache for', cacheKey);
+            console.log('Loaded holidays from cache for', cacheKey);
             return;
         }
         holidays = {};
@@ -491,11 +487,9 @@ Item {
                         
                         holidayCache[cacheKey] = Object.assign({}, holidays);
                         holidays = Object.assign({}, holidays);
-// console.log('Fetched holidays for', country, year, holidays);
+                        console.log('Fetched holidays for', country, year, holidays);
                     }
-                } catch (e) {
-                    // console.log('Holiday parse error', e);
-                }
+                } catch (e) { console.log('Holiday parse error', e); }
             }
         }
         xhr.send();
@@ -520,7 +514,7 @@ Item {
         repeat: true
         onTriggered: {
             updateTodoTasks();
-// console.log('Timer triggered, todo tasks updated');
+            console.log('Timer triggered, todo tasks updated');
         }
     }
 
@@ -859,7 +853,7 @@ Item {
                                 Component.onCompleted: {
                                     let dateKey = `${currentYear}-${(currentMonth+1).toString().padStart(2, '0')}-${(index+1).toString().padStart(2, '0')}`;
                                     if (todoTasks[dateKey]) {
-// console.log(`Day ${index+1} has ${todoTasks[dateKey].length} tasks:`, todoTasks[dateKey].map(t => t.content));
+                                        console.log(`Day ${index+1} has ${todoTasks[dateKey].length} tasks:`, todoTasks[dateKey].map(t => t.content));
                                     }
                                 }
                                 
