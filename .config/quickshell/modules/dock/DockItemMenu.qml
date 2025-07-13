@@ -98,25 +98,9 @@ Menu {
         }
         
         onTriggered: {
-// console.log("[DOCK DEBUG] Launch new instance triggered", appInfo.class)
-            // Use the mapped command from desktopIdToCommand if available
-            var command = ""
             if (appInfo.class) {
-                // Try different variations of the class name
-                var classLower = appInfo.class.toLowerCase()
-                var classWithDesktop = appInfo.class + ".desktop"
-                if (dock.desktopIdToCommand[appInfo.class]) {
-                    command = dock.desktopIdToCommand[appInfo.class]
-                } else if (dock.desktopIdToCommand[classLower]) {
-                    command = dock.desktopIdToCommand[classLower]
-                } else if (dock.desktopIdToCommand[classWithDesktop]) {
-                    command = dock.desktopIdToCommand[classWithDesktop]
-                } else {
-                    command = appInfo.command || appInfo.class.toLowerCase()
-                }
+                dock.launchApp(appInfo.class)
             }
-// console.log("Launching new instance with command:", command)
-            Hyprland.dispatch(`exec ${command}`)
         }
     }
     

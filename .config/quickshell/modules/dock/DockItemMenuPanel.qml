@@ -88,8 +88,9 @@ PanelWindow {
                     verticalAlignment: Text.AlignVCenter
                 }
                 onClicked: {
-                    var command = appInfo.command || appInfo.class.toLowerCase()
-                    Hyprland.dispatch(`exec ${command}`)
+                    if (appInfo.class) {
+                        dock.launchApp(appInfo.class)
+                    }
                     menuRoot.hide()
                 }
             }

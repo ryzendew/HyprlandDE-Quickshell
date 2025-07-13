@@ -63,10 +63,7 @@ DockButton {
             }
             onClicked: {
                 if (root.appToplevel.pinned) {
-                    var index = ConfigOptions.dock.pinnedApps.indexOf(root.appToplevel.appId)
-                    if (index !== -1) {
-                        ConfigOptions.dock.pinnedApps.splice(index, 1)
-                    }
+                    dock.removePinnedApp(root.appToplevel.appId)
                 } else {
                     ConfigOptions.dock.pinnedApps.push(root.appToplevel.appId)
                 }

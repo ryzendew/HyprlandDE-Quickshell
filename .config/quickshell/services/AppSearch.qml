@@ -61,10 +61,10 @@ Singleton {
     // Function to refresh the desktop database
     function refresh() {
         return new Promise((resolve, reject) => {
-                    // For now, just trigger the signal to update the UI
-        // The actual desktop database update would need to be done externally
+            // For now, just trigger the signal to update the UI
+            // The actual desktop database update would need to be done externally
         // console.log("[APPSEARCH] Refreshing application list...")
-        root.applicationsRefreshed()
+            root.applicationsRefreshed()
             
             // Small delay to ensure UI updates
             Qt.callLater(() => {
@@ -100,7 +100,7 @@ Singleton {
 
     function guessIcon(str) {
         if (!str || str.length == 0) {
-            return "image-missing";
+            return "settings";
         }
 
         // Normal substitutions
@@ -148,7 +148,7 @@ Singleton {
             }
         }
 
-        // Give up
-        return str;
+        // Give up: use settings cog as default
+        return "settings";
     }
 }

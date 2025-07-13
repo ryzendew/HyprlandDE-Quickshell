@@ -85,10 +85,7 @@ Singleton {
         property bool showPreviews: true // Show window previews on hover
         property bool showLabels: false // Show app labels under icons
         property real transparency: 0.9 // Dock background transparency (0.0-1.0)
-        property list<string> pinnedApps: [ // IDs of pinned entries
-            "org.kde.dolphin",
-            "kitty",
-        ]
+        property list<string> pinnedApps: [] // IDs of pinned entries
     }
 
     // Remove the dockEnabled property and handlers

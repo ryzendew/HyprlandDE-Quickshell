@@ -54,6 +54,7 @@ Item {
                         (a.exec && a.exec.toLowerCase().includes(appId.toLowerCase())) ||
                         (a.name && a.name.toLowerCase() === appId.toLowerCase())
                     );
+                    
                     if (!appObj) {
                         // Fallback: minimal object
                         appObj = {
