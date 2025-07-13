@@ -341,8 +341,9 @@ Item {
         // Album art on the left
         Rectangle {
             id: albumArtContainer
-            Layout.preferredWidth: 32
-            Layout.preferredHeight: 32
+            Layout.preferredWidth: 40
+            Layout.preferredHeight: 40
+            Layout.leftMargin: 2
             radius: 6
             color: Qt.rgba(
                 Appearance.colors.colLayer1.r,
@@ -354,17 +355,20 @@ Item {
                 Appearance.colors.colOnLayer1.r,
                 Appearance.colors.colOnLayer1.g,
                 Appearance.colors.colOnLayer1.b,
-                0.3
+                0.6
             )
-            border.width: 1
+            border.width: 3
             visible: root.activePlayer
             Layout.alignment: Qt.AlignTop
-            Layout.topMargin: -3
+            Layout.topMargin: -8
             layer.enabled: true
             layer.smooth: true
+            clip: true // Ensure content is clipped to rounded rect
             
+            // Make album art image fill the container with 1px padding
             Image {
                 anchors.fill: parent
+                anchors.margins: 3
                 source: root.downloaded ? Qt.resolvedUrl(root.artFilePath) : ""
                 fillMode: Image.PreserveAspectCrop
                 cache: false
@@ -372,27 +376,20 @@ Item {
                 visible: root.downloaded && status === Image.Ready
                 layer.enabled: true
                 layer.smooth: true
-                
                 onStatusChanged: {
                     if (status === Image.Error) {
-                        // console.log("[BarMedia] Image load error for:", source)
-                        // Mark as not downloaded so the fallback icon shows
                         root.downloaded = false
-                    } else if (status === Image.Ready) {
-                        // console.log("[BarMedia] Successfully loaded album art:", source)
                     }
                 }
             }
             
             // Show player icon when no album art is available
-            Image {
+            // Use MaterialSymbol or Material Icons font for fallback
+            MaterialSymbol {
                 anchors.centerIn: parent
-                width: 20
-                height: 20
-                source: "image://icon/" + (root.getPlayerIcon() || "multimedia-player")
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                mipmap: true
+                iconSize: 20
+                text: "music_note"
+                color: Appearance.colors.colOnLayer1
                 visible: !root.downloaded || albumArtContainer.children[0].status !== Image.Ready
             }
         }

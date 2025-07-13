@@ -113,7 +113,7 @@ PanelWindow {
                 }
                 onClicked: {
                     if (appInfo.address) {
-                        Hyprland.dispatch(`dispatch movetoworkspace +1 address:${appInfo.address}`)
+                        Hyprland.dispatch(`movetoworkspace +1,address:${appInfo.address}`)
                     }
                     menuRoot.hide()
                 }
@@ -132,7 +132,7 @@ PanelWindow {
                 }
                 onClicked: {
                     if (appInfo.address) {
-                        Hyprland.dispatch(`dispatch togglefloating address:${appInfo.address}`)
+                        Hyprland.dispatch(`togglefloating address:${appInfo.address}`)
                     }
                     menuRoot.hide()
                 }
@@ -156,11 +156,11 @@ PanelWindow {
                 }
                 onClicked: {
                     if (appInfo.address) {
-                        Hyprland.dispatch(`dispatch closewindow address:${appInfo.address}`)
+                        Hyprland.dispatch(`closewindow address:${appInfo.address}`)
                     } else if (appInfo.pid) {
-                        Hyprland.dispatch(`dispatch closewindow pid:${appInfo.pid}`)
+                        Hyprland.dispatch(`closewindow pid:${appInfo.pid}`)
                     } else {
-                        Hyprland.dispatch(`dispatch closewindow class:${appInfo.class}`)
+                        Hyprland.dispatch(`closewindow class:${appInfo.class}`)
                     }
                     menuRoot.closeApp()
                     menuRoot.hide()

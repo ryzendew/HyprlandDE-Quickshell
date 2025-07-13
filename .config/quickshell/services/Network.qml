@@ -19,6 +19,14 @@ Singleton {
     property string ssid: ""
     property string networkName: ""
     property int networkStrength: 0
+    onNetworkStrengthChanged: {
+        // Ensure networkStrength is always a valid integer between 0-100
+        if (isNaN(networkStrength) || networkStrength < 0) {
+            networkStrength = 0;
+        } else if (networkStrength > 100) {
+            networkStrength = 100;
+        }
+    }
     property int updateInterval: 1000
     
     // WiFi scanning and management
@@ -134,7 +142,8 @@ Singleton {
         command: ["sh", "-c", "nmcli -f IN-USE,SIGNAL,SSID device wifi | awk '/^\*/{if (NR!=1) {print $2}}'"]
         stdout: SplitParser {
             onRead: data => {
-                root.networkStrength = parseInt(data);
+                const strength = parseInt(data);
+                root.networkStrength = (!isNaN(strength)) ? strength : 0;
             }
         }
     }
@@ -174,7 +183,8 @@ Singleton {
                 const parts = line.split(':');
                 const ssid = parts[0];
                 const security = parts[1] || "Open";
-                const signal = parseInt(parts[2]) || 0;
+                const signalRaw = parts[2];
+                const signal = (signalRaw && !isNaN(parseInt(signalRaw))) ? parseInt(signalRaw) : 0;
                 const inUse = parts[3] === "*";
                 
                 if (ssid && !seen[ssid]) {
@@ -188,6 +198,12 @@ Singleton {
                 }
             }
             
+            // Defensive: ensure every network has a valid signal property
+            for (let i = 0; i < nets.length; ++i) {
+                if (typeof nets[i].signal !== 'number' || isNaN(nets[i].signal)) {
+                    nets[i].signal = 0;
+                }
+            }
             root.networks = nets;
             root.isScanning = false;
         }

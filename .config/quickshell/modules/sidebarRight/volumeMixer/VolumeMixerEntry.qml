@@ -112,6 +112,7 @@ Item {
             RowLayout {
                 StyledSlider {
                     id: slider
+                    Layout.fillWidth: true
                     scale: 0.45
                     from: 0
                     to: 1.0
@@ -132,6 +133,17 @@ Item {
                         opacity = 1
                     }
                 }
+                
+                // Volume percentage display
+                StyledText {
+                    text: Math.round(root.node.audio.volume * 100) + "%"
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    color: Appearance.colors.colOnLayer1
+                    opacity: 0.7
+                    Layout.preferredWidth: 35
+                    horizontalAlignment: Text.AlignRight
+                }
+                
                 // Settings cog for device assignment
                 Rectangle {
                     width: 28; height: 28; radius: 14

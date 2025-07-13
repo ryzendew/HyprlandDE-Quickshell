@@ -9,7 +9,6 @@ import QtQuick.Layouts
 import Quickshell.Widgets
 import Quickshell.Services.Pipewire
 
-
 Item {
     id: root
     function wrapAfterWords(str, n) {
@@ -51,10 +50,7 @@ Item {
         }
     }
 
-    // Track audio objects
-    PwObjectTracker {
-        objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource]
-    }
+    // Track audio objects - using local Pipewire service
 
     ColumnLayout {
         anchors.fill: parent
@@ -236,7 +232,7 @@ Item {
                         }
                         
                         StyledText {
-                            text: Math.round((Pipewire.defaultAudioSink?.audio.volume ?? 0) * 100) + "%"
+                            text: Math.round((Audio.sink?.audio?.volume ?? 0) * 100) + "%"
                             font.pixelSize: Appearance.font.pixelSize.small
                             color: Appearance.colors.colOnLayer1
                             opacity: 0.7
@@ -251,13 +247,13 @@ Item {
                             Layout.fillWidth: true
                             from: 0
                             to: 1.0
-                            value: Pipewire.defaultAudioSink?.audio.volume ?? 0
-                            enabled: !(Pipewire.defaultAudioSink?.audio.muted ?? false)
-                            opacity: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 0.5 : 1.0
+                            value: Audio.sink?.audio?.volume ?? 0
+                            enabled: !(Audio.sink?.audio?.muted ?? false)
+                            opacity: (Audio.sink?.audio?.muted ?? false) ? 0.5 : 1.0
                             scale: 0.45
                             onValueChanged: {
-                                if (Pipewire.defaultAudioSink?.audio) {
-                                    Pipewire.defaultAudioSink.audio.volume = value
+                                if (Audio.sink?.audio) {
+                                    Audio.sink.audio.volume = value
                                 }
                             }
                         }
@@ -266,7 +262,7 @@ Item {
                             Layout.preferredWidth: 32
                             Layout.preferredHeight: 32
                             radius: 16
-                            color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 
+                            color: (Audio.sink?.audio?.muted ?? false) ? 
                                    "#e74c3c" : 
                                    Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.1)
                             border.color: Qt.rgba(1, 1, 1, 0.15)
@@ -274,9 +270,9 @@ Item {
                             
                             MaterialSymbol {
                                 anchors.centerIn: parent
-                                text: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "volume_off" : "volume_up"
+                                text: (Audio.sink?.audio?.muted ?? false) ? "volume_off" : "volume_up"
                                 iconSize: Appearance.font.pixelSize.small
-                                color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 
+                                color: (Audio.sink?.audio?.muted ?? false) ? 
                                        "white" : 
                                        Appearance.colors.colOnLayer1
                             }
@@ -284,8 +280,8 @@ Item {
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    if (Pipewire.defaultAudioSink?.audio) {
-                                        Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted
+                                    if (Audio.sink?.audio) {
+                                        Audio.sink.audio.muted = !Audio.sink.audio.muted
                                     }
                                 }
                             }
@@ -352,7 +348,7 @@ Item {
                         }
                         
                         StyledText {
-                            text: Math.round((Pipewire.defaultAudioSource?.audio?.volume ?? 0) * 100) + "%"
+                            text: Math.round((Audio.source?.audio?.volume ?? 0) * 100) + "%"
                             font.pixelSize: Appearance.font.pixelSize.small
                             color: Appearance.colors.colOnLayer1
                             opacity: 0.7
@@ -367,13 +363,13 @@ Item {
                             Layout.fillWidth: true
                             from: 0
                             to: 1.0
-                            value: Pipewire.defaultAudioSource?.audio?.volume ?? 0
-                            enabled: !(Pipewire.defaultAudioSource?.audio?.muted ?? false)
-                            opacity: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 0.5 : 1.0
+                            value: Audio.source?.audio?.volume ?? 0
+                            enabled: !(Audio.source?.audio?.muted ?? false)
+                            opacity: (Audio.source?.audio?.muted ?? false) ? 0.5 : 1.0
                             scale: 0.45
                             onValueChanged: {
-                                if (Pipewire.defaultAudioSource?.audio) {
-                                    Pipewire.defaultAudioSource.audio.volume = value
+                                if (Audio.source?.audio) {
+                                    Audio.source.audio.volume = value
                                 }
                             }
                         }
@@ -382,7 +378,7 @@ Item {
                             Layout.preferredWidth: 32
                             Layout.preferredHeight: 32
                             radius: 16
-                            color: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 
+                            color: (Audio.source?.audio?.muted ?? false) ? 
                                    "#e74c3c" : 
                                    Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.1)
                             border.color: Qt.rgba(1, 1, 1, 0.15)
@@ -390,9 +386,9 @@ Item {
                             
                             MaterialSymbol {
                                 anchors.centerIn: parent
-                                text: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? "mic_off" : "mic"
+                                text: (Audio.source?.audio?.muted ?? false) ? "mic_off" : "mic"
                                 iconSize: Appearance.font.pixelSize.small
-                                color: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 
+                                color: (Audio.source?.audio?.muted ?? false) ? 
                                        "white" : 
                                        Appearance.colors.colOnLayer1
                             }
@@ -400,8 +396,8 @@ Item {
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    if (Pipewire.defaultAudioSource?.audio) {
-                                        Pipewire.defaultAudioSource.audio.muted = !Pipewire.defaultAudioSource.audio.muted
+                                    if (Audio.source?.audio) {
+                                        Audio.source.audio.muted = !Audio.source.audio.muted
                                     }
                                 }
                             }

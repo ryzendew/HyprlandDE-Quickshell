@@ -1,7 +1,7 @@
 import "root:/modules/common"
 import QtQuick
 import Quickshell
-import Quickshell.Services.Pipewire
+import "root:/services"
 pragma Singleton
 pragma ComponentBehavior: Bound
 
@@ -11,14 +11,61 @@ pragma ComponentBehavior: Bound
 Singleton {
     id: root
 
-    property bool ready: Pipewire.defaultAudioSink?.ready ?? false
-    property PwNode sink: Pipewire.defaultAudioSink
-    property PwNode source: Pipewire.defaultAudioSource
+    property bool ready: Pipewire.sinkId !== ""
+    property var sink: sinkWrapper
+    property var source: sourceWrapper
 
     signal sinkProtectionTriggered(string reason);
 
-    PwObjectTracker {
-        objects: [sink, source]
+    // Wrapper objects to maintain compatibility with existing code
+    property var sinkWrapper: QtObject {
+        property var audio: sinkAudio
+        property bool ready: Pipewire.sinkId !== ""
+        property string name: Pipewire.sinkName
+        property string description: Pipewire.sinkDescription
+        property string id: Pipewire.sinkId
+
+        property var sinkAudio: QtObject {
+            property real volume: Pipewire.sinkVolume
+            property bool muted: Pipewire.sinkMuted
+
+            onVolumeChanged: {
+                if (Pipewire.sinkId && volume !== Pipewire.sinkVolume) {
+                    Pipewire.setSinkVolume(volume)
+                }
+            }
+
+            onMutedChanged: {
+                if (Pipewire.sinkId && muted !== Pipewire.sinkMuted) {
+                    Pipewire.setSinkMuted(muted)
+                }
+            }
+        }
+    }
+
+    property var sourceWrapper: QtObject {
+        property var audio: sourceAudio
+        property bool ready: Pipewire.sourceId !== ""
+        property string name: Pipewire.sourceName
+        property string description: Pipewire.sourceDescription
+        property string id: Pipewire.sourceId
+
+        property var sourceAudio: QtObject {
+            property real volume: Pipewire.sourceVolume
+            property bool muted: Pipewire.sourceMuted
+
+            onVolumeChanged: {
+                if (Pipewire.sourceId && volume !== Pipewire.sourceVolume) {
+                    Pipewire.setSourceVolume(volume)
+                }
+            }
+
+            onMutedChanged: {
+                if (Pipewire.sourceId && muted !== Pipewire.sourceMuted) {
+                    Pipewire.setSourceMuted(muted)
+                }
+            }
+        }
     }
 
     Connections { // Protection against sudden volume changes

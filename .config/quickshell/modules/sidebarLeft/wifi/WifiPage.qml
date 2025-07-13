@@ -14,6 +14,12 @@ Rectangle {
     radius: Appearance.rounding.normal
     color: "transparent"
 
+    function safeSignal(val) {
+        if (typeof val === "number" && !isNaN(val)) return val;
+        var n = parseInt(val);
+        return (!isNaN(n) && n >= 0) ? n : 0;
+    }
+
     property bool showPasswordDialog: false
     property string selectedNetwork: ""
     property string passwordInput: ""
@@ -40,13 +46,12 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 8
-        spacing: 12
+        anchors.margins: 0
 
         // Header with WiFi toggle and status
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 56
+            Layout.minimumHeight: 54
             radius: Appearance.rounding.normal
             color: Qt.rgba(
                 Appearance.colors.colLayer1.r,
@@ -59,7 +64,8 @@ Rectangle {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 12
+                anchors.topMargin: 8
+                anchors.margins: 8
                 spacing: 8
 
                 // WiFi toggle button
@@ -87,18 +93,13 @@ Rectangle {
 
                 // Status info (wired connection and signal)
                 ColumnLayout {
-                    spacing: 0
+                    spacing: 8
                     Layout.alignment: Qt.AlignVCenter
                     StyledText {
-                        text: (Network.networkName || "").length > 0 ? Network.networkName : qsTr("Wired connection 1")
+                        text: Network.wifiEnabled ? qsTr("WiFi is enabled") : qsTr("WiFi is disabled")
                         font.pixelSize: Appearance.font.pixelSize.small
-                        color: Appearance.colors.colSubtext
-                    }
-                    StyledText {
-                        visible: (Network.networkStrength ?? 0) > 0
-                        text: qsTr("Signal: %1%").arg(Network.networkStrength ?? 0)
-                        font.pixelSize: Appearance.font.pixelSize.tiny
-                        color: Appearance.colors.colSubtext
+                        color: Network.wifiEnabled ? "#2196F3" : "#F44336"
+                        font.weight: Font.Medium
                     }
                 }
 
@@ -136,119 +137,29 @@ Rectangle {
             }
         }
 
-        // Connection status
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 48
-            radius: Appearance.rounding.normal
-            color: Qt.rgba(
-                Appearance.colors.colLayer1.r,
-                Appearance.colors.colLayer1.g,
-                Appearance.colors.colLayer1.b,
-                0.2
-            )
-            border.color: Qt.rgba(1, 1, 1, 0.08)
-            border.width: 1
-            visible: Network.wifiEnabled
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 8
-
-                MaterialSymbol {
-                    text: Network.isScanning ? "sync" : (Network.connected ? "wifi" : "wifi_off")
-                    iconSize: 18
-                    color: Network.isScanning ? Appearance.colors.colAccent :
-                           Network.connected ? "#4CAF50" : "#F44336"
-                }
-
-                StyledText {
-                    text: Network.isScanning ? qsTr("Scanning...") :
-                          Network.connected ? qsTr("Connected") : qsTr("Disconnected")
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colOnLayer0
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // Show connected SSID on the right
-                StyledText {
-                    visible: Network.connected && Network.ssid.length > 0
-                    text: Network.ssid
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colOnLayer1
-                    horizontalAlignment: Text.AlignRight
-                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                }
-
-                StyledText {
-                    text: Network.isConnecting ? qsTr("Connecting...") : ""
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    color: Appearance.colors.colAccent
-                    visible: Network.isConnecting
-                }
-            }
-        }
-
-        // Error message
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 40
-            radius: Appearance.rounding.normal
-            color: Qt.rgba(244, 67, 54, 0.1)
-            border.color: Qt.rgba(244, 67, 54, 0.3)
-            border.width: 1
-            visible: Network.connectionError.length > 0
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 8
-
-                MaterialSymbol {
-                    text: "error"
-                    iconSize: 16
-                    color: "#F44336"
-                }
-
-                StyledText {
-                    text: Network.connectionError
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    color: "#F44336"
-                    Layout.fillWidth: true
-                }
-
-                QuickToggleButton {
-                    buttonIcon: "close"
-                    implicitWidth: 24
-                    implicitHeight: 24
-                    onClicked: {
-                        Network.connectionError = "";
-                    }
-                }
-            }
-        }
-
         // Connected network section
         ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 4
-            visible: (Network.networks || []).filter(function(n) { return n.connected; }).length > 0
+            Layout.topMargin: -18
+            spacing: 0
+            visible: Network.wifiEnabled && Network.connected
             Text {
-                text: qsTr("Connected")
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.Medium
                 color: Appearance.colors.colOnLayer0
-                padding: 4
+                padding: 0
             }
             ListView {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.max(72, 72 * (Network.networks || []).filter(function(n) { return n.connected; }).length)
-                model: (Network.networks || []).filter(function(n) { return n.connected; })
+                Layout.preferredHeight: Math.max(72, 72 * (Network.connected ? 1 : 0))
+                model: Network.connected ? [{
+                    ssid: Network.ssid || Network.networkName,
+                    security: "Unknown",
+                    signal: Network.networkStrength || 0,
+                    connected: true
+                }] : []
                 spacing: 4
                 delegate: Rectangle {
-                    width: networkListView.width
+                    width: parent.width * 1.0
                     implicitHeight: modelData.connected ? 72 : Math.max(48, rowContent.implicitHeight + 16)
                     color: modelData.connected ? Qt.rgba(30/255, 30/255, 32/255, 0.92) : mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent"
                     radius: modelData.connected ? 12 : Appearance.rounding.small
@@ -272,17 +183,20 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            anchors.margins: 8
+                            anchors.margins: 12
                             spacing: 12
                             Layout.alignment: Qt.AlignVCenter
 
-                            // Signal strength icon
-                            MaterialSymbol {
-                                text: (modelData.signal ?? 0) > 80 ? "signal_wifi_4_bar" :
-                                      (modelData.signal ?? 0) > 60 ? "network_wifi_3_bar" :
-                                      (modelData.signal ?? 0) > 40 ? "network_wifi_2_bar" :
-                                      (modelData.signal ?? 0) > 20 ? "network_wifi_1_bar" :
-                                      "signal_wifi_0_bar"
+                                                                // Signal strength icon
+                                    MaterialSymbol {
+                                        text: {
+                                            const signal = safeSignal(modelData.signal);
+                                            return signal > 80 ? "signal_wifi_4_bar" :
+                                                   signal > 60 ? "network_wifi_3_bar" :
+                                                   signal > 40 ? "network_wifi_2_bar" :
+                                                   signal > 20 ? "network_wifi_1_bar" :
+                                                   "signal_wifi_0_bar";
+                                        }
                                 iconSize: 24
                                 color: modelData.connected ? "#4CAF50" : Appearance.colors.colOnLayer1
                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -324,7 +238,7 @@ Rectangle {
                                 spacing: 8
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                                 ColumnLayout {
-                                    spacing: 2
+                                    spacing: 4
                                     StyledText {
                                         visible: modelData.connected
                                         text: qsTr("Connected")
@@ -342,7 +256,7 @@ Rectangle {
                                     }
                                     StyledText {
                                         visible: ConfigOptions.networking?.wifi?.showSignalStrength || false
-                                        text: (modelData.signal ?? 0) + "%"
+                                        text: safeSignal(modelData.signal) + "%"
                                         font.pixelSize: Appearance.font.pixelSize.tiny
                                         color: Appearance.colors.colSubtext
                                         horizontalAlignment: Text.AlignLeft
@@ -463,11 +377,14 @@ Rectangle {
 
                                     // Signal strength icon
                                     MaterialSymbol {
-                                        text: (modelData.signal ?? 0) > 80 ? "signal_wifi_4_bar" :
-                                              (modelData.signal ?? 0) > 60 ? "network_wifi_3_bar" :
-                                              (modelData.signal ?? 0) > 40 ? "network_wifi_2_bar" :
-                                              (modelData.signal ?? 0) > 20 ? "network_wifi_1_bar" :
-                                              "signal_wifi_0_bar"
+                                        text: {
+                                            const signal = safeSignal(modelData.signal);
+                                            return signal > 80 ? "signal_wifi_4_bar" :
+                                                   signal > 60 ? "network_wifi_3_bar" :
+                                                   signal > 40 ? "network_wifi_2_bar" :
+                                                   signal > 20 ? "network_wifi_1_bar" :
+                                                   "signal_wifi_0_bar";
+                                        }
                                         iconSize: 24
                                         color: modelData.connected ? "#4CAF50" : Appearance.colors.colOnLayer1
                                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -527,7 +444,7 @@ Rectangle {
                                             }
                                             StyledText {
                                                 visible: ConfigOptions.networking?.wifi?.showSignalStrength || false
-                                                text: (modelData.signal ?? 0) + "%"
+                                                text: safeSignal(modelData.signal) + "%"
                                                 font.pixelSize: Appearance.font.pixelSize.tiny
                                                 color: Appearance.colors.colSubtext
                                                 horizontalAlignment: Text.AlignLeft

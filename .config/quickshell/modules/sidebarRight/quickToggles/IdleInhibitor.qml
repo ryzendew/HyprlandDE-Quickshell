@@ -26,6 +26,25 @@ QuickToggleButton {
         }
     }
     
+    Component.onCompleted: {
+        // On startup, disable sleep by default (kill hypridle)
+        killHypridle.startDetached()
+        isInhibiting = true
+        
+        // Delay the status check to allow the kill command to take effect
+        startupTimer.start()
+    }
+    
+    // Timer to delay the initial status check
+    Timer {
+        id: startupTimer
+        interval: 1000 // 1 second delay
+        repeat: false
+        onTriggered: {
+            checkHypridleStatus.running = true
+        }
+    }
+    
     // Process to kill hypridle (disable sleep)
     Process {
         id: killHypridle

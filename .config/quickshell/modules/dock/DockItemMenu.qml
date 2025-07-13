@@ -1,5 +1,5 @@
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Controls 2.15
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
@@ -67,6 +67,7 @@ Menu {
         }
         
         onTriggered: {
+            console.log("[DOCK DEBUG] Pin/Unpin triggered", isPinned)
             if (isPinned) {
                 dockItemMenu.unpinApp()
             } else {
@@ -97,6 +98,7 @@ Menu {
         }
         
         onTriggered: {
+            console.log("[DOCK DEBUG] Launch new instance triggered", appInfo.class)
             // Use the mapped command from desktopIdToCommand if available
             var command = ""
             if (appInfo.class) {
@@ -153,10 +155,11 @@ Menu {
         }
         
         onTriggered: {
+            console.log("[DOCK DEBUG] Move to workspace triggered", appInfo.address)
             if (appInfo.address) {
                 // TODO: Add workspace selection submenu
                 // For now just move to next workspace
-                Hyprland.dispatch(`dispatch movetoworkspace +1 address:${appInfo.address}`)
+                Hyprland.dispatch(`movetoworkspace +1,address:${appInfo.address}`)
             }
         }
     }
@@ -183,8 +186,9 @@ Menu {
         }
         
         onTriggered: {
+            console.log("[DOCK DEBUG] Toggle floating triggered", appInfo.address)
             if (appInfo.address) {
-                Hyprland.dispatch(`dispatch togglefloating address:${appInfo.address}`)
+                Hyprland.dispatch(`togglefloating address:${appInfo.address}`)
             }
         }
     }
@@ -224,12 +228,13 @@ Menu {
         }
         
         onTriggered: {
+            console.log("[DOCK DEBUG] Close triggered", appInfo.address, appInfo.pid, appInfo.class)
             if (appInfo.address) {
-                Hyprland.dispatch(`dispatch closewindow address:${appInfo.address}`)
+                Hyprland.dispatch(`closewindow address:${appInfo.address}`)
             } else if (appInfo.pid) {
-                Hyprland.dispatch(`dispatch closewindow pid:${appInfo.pid}`)
+                Hyprland.dispatch(`closewindow pid:${appInfo.pid}`)
             } else {
-                Hyprland.dispatch(`dispatch closewindow class:${appInfo.class}`)
+                Hyprland.dispatch(`closewindow class:${appInfo.class}`)
             }
             dockItemMenu.closeApp()
         }

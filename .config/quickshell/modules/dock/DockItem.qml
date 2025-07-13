@@ -116,43 +116,43 @@ Rectangle {
             anchors.fill: parent
             property string resolvedSource: (function() {
                 if (!appData) {
-                    console.log('[DOCK DEBUG] appData is null/undefined for DockItem');
+                    // console.log('[DOCK DEBUG] appData is null/undefined for DockItem');
                     return "image://icon/application-x-executable";
                 }
                 // For desktop entries, use iconUrl or fallback to icon name
                 if (appData.iconUrl) {
-                    console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source:', appData.iconUrl);
+                    // console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source:', appData.iconUrl);
                     return appData.iconUrl;
                 }
                 if (appData.icon) {
-                    console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source:', "image://icon/" + appData.icon);
+                    // console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source:', "image://icon/" + appData.icon);
                     return "image://icon/" + appData.icon;
                 }
                 if (appData.class && !isPinned) {
                     var desktopEntry = DesktopEntries.byId(appData.class);
                     if (desktopEntry) {
                         var src = desktopEntry.iconUrl || "image://icon/" + (desktopEntry.icon || "application-x-executable");
-                        console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'desktopEntry:', JSON.stringify(desktopEntry), 'icon source:', src);
+                        // console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'desktopEntry:', JSON.stringify(desktopEntry), 'icon source:', src);
                         return src;
                     }
                     for (var i = 0; i < AppSearch.list.length; i++) {
                         var app = AppSearch.list[i];
                         if (app.desktopId === appData.class) {
                             var src2 = app.iconUrl || "image://icon/" + (app.icon || "application-x-executable");
-                            console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'AppSearch match:', JSON.stringify(app), 'icon source:', src2);
+                            // console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'AppSearch match:', JSON.stringify(app), 'icon source:', src2);
                             return src2;
                         }
                     }
                     var guessedIcon = AppSearch.guessIcon(appData.class);
                     var src3 = "image://icon/" + (guessedIcon || "application-x-executable");
-                    console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'guessed icon:', guessedIcon, 'icon source:', src3);
+                    // console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'guessed icon:', guessedIcon, 'icon source:', src3);
                     return src3;
                 }
                 // Final fallback
                 if (isPinned) {
-                    console.log('[DOCK DEBUG] PINNED FALLBACK: modelData:', modelData, 'appData:', JSON.stringify(appData), 'icon source: fallback image://icon/application-x-executable');
+                    // console.log('[DOCK DEBUG] PINNED FALLBACK: modelData:', modelData, 'appData:', JSON.stringify(appData), 'icon source: fallback image://icon/application-x-executable');
                 } else {
-                    console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source: fallback image://icon/application-x-executable');
+                    // console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source: fallback image://icon/application-x-executable');
                 }
                 return "image://icon/application-x-executable";
             })()

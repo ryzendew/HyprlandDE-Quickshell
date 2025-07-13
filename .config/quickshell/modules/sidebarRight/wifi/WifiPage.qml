@@ -119,7 +119,7 @@ Rectangle {
                     }
 
                     StyledText {
-                        text: Network.connected ? Network.signalStrength + "%" : qsTr("N/A")
+                        text: Network.connected ? Network.networkStrength + "%" : qsTr("N/A")
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.colors.colOnLayer0
                     }
@@ -127,13 +127,13 @@ Rectangle {
                     Item { Layout.fillWidth: true }
 
                     StyledText {
-                        text: qsTr("Speed:")
+                        text: qsTr("Type:")
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.colors.colOnLayer1
                     }
 
                     StyledText {
-                        text: Network.connected ? Network.bitrate + " Mbps" : qsTr("N/A")
+                        text: Network.connected ? (Network.ethernet ? qsTr("Ethernet") : qsTr("WiFi")) : qsTr("N/A")
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.colors.colOnLayer0
                     }

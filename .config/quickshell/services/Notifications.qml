@@ -264,7 +264,7 @@ Singleton {
 
     function saveNotifications() {
         try {
-            const dir = `${Directories.cache}/notifications`
+            const dir = FileUtils.trimFileProtocol(`${Directories.cache.replace(/Quickshell/, 'quickshell')}/notifications`)
             Hyprland.dispatch(`exec mkdir -p '${dir}'`)
             const content = stringifyList(root.list);
             // console.log("[Notifications] Saving", root.list.length, "notifications to file");

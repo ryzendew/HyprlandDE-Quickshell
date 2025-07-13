@@ -15,7 +15,7 @@ import Qt.labs.platform
  */
 Singleton {
     id: root
-    property string fileDir: Directories.state
+    property string fileDir: FileUtils.trimFileProtocol(Directories.state.replace(/Quickshell/, 'quickshell'))
     property string fileName: "states.json"
     property string filePath: `${root.fileDir}/${root.fileName}`
     property bool allowWriteback: false

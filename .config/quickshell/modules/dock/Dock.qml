@@ -688,14 +688,14 @@ Scope {
                                         var found = null;
                                         
                                         if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                            console.log('[AFFINITY DEBUG] pinnedId:', pinnedId, 'base:', base, 'lowerBase:', lowerBase);
-                                            console.log('[AFFINITY DEBUG] Searching AppSearch.list for Affinity entries...');
+                                                            // console.log('[AFFINITY DEBUG] pinnedId:', pinnedId, 'base:', base, 'lowerBase:', lowerBase);
+                // console.log('[AFFINITY DEBUG] Searching AppSearch.list for Affinity entries...');
                                             for (var j = 0; j < AppSearch.list.length; j++) {
                                                 var searchApp = AppSearch.list[j];
                                                 if ((searchApp.desktopId && searchApp.desktopId.toLowerCase().indexOf('affinity') !== -1) ||
                                                     (searchApp.name && searchApp.name.toLowerCase().indexOf('affinity') !== -1) ||
                                                     (searchApp.exec && searchApp.exec.toLowerCase().indexOf('affinity') !== -1)) {
-                                                    console.log('[AFFINITY DEBUG] Found potential match:', JSON.stringify(searchApp));
+                                                    // console.log('[AFFINITY DEBUG] Found potential match:', JSON.stringify(searchApp));
                                                 }
                                             }
                                         }
@@ -710,7 +710,7 @@ Scope {
                                             )) {
                                                 found = app;
                                                 if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                    console.log('[AFFINITY DEBUG] [1] Found by desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                                    // console.log('[AFFINITY DEBUG] [1] Found by desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
                                                 }
                                                 break;
                                             }
@@ -723,7 +723,7 @@ Scope {
                                                 if (app.name && app.name.toLowerCase() === lowerBase) {
                                                     found = app;
                                                     if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                        console.log('[AFFINITY DEBUG] [2] Found by name:', app.name, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                                        // console.log('[AFFINITY DEBUG] [2] Found by name:', app.name, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
                                                     }
                                                     break;
                                                 }
@@ -737,7 +737,7 @@ Scope {
                                                 if (app.exec && app.exec.toLowerCase().indexOf(lowerBase) !== -1) {
                                                     found = app;
                                                     if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                        console.log('[AFFINITY DEBUG] [3] Found by exec:', app.exec, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                                        // console.log('[AFFINITY DEBUG] [3] Found by exec:', app.exec, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
                                                     }
                                                     break;
                                                 }
@@ -755,7 +755,7 @@ Scope {
                                                 )) {
                                                     found = app;
                                                     if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                        console.log('[AFFINITY DEBUG] [4] Found by fuzzy name/id:', app.name, 'id:', app.id, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                                        // console.log('[AFFINITY DEBUG] [4] Found by fuzzy name/id:', app.name, 'id:', app.id, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
                                                     }
                                                     break;
                                                 }
@@ -768,14 +768,14 @@ Scope {
                                             if (!found.icon || found.icon === "") {
                                                 found.icon = AppSearch.guessIcon(pinnedId);
                                                 if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                    console.log('[AFFINITY DEBUG] [5] Guessed icon:', found.icon);
+                                                    // console.log('[AFFINITY DEBUG] [5] Guessed icon:', found.icon);
                                                 }
                                             }
                                             if (!found.iconUrl) {
                                                 found.iconUrl = null;
                                             }
                                             if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(found));
+                                                // console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(found));
                                             }
                                             return found;
                                         }
@@ -788,8 +788,8 @@ Scope {
                                             iconUrl: null
                                         };
                                         if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                            console.log('[AFFINITY DEBUG] [6] Fallback guessIcon:', fallback.icon);
-                                            console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(fallback));
+                                                            // console.log('[AFFINITY DEBUG] [6] Fallback guessIcon:', fallback.icon);
+                // console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(fallback));
                                         }
                                         return fallback;
                                     }
@@ -1310,10 +1310,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 8, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 8, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 8,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 8 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 8 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1322,10 +1322,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 9, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 9, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 9,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 9 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 9 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1334,10 +1334,10 @@ Scope {
                 enabled: dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address !== undefined
                 onTriggered: {
                     if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.address) {
-                        console.log("[DOCK MENU DEBUG] Moving window to workspace 10, address:", dockContextMenu.contextAppInfo.address)
+                        // console.log("[DOCK MENU DEBUG] Moving window to workspace 10, address:", dockContextMenu.contextAppInfo.address)
                         Hyprland.dispatch(`movetoworkspace 10,address:${dockContextMenu.contextAppInfo.address}`)
                     } else {
-                        console.log("[DOCK MENU DEBUG] Cannot move to workspace 10 - missing address:", dockContextMenu.contextAppInfo)
+                        // console.log("[DOCK MENU DEBUG] Cannot move to workspace 10 - missing address:", dockContextMenu.contextAppInfo)
                     }
                 }
             }
@@ -1370,9 +1370,31 @@ Scope {
     function openDockContextMenu(appInfo, isPinned, dockItem, mouse) {
         var finalAppInfo = appInfo
         
+        // Normalize the app info - desktop entries use 'id', windows use 'class'
+        if (appInfo && !appInfo.class && appInfo.id) {
+            finalAppInfo = {
+                class: appInfo.id,  // Use id as class for desktop entries
+                name: appInfo.name,
+                address: appInfo.address,
+                pid: appInfo.pid,
+                command: appInfo.execString,
+                id: appInfo.id,
+                genericName: appInfo.genericName,
+                noDisplay: appInfo.noDisplay,
+                comment: appInfo.comment,
+                icon: appInfo.icon,
+                execString: appInfo.execString,
+                workingDirectory: appInfo.workingDirectory,
+                runInTerminal: appInfo.runInTerminal,
+                categories: appInfo.categories,
+                keywords: appInfo.keywords,
+                actions: appInfo.actions,
+                iconUrl: appInfo.iconUrl
+            }
+        }
         
         // For pinned apps, we need to find the actual window to get the address
-        if (isPinned && appInfo && appInfo.class) {
+        if (isPinned && finalAppInfo && finalAppInfo.class) {
             // Build mapping for .desktop files to possible window classes
             var mapping = {
                 'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
@@ -1380,19 +1402,19 @@ Scope {
                 'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
                 'vesktop': ['vesktop', 'discord'],
                 'steam-native': ['steam', 'steam.exe'],
-                'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus'],
+                'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus'],
                 'lutris': ['lutris', 'net.lutris.lutris'],
                 'heroic': ['heroic', 'heroicgameslauncher'],
                 'obs': ['obs', 'com.obsproject.studio'],
-                                                            'cursor-cursor': ['cursor', 'Cursor'],
+                'cursor-cursor': ['cursor', 'Cursor'],
                 'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
                 'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
             };
             
             // Build list of possible window classes for this pinned app
-            var possibleClasses = [appInfo.class.toLowerCase()];
-            if (mapping[appInfo.class]) {
-                possibleClasses = possibleClasses.concat(mapping[appInfo.class].map(c => c.toLowerCase()));
+            var possibleClasses = [finalAppInfo.class.toLowerCase()];
+            if (mapping[finalAppInfo.class]) {
+                possibleClasses = possibleClasses.concat(mapping[finalAppInfo.class].map(c => c.toLowerCase()));
             }
             
             // Find the window for this pinned app
