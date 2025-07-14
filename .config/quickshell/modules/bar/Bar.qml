@@ -19,10 +19,13 @@ import "." as BarComponents
 Scope {
     id: bar
 
-    readonly property int barHeight: Appearance.sizes.barHeight - 4
+    readonly property int barHeight: ConfigOptions.bar.height ?? 40
     readonly property int barCenterSideModuleWidth: Appearance.sizes.barCenterSideModuleWidth
     readonly property int osdHideMouseMoveThreshold: 20
     property bool hyprlandAvailable: true
+    readonly property int barIconSize: ConfigOptions.getIconSize()
+    readonly property int indicatorIconSize: ConfigOptions.getIndicatorIconSize()
+    readonly property int logoIconSize: ConfigOptions.getLogoIconSize()
 
     // Helper function to safely dispatch Hyprland commands
     function safeDispatch(command) {
@@ -102,7 +105,8 @@ Scope {
             WlrLayershell.namespace: "quickshell:bar:blur"
 
             anchors {
-                top: true
+                top: ConfigOptions.bar?.bottom ? undefined : true
+                bottom: ConfigOptions.bar?.bottom ? true : undefined
                 left: true
                 right: true
             }
@@ -114,12 +118,12 @@ Scope {
                 anchors.top: parent.top
                 height: barHeight
                 radius: 0
-                color: Qt.rgba(
+                color: ConfigOptions.bar?.showBackground ? Qt.rgba(
                     Appearance.colors.colLayer0.r,
                     Appearance.colors.colLayer0.g,
                     Appearance.colors.colLayer0.b,
-                    0.55
-                )
+                    ConfigOptions.bar?.transparency ?? 0.55
+                ) : "transparent"
                 anchors.margins: 0
                 layer.enabled: true
                 layer.smooth: true
@@ -210,14 +214,14 @@ Scope {
                                 Image {
                                     id: archLogo
                                     anchors.centerIn: parent
-                                    width: 32
-                                    height: 32
+                                    width: logoIconSize
+                                    height: logoIconSize
                                     source: "root:/logo/Arch-linux-logo.png"
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
                                     antialiasing: true
-                                    sourceSize.width: 32
-                                    sourceSize.height: 32
+                                    sourceSize.width: logoIconSize
+                                    sourceSize.height: logoIconSize
                                     layer.enabled: true
                                     layer.smooth: true
                                 }
@@ -341,7 +345,7 @@ Scope {
                                     MaterialSymbol {
                                         Layout.rightMargin: 4
                                         text: "volume_off"
-                                        iconSize: Appearance.font.pixelSize.huge
+                                        iconSize: indicatorIconSize
                                         color: rightSidebarButton.colText
                                         visible: Audio.sink?.audio?.muted ?? false
                                         
@@ -402,7 +406,7 @@ Scope {
                                             else if (volume > 0.3) return "volume_down"
                                             else return "volume_mute"
                                         }
-                                        iconSize: Appearance.font.pixelSize.huge
+                                        iconSize: indicatorIconSize
                                             color: rightSidebarButton.colText
                                         visible: !(Audio.sink?.audio?.muted ?? false)
                                         
@@ -458,7 +462,7 @@ Scope {
                                     MaterialSymbol {
                                         Layout.rightMargin: 4
                                         text: "mic_off"
-                                        iconSize: Appearance.font.pixelSize.huge
+                                        iconSize: indicatorIconSize
                                         color: rightSidebarButton.colText
                                         visible: Audio.source?.audio?.muted ?? false
                                         
@@ -499,7 +503,7 @@ Scope {
                                         MaterialSymbol {
                                         Layout.rightMargin: 4
                                         text: "mic"
-                                        iconSize: Appearance.font.pixelSize.huge
+                                        iconSize: indicatorIconSize
                                             color: rightSidebarButton.colText
                                         visible: !(Audio.source?.audio?.muted ?? false)
                                         MouseArea {
@@ -539,7 +543,7 @@ Scope {
                                     MaterialSymbol {
                                         Layout.rightMargin: 4
                                         text: "light_mode"
-                                        iconSize: Appearance.font.pixelSize.huge
+                                        iconSize: indicatorIconSize
                                         color: rightSidebarButton.colText
                                         
                                         MouseArea {
@@ -586,12 +590,12 @@ Scope {
                                     MaterialSymbol {
                                         Layout.rightMargin: indicatorsRowLayout.realSpacing
                                         text: Network.materialSymbol
-                                        iconSize: Appearance.font.pixelSize.huge
+                                        iconSize: indicatorIconSize
                                         color: rightSidebarButton.colText
                                     }
                                     MaterialSymbol {
                                         text: Bluetooth.bluetoothConnected ? "bluetooth_connected" : Bluetooth.bluetoothEnabled ? "bluetooth" : "bluetooth_disabled"
-                                        iconSize: Appearance.font.pixelSize.huge
+                                        iconSize: indicatorIconSize
                                         color: rightSidebarButton.colText
                                     }
 

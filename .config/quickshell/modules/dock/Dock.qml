@@ -68,7 +68,7 @@ Scope {
     
     // Debug pinnedApps changes
     onPinnedAppsChanged: {
-        console.log("[DOCK DEBUG] pinnedApps changed to:", JSON.stringify(pinnedApps))
+// console.log("[DOCK DEBUG] pinnedApps changed to:", JSON.stringify(pinnedApps))
     }
     
     // 1. Update pinned apps file path
@@ -226,17 +226,17 @@ Scope {
                     var arr = JSON.parse(content);
                     if (Array.isArray(arr)) {
                         dock.pinnedApps = arr;
-                        console.log("[DOCK DEBUG] Loaded pinned apps:", JSON.stringify(dock.pinnedApps));
+// console.log("[DOCK DEBUG] Loaded pinned apps:", JSON.stringify(dock.pinnedApps));
                     }
                 }
             } catch (e) {
-                console.log("[DOCK DEBUG] Error loading pinned apps from file:", e);
+// console.log("[DOCK DEBUG] Error loading pinned apps from file:", e);
                 dock.pinnedApps = [];
             }
         }
         
         onLoadFailed: {
-            console.log("[DOCK DEBUG] Pinned apps file not found, starting with empty array");
+// console.log("[DOCK DEBUG] Pinned apps file not found, starting with empty array");
             dock.pinnedApps = [];
         }
     }
@@ -248,7 +248,7 @@ Scope {
     
     // Add a new app to pinned apps
     function addPinnedApp(appClass) {
-        console.log("[DOCK DEBUG] addPinnedApp called with:", appClass);
+// console.log("[DOCK DEBUG] addPinnedApp called with:", appClass);
         // Map window class to desktop file if known
         var windowClassToDesktopFile = {
             "photo.exe": "AffinityPhoto.desktop",
@@ -266,17 +266,17 @@ Scope {
             // Add more mappings as needed
         };
         var toPin = windowClassToDesktopFile[appClass] || appClass;
-        console.log("[DOCK DEBUG] Mapped to:", toPin);
+// console.log("[DOCK DEBUG] Mapped to:", toPin);
         // Check if app is already pinned
         if (!pinnedApps.includes(toPin)) {
             // Create a new array to trigger QML reactivity
             var newPinnedApps = pinnedApps.slice()
             newPinnedApps.push(toPin)
             pinnedApps = newPinnedApps
-            console.log("[DOCK DEBUG] Added to pinned apps, calling savePinnedApps");
+// console.log("[DOCK DEBUG] Added to pinned apps, calling savePinnedApps");
             savePinnedApps()
         } else {
-            console.log("[DOCK DEBUG] App already pinned:", toPin);
+// console.log("[DOCK DEBUG] App already pinned:", toPin);
         }
     }
     
@@ -318,12 +318,12 @@ Scope {
     
     // Universal app launching function
     function launchApp(appIdentifier) {
-        console.log("[DOCK DEBUG] Launching app:", appIdentifier);
+// console.log("[DOCK DEBUG] Launching app:", appIdentifier);
         
         // Debug: List all available desktop entries for troubleshooting
         let allEntries = Object.keys(DesktopEntries.applications);
-        console.log("[DOCK DEBUG] Total desktop entries available:", allEntries.length);
-        console.log("[DOCK DEBUG] Available desktop entries:", allEntries.filter(k => k.toLowerCase().includes('edge') || k.toLowerCase().includes('nautilus') || k.toLowerCase().includes('microsoft')));
+// console.log("[DOCK DEBUG] Total desktop entries available:", allEntries.length);
+// console.log("[DOCK DEBUG] Available desktop entries:", allEntries.filter(k => k.toLowerCase().includes('edge') || k.toLowerCase().includes('nautilus') || k.toLowerCase().includes('microsoft')));
         
         // Map common window classes to desktop file IDs
         let mappedId = appIdentifier;
@@ -333,23 +333,23 @@ Scope {
             mappedId = "org.gnome.Nautilus.desktop";
         }
         
-        console.log("[DOCK DEBUG] Original identifier:", appIdentifier);
-        console.log("[DOCK DEBUG] Mapped identifier:", mappedId);
+// console.log("[DOCK DEBUG] Original identifier:", appIdentifier);
+// console.log("[DOCK DEBUG] Mapped identifier:", mappedId);
         
         // Try to find the desktop entry first (like HyprMenu does)
         let entry = DesktopEntries.applications[mappedId];
-        console.log("[DOCK DEBUG] Entry for mappedId:", mappedId, "found:", !!entry, "has execute:", !!(entry && entry.execute));
+// console.log("[DOCK DEBUG] Entry for mappedId:", mappedId, "found:", !!entry, "has execute:", !!(entry && entry.execute));
         if (entry && entry.execute) {
-            console.log("[DOCK DEBUG] Using DesktopEntries.execute() for:", mappedId);
+// console.log("[DOCK DEBUG] Using DesktopEntries.execute() for:", mappedId);
             entry.execute();
             return;
         }
         
         // Try original identifier
         entry = DesktopEntries.applications[appIdentifier];
-        console.log("[DOCK DEBUG] Entry for original:", appIdentifier, "found:", !!entry, "has execute:", !!(entry && entry.execute));
+// console.log("[DOCK DEBUG] Entry for original:", appIdentifier, "found:", !!entry, "has execute:", !!(entry && entry.execute));
         if (entry && entry.execute) {
-            console.log("[DOCK DEBUG] Using DesktopEntries.execute() for:", appIdentifier);
+// console.log("[DOCK DEBUG] Using DesktopEntries.execute() for:", appIdentifier);
             entry.execute();
             return;
         }
@@ -358,30 +358,30 @@ Scope {
         if (!appIdentifier.endsWith('.desktop')) {
             let desktopId = appIdentifier + '.desktop';
             entry = DesktopEntries.applications[desktopId];
-            console.log("[DOCK DEBUG] Entry for desktopId:", desktopId, "found:", !!entry, "has execute:", !!(entry && entry.execute));
+// console.log("[DOCK DEBUG] Entry for desktopId:", desktopId, "found:", !!entry, "has execute:", !!(entry && entry.execute));
             if (entry && entry.execute) {
-                console.log("[DOCK DEBUG] Using DesktopEntries.execute() for:", desktopId);
+// console.log("[DOCK DEBUG] Using DesktopEntries.execute() for:", desktopId);
                 entry.execute();
                 return;
             }
         }
         
         // Fallback: try to find by searching through all desktop entries
-        console.log("[DOCK DEBUG] Searching through all desktop entries...");
+// console.log("[DOCK DEBUG] Searching through all desktop entries...");
         for (let [id, desktopEntry] of Object.entries(DesktopEntries.applications)) {
             // Check if the app identifier matches the desktop entry name, exec, or id
             if (desktopEntry.name && desktopEntry.name.toLowerCase() === appIdentifier.toLowerCase()) {
-                console.log("[DOCK DEBUG] Found desktop entry by name:", id);
+// console.log("[DOCK DEBUG] Found desktop entry by name:", id);
                 desktopEntry.execute();
                 return;
             }
             if (desktopEntry.exec && desktopEntry.exec.toLowerCase().includes(appIdentifier.toLowerCase())) {
-                console.log("[DOCK DEBUG] Found desktop entry by exec:", id);
+// console.log("[DOCK DEBUG] Found desktop entry by exec:", id);
                 desktopEntry.execute();
                 return;
             }
             if (id.toLowerCase() === appIdentifier.toLowerCase()) {
-                console.log("[DOCK DEBUG] Found desktop entry by id:", id);
+// console.log("[DOCK DEBUG] Found desktop entry by id:", id);
                 desktopEntry.execute();
                 return;
             }
@@ -390,13 +390,13 @@ Scope {
         // Final fallback: try gtk-launch for .desktop files
         if (appIdentifier.endsWith('.desktop') || mappedId.endsWith('.desktop')) {
             let desktopFile = appIdentifier.endsWith('.desktop') ? appIdentifier : mappedId;
-            console.log("[DOCK DEBUG] Trying gtk-launch for:", desktopFile);
+// console.log("[DOCK DEBUG] Trying gtk-launch for:", desktopFile);
             Hyprland.dispatch(`exec gtk-launch ${desktopFile}`);
             return;
         }
         
         // Final fallback: try direct execution
-        console.log("[DOCK DEBUG] No desktop entry found, trying direct execution:", appIdentifier);
+// console.log("[DOCK DEBUG] No desktop entry found, trying direct execution:", appIdentifier);
         Hyprland.dispatch(`exec ${appIdentifier}`);
     }
     
@@ -533,49 +533,49 @@ Scope {
             Connections {
                 target: HyprlandData
                 function onWindowListChanged() { 
-                    log("debug", "Window list changed, updating active windows")
+                    // log("debug", "Window list changed, updating active windows")
                     updateActiveWindows() 
                 }
             }
             
             Component.onCompleted: {
-                log("info", "Dock component completed, initializing...")
+                // log("info", "Dock component completed, initializing...")
                 updateActiveWindows()
             }
             
             function updateActiveWindows() {
                 // Show apps from ALL monitors/workspaces instead of filtering by current monitor
                 const windows = HyprlandData.windowList.filter((window, idx, arr) => {
-                    log("debug", `[FILTER] Checking window: class='${window.class}', title='${window.title}'`);
+                    // log("debug", `[FILTER] Checking window: class='${window.class}', title='${window.title}'`);
                     // Skip windows without a valid class
                     if (!window.class || window.class.trim() === '') {
-                        log("debug", `[FILTER] Excluded: missing or empty class`);
+                        // log("debug", `[FILTER] Excluded: missing or empty class`);
                         return false;
                     }
                     // Skip windows with very short class names that might be temporary/placeholder
                     if (window.class.length < 2) {
-                        log("debug", `[FILTER] Excluded: class too short`);
+                        // log("debug", `[FILTER] Excluded: class too short`);
                         return false;
                     }
                     // Skip windows with generic class names that don't represent real apps
                     const genericClasses = ['window', 'x11', 'xwayland', 'wayland', 'unknown', 'null', 'undefined'];
                     if (genericClasses.includes(window.class.toLowerCase())) {
-                        log("debug", `[FILTER] Excluded: generic class '${window.class}'`);
+                        // log("debug", `[FILTER] Excluded: generic class '${window.class}'`);
                         return false;
                     }
                     // Skip windows that don't have a proper title (optional additional check)
                     if (!window.title || window.title.trim() === '') {
-                        log("debug", `[FILTER] Excluded: missing or empty title`);
+                        // log("debug", `[FILTER] Excluded: missing or empty title`);
                         return false;
                     }
                     // Icon resolution is now handled in DockItem.qml, so we don't need to filter by icon here
-                    log("debug", `[FILTER] Included: valid window`);
+                    // log("debug", `[FILTER] Included: valid window`);
                     return true;
                 })
                 
                 if (JSON.stringify(windows) !== JSON.stringify(dock.activeWindows)) {
-                    log("debug", `Updating active windows: ${windows.length} windows found`)
-                    log("debug", `Window list: ${JSON.stringify(windows.map(w => w.class))}`)
+                    // log("debug", `Updating active windows: ${windows.length} windows found`)
+                    // log("debug", `Window list: ${JSON.stringify(windows.map(w => w.class))}`)
                     dock.activeWindows = windows
                 }
             }
@@ -622,22 +622,22 @@ Scope {
                         possibleClasses.push(key.toLowerCase());
                     }
                 }
-                log("debug", `[ISWINDOWACTIVE] Checking ${normalizedWindowClass}, possible classes: ${JSON.stringify(possibleClasses)}`);
-                log("debug", `[ISWINDOWACTIVE] Active windows: ${JSON.stringify(dock.activeWindows.map(w => w.class))}`);
+                // log("debug", `[ISWINDOWACTIVE] Checking ${normalizedWindowClass}, possible classes: ${JSON.stringify(possibleClasses)}`);
+                // log("debug", `[ISWINDOWACTIVE] Active windows: ${JSON.stringify(dock.activeWindows.map(w => w.class))}`);
                 var result = dock.activeWindows.some(w => possibleClasses.includes(w.class.toLowerCase()));
-                log("debug", `[ISWINDOWACTIVE] Result for ${normalizedWindowClass}: ${result}`);
+                // log("debug", `[ISWINDOWACTIVE] Result for ${normalizedWindowClass}: ${result}`);
                 return result;
             }
             
             function focusOrLaunchApp(appInfo) {
-                log("debug", `[FOCUSORLAUNCH] Called with appInfo: ${JSON.stringify(appInfo)}`);
+                // log("debug", `[FOCUSORLAUNCH] Called with appInfo: ${JSON.stringify(appInfo)}`);
                 var isActive = isWindowActive(appInfo.class);
-                log("debug", `[FOCUSORLAUNCH] isWindowActive(${appInfo.class}) = ${isActive}`);
+                // log("debug", `[FOCUSORLAUNCH] isWindowActive(${appInfo.class}) = ${isActive}`);
                 if (isActive) {
-                    log("debug", `[FOCUSORLAUNCH] Focusing window class: ${appInfo.class}`);
+                    // log("debug", `[FOCUSORLAUNCH] Focusing window class: ${appInfo.class}`);
                     Hyprland.dispatch(`focuswindow class:${appInfo.class}`)
                 } else {
-                    log("debug", `[FOCUSORLAUNCH] Launching new instance`);
+                    // log("debug", `[FOCUSORLAUNCH] Launching new instance`);
                     dock.launchApp(appInfo.class);
                 }
             }
@@ -1049,7 +1049,7 @@ Scope {
                                             key = "lutris";
                                         }
                                         // Debug log for window class and grouping key
-                                        console.log('[DOCK DEBUG] Window class:', w.class, '| Grouping key:', key, '| Title:', w.title, '| Address:', w.address);
+// console.log('[DOCK DEBUG] Window class:', w.class, '| Grouping key:', key, '| Title:', w.title, '| Address:', w.address);
                                         // Skip if this app is pinned (check normalized set)
                                         if (normalizedPinnedSet.has(key)) continue;
                                         if (!groups[key]) groups[key] = [];
@@ -1137,8 +1137,8 @@ Scope {
                                             var mappedBase = mappedDesktopFile.replace(/\.desktop$/i, "");
                                             var mappedLowerBase = mappedBase.toLowerCase();
                                             
-                                            console.log('[REVERSE MAPPING] windowClass:', windowClass, 'mapped to:', mappedDesktopFile);
-                                            console.log('[REVERSE MAPPING] Searching for:', mappedLower, mappedLowerBase + ".desktop", mappedLowerBase);
+// console.log('[REVERSE MAPPING] windowClass:', windowClass, 'mapped to:', mappedDesktopFile);
+// console.log('[REVERSE MAPPING] Searching for:', mappedLower, mappedLowerBase + ".desktop", mappedLowerBase);
                                             
                                             // Search using the mapped desktop file name
                                             for (var i = 0; i < AppSearch.list.length; i++) {
@@ -1149,33 +1149,33 @@ Scope {
                                                     app.desktopId.toLowerCase() === mappedLowerBase
                                                 )) {
                                                     found = app;
-                                                    console.log('[REVERSE MAPPING] Found by mapped desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+// console.log('[REVERSE MAPPING] Found by mapped desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
                                                     break;
                                                 }
                                             }
                                             
                                             // If not found, let's see what's in AppSearch.list for Affinity apps
                                             if (!found && lowerWindowClass.indexOf('affinity') !== -1) {
-                                                console.log('[REVERSE MAPPING] Not found, checking AppSearch.list for Affinity entries...');
+// console.log('[REVERSE MAPPING] Not found, checking AppSearch.list for Affinity entries...');
                                                 for (var j = 0; j < AppSearch.list.length; j++) {
                                                     var searchApp = AppSearch.list[j];
                                                     if ((searchApp.desktopId && searchApp.desktopId.toLowerCase().indexOf('affinity') !== -1) ||
                                                         (searchApp.name && searchApp.name.toLowerCase().indexOf('affinity') !== -1)) {
-                                                        console.log('[REVERSE MAPPING] Found Affinity entry:', JSON.stringify(searchApp));
+// console.log('[REVERSE MAPPING] Found Affinity entry:', JSON.stringify(searchApp));
                                                     }
                                                 }
                                             }
                                         }
                                         
                                         if (lowerWindowClass.indexOf('affinity') !== -1) {
-                                            console.log('[AFFINITY DEBUG] windowClass:', windowClass, 'base:', base, 'lowerBase:', lowerBase);
-                                            console.log('[AFFINITY DEBUG] Searching AppSearch.list for Affinity entries...');
+// console.log('[AFFINITY DEBUG] windowClass:', windowClass, 'base:', base, 'lowerBase:', lowerBase);
+// console.log('[AFFINITY DEBUG] Searching AppSearch.list for Affinity entries...');
                                             for (var j = 0; j < AppSearch.list.length; j++) {
                                                 var searchApp = AppSearch.list[j];
                                                 if ((searchApp.desktopId && searchApp.desktopId.toLowerCase().indexOf('affinity') !== -1) ||
                                                     (searchApp.name && searchApp.name.toLowerCase().indexOf('affinity') !== -1) ||
                                                     (searchApp.exec && searchApp.exec.toLowerCase().indexOf('affinity') !== -1)) {
-                                                    console.log('[AFFINITY DEBUG] Found potential match:', JSON.stringify(searchApp));
+// console.log('[AFFINITY DEBUG] Found potential match:', JSON.stringify(searchApp));
                                                 }
                                             }
                                         }
@@ -1190,7 +1190,7 @@ Scope {
                                             )) {
                                                 found = app;
                                                                                             if (lowerWindowClass.indexOf('affinity') !== -1) {
-                                                console.log('[AFFINITY DEBUG] [1] Found by desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+// console.log('[AFFINITY DEBUG] [1] Found by desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
                                             }
                                                 break;
                                             }
@@ -1203,7 +1203,7 @@ Scope {
                                                 if (app.name && app.name.toLowerCase() === lowerBase) {
                                                     found = app;
                                                                                                 if (lowerWindowClass.indexOf('affinity') !== -1) {
-                                                console.log('[AFFINITY DEBUG] [2] Found by name:', app.name, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+// console.log('[AFFINITY DEBUG] [2] Found by name:', app.name, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
                                             }
                                                     break;
                                                 }
@@ -1217,7 +1217,7 @@ Scope {
                                                 if (app.exec && app.exec.toLowerCase().indexOf(lowerBase) !== -1) {
                                                     found = app;
                                                                                                 if (lowerWindowClass.indexOf('affinity') !== -1) {
-                                                console.log('[AFFINITY DEBUG] [3] Found by exec:', app.exec, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+// console.log('[AFFINITY DEBUG] [3] Found by exec:', app.exec, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
                                             }
                                                     break;
                                                 }
@@ -1235,7 +1235,7 @@ Scope {
                                                 )) {
                                                     found = app;
                                                                                                 if (lowerWindowClass.indexOf('affinity') !== -1) {
-                                                console.log('[AFFINITY DEBUG] [4] Found by fuzzy name/id:', app.name, 'id:', app.id, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+// console.log('[AFFINITY DEBUG] [4] Found by fuzzy name/id:', app.name, 'id:', app.id, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
                                             }
                                                     break;
                                                 }
@@ -1248,7 +1248,7 @@ Scope {
                                             if (!found.icon || found.icon === "") {
                                                 found.icon = AppSearch.guessIcon(windowClass);
                                                                                             if (lowerWindowClass.indexOf('affinity') !== -1) {
-                                                console.log('[AFFINITY DEBUG] [5] Guessed icon:', found.icon);
+// console.log('[AFFINITY DEBUG] [5] Guessed icon:', found.icon);
                                             }
                                             }
                                             if (!found.iconUrl) {
@@ -1260,7 +1260,7 @@ Scope {
                                             found.address = modelData.address;
                                             found.workspace = modelData.workspace;
                                             if (lowerWindowClass.indexOf('affinity') !== -1) {
-                                                console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(found));
+// console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(found));
                                             }
                                             return found;
                                         }
@@ -1287,7 +1287,7 @@ Scope {
                                                 var iconPath = "/home/matt/.local/share/icons/" + mappedDesktopFile.replace('.desktop', '.svg');
                                                 fallback.iconUrl = "file://" + iconPath;
                                                 fallback.icon = mappedDesktopFile.replace('.desktop', '');
-                                                console.log('[AFFINITY FALLBACK] Set iconUrl to', fallback.iconUrl, 'icon:', fallback.icon);
+// console.log('[AFFINITY FALLBACK] Set iconUrl to', fallback.iconUrl, 'icon:', fallback.icon);
                                             }
                                         }
                                         

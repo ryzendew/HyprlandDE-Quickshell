@@ -14,11 +14,12 @@ MouseArea {
     required property SystemTrayItem item
     required property var systrayWidget
     property bool targetMenuOpen: false
-    property int trayItemWidth: Appearance.font.pixelSize.larger
+    property int trayItemWidth: ConfigOptions.getSystrayIconSize()
 
     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
     Layout.fillHeight: true
     implicitWidth: trayItemWidth
+    implicitHeight: trayItemWidth
     hoverEnabled: true
     
     onClicked: function(mouse) {
@@ -71,8 +72,8 @@ MouseArea {
         visible: true // There's already color overlay
         source: root.item.icon
         anchors.centerIn: parent
-        width: parent.width
-        height: parent.height
+        width: trayItemWidth
+        height: trayItemWidth
     }
 
 }

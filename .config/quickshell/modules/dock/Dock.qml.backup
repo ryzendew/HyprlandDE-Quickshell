@@ -13,6 +13,7 @@ import "root:/modules/common/widgets"
 import "root:/services"
 import Qt.labs.platform
 import "root:/modules/bar"
+import "root:/modules/dock"
 
 
 Scope {
@@ -35,7 +36,7 @@ Scope {
     readonly property bool autoHide: ConfigOptions.dock.autoHide
     
     onAutoHideChanged: {
-        console.log("[DOCK DEBUG] autoHide property changed to:", autoHide, "ConfigOptions.dock.autoHide:", ConfigOptions.dock.autoHide)
+// console.log("[DOCK DEBUG] autoHide property changed to:", autoHide, "ConfigOptions.dock.autoHide:", ConfigOptions.dock.autoHide)
     }
     property int hideDelay: ConfigOptions.dock.hideDelay
     property int showDelay: ConfigOptions.dock.showDelay
@@ -57,69 +58,53 @@ Scope {
     property point previewPosition: Qt.point(0, 0)
     property int previewItemWidth: 0
     
-    // Default pinned apps to use if no saved settings exist
-    readonly property var defaultPinnedApps: [
-            "microsoft-edge-dev",
-            "org.gnome.Nautilus",
-            "vesktop",
-            "cider",
-            "Cider.desktop",
-            "steam-native",
-            "lutris",
-            "heroic",
-            "obs",
-            "com.blackmagicdesign.resolve.desktop",
-            "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "AffinityPhoto.desktop",
-            "ptyxis"
-    ]
-    
     // Pinned apps list - will be loaded from file
     property var pinnedApps: []
     
+    // Active windows list - will be updated by PanelWindow
+    property var activeWindows: []
+    
+    // No longer needed - using DesktopEntries.execute() like HyprMenu
+    
     // Debug pinnedApps changes
     onPinnedAppsChanged: {
-        // console.log("[DOCK DEBUG] pinnedApps changed to:", JSON.stringify(pinnedApps))
+        console.log("[DOCK DEBUG] pinnedApps changed to:", JSON.stringify(pinnedApps))
     }
     
-    // Settings file path
-    property string configFilePath: `${Quickshell.configDir}/dock_config.json`
-    
-    // Map desktop IDs to executable commands
-    readonly property var desktopIdToCommand: ({
-        // Nautilus variations
-        "org.gnome.Nautilus": "nautilus --new-window",
-        "org.gnome.nautilus": "nautilus --new-window",
-        "nautilus": "nautilus --new-window",
-        "Nautilus": "nautilus --new-window",
-        
-        // Ptyxis variations
-        "org.gnome.Ptyxis.desktop": "ptyxis",
-        "org.gnome.Ptyxis": "ptyxis",
-        "ptyxis": "ptyxis",
-        
-        // Other apps
-        "vesktop": "vesktop --new-window",
-        "microsoft-edge-dev": "microsoft-edge-dev --new-window",
-        "cursor-cursor": "gtk-launch cursor-cursor",
-        "steam-native": "steam-native -newbigpicture",
-        "lutris": "lutris",
-        "net.lutris.Lutris": "lutris",
-        "heroic": "heroic",
-        "obs": "obs",
-        "com.obsproject.Studio.desktop": "gtk-launch com.obsproject.Studio.desktop",
-        "com.blackmagicdesign.resolve": "resolve",
-        "com.blackmagicdesign.resolve.desktop": "gtk-launch com.blackmagicdesign.resolve.desktop",
-        "net.lutris.davinci-resolve-studio-20-1.desktop": "gtk-launch net.lutris.davinci-resolve-studio-20-1.desktop",
-        "AffinityPhoto": "AffinityPhoto",
-        "AffinityPhoto.desktop": "gtk-launch AffinityPhoto.desktop",
-        "AffinityDesigner": "AffinityDesigner",
-        "AffinityDesigner.desktop": "gtk-launch AffinityDesigner.desktop",
-        "cider": "Cider",
-        "Cider": "Cider",
-        "Cider.desktop": "Cider"
-    })
-    
+    // 1. Update pinned apps file path
+    property string pinnedAppsFilePath: `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/Quickshell/Dock/PinnedApps.conf`
+    property string oldConfigFilePath: `${Quickshell.configDir}/dock_config.json`
+
+    // 2. On startup, initialize pinned apps array
+    Component.onCompleted: {
+        // Initialize with empty array, FileView will load the data
+        dock.pinnedApps = [];
+    }
+
+    // 3. Update save logic - using Hyprland.dispatch to write file
+    function savePinnedApps() {
+        try {
+            // console.log("[SAVE PINNED DEBUG] Saving pinned apps to:", pinnedAppsFilePath);
+            // console.log("[SAVE PINNED DEBUG] Pinned apps to save:", JSON.stringify(pinnedApps));
+            
+            // Use Hyprland.dispatch to write the pinned apps file
+            // Create the directory if it doesn't exist
+            var dirPath = pinnedAppsFilePath.replace('file://', '').replace('/PinnedApps.conf', '');
+            // console.log("[SAVE PINNED DEBUG] Creating directory:", dirPath);
+            Hyprland.dispatch(`exec mkdir -p '${dirPath}'`);
+            
+            // Write the JSON content to the file
+            var jsonContent = JSON.stringify(pinnedApps, null, 2);
+            // console.log("[SAVE PINNED DEBUG] JSON content to write:", jsonContent);
+            Hyprland.dispatch(`exec echo '${jsonContent.replace(/'/g, "'\"'\"'")}' > '${pinnedAppsFilePath.replace('file://', '')}'`);
+            
+            // console.log("[SAVE PINNED DEBUG] Successfully saved pinned apps");
+        } catch (e) {
+            // console.log("[SAVE PINNED DEBUG] Error saving pinned apps:", e);
+        }
+    }
+
+    // 4. Remove all fallback/defaults logic
     // Watch for ConfigOptions changes
     Connections {
         target: ConfigOptions.dock
@@ -146,7 +131,7 @@ Scope {
         
         function onAutoHideChanged() {
             // Auto-hide behavior will update automatically due to property bindings
-            console.log("[DOCK DEBUG] Auto-hide setting changed to:", autoHide)
+// console.log("[DOCK DEBUG] Auto-hide setting changed to:", autoHide)
         }
         
         function onHideDelayChanged() {
@@ -229,53 +214,234 @@ Scope {
         }
     }
     
-    function saveConfig() {
-        var config = {
-            pinnedApps: pinnedApps
-            // autoHide is now managed by ConfigOptions.dock.autoHide
+    // FileView to manage pinned apps storage
+    FileView {
+        id: pinnedAppsFileView
+        path: pinnedAppsFilePath
+        
+        onLoaded: {
+            try {
+                var content = text();
+                if (content && content.trim() !== '') {
+                    var arr = JSON.parse(content);
+                    if (Array.isArray(arr)) {
+                        dock.pinnedApps = arr;
+                        console.log("[DOCK DEBUG] Loaded pinned apps:", JSON.stringify(dock.pinnedApps));
+                    }
+                }
+            } catch (e) {
+                console.log("[DOCK DEBUG] Error loading pinned apps from file:", e);
+                dock.pinnedApps = [];
+            }
         }
-        dockConfigView.setText(JSON.stringify(config, null, 2))
+        
+        onLoadFailed: {
+            console.log("[DOCK DEBUG] Pinned apps file not found, starting with empty array");
+            dock.pinnedApps = [];
+        }
     }
     
 
-    
-    function savePinnedApps() {
-        saveConfig()
-    }
     
     // Auto-hide is now managed through ConfigOptions.dock.autoHide
     // Use the settings UI to toggle auto-hide
     
     // Add a new app to pinned apps
     function addPinnedApp(appClass) {
+        console.log("[DOCK DEBUG] addPinnedApp called with:", appClass);
         // Map window class to desktop file if known
         var windowClassToDesktopFile = {
             "photo.exe": "AffinityPhoto.desktop",
             "Photo.exe": "AffinityPhoto.desktop",
             "designer.exe": "AffinityDesigner.desktop",
-            "Designer.exe": "AffinityDesigner.desktop"
+            "Designer.exe": "AffinityDesigner.desktop",
+            "net.lutris.lutris": "lutris",  // Normalize Lutris to always use "lutris"
+            "net.lutris.Lutris": "lutris",  // Handle capital L variation
+            "lutris": "lutris",  // Ensure Lutris is always "lutris"
+            "Lutris": "lutris",   // Handle capital L variation
+            "com.obsproject.Studio": "obs",  // Normalize OBS to always use "obs"
+            "com.obsproject.studio": "obs",  // Handle lowercase s variation
+            "obs": "obs",  // Ensure OBS is always "obs"
+            "OBS": "obs"   // Handle uppercase variation
             // Add more mappings as needed
         };
         var toPin = windowClassToDesktopFile[appClass] || appClass;
+        console.log("[DOCK DEBUG] Mapped to:", toPin);
         // Check if app is already pinned
         if (!pinnedApps.includes(toPin)) {
             // Create a new array to trigger QML reactivity
             var newPinnedApps = pinnedApps.slice()
             newPinnedApps.push(toPin)
             pinnedApps = newPinnedApps
+            console.log("[DOCK DEBUG] Added to pinned apps, calling savePinnedApps");
             savePinnedApps()
+        } else {
+            console.log("[DOCK DEBUG] App already pinned:", toPin);
         }
     }
     
     // Remove an app from pinned apps
     function removePinnedApp(appClass) {
-        var index = pinnedApps.indexOf(appClass)
+        // For pinned apps, appClass is already the desktop file name
+        // For unpinned apps, we need to map window class to desktop file
+        var toRemove = appClass;
+        
+        // Apply mapping for both window classes and desktop files
+        var windowClassToDesktopFile = {
+            "photo.exe": "AffinityPhoto.desktop",
+            "Photo.exe": "AffinityPhoto.desktop",
+            "designer.exe": "AffinityDesigner.desktop",
+            "Designer.exe": "AffinityDesigner.desktop",
+            "net.lutris.lutris": "lutris",  // Normalize Lutris to always use "lutris"
+            "net.lutris.Lutris": "lutris",  // Handle capital L variation
+            "lutris": "lutris",  // Ensure Lutris is always "lutris"
+            "Lutris": "lutris",   // Handle capital L variation
+            "com.obsproject.Studio": "obs",  // Normalize OBS to always use "obs"
+            "com.obsproject.studio": "obs",  // Handle lowercase s variation
+            "obs": "obs",  // Ensure OBS is always "obs"
+            "OBS": "obs",   // Handle uppercase variation
+            "com.obsproject.Studio.desktop": "obs",  // Handle desktop file name for OBS
+            "com.obsproject.studio.desktop": "obs"   // Handle lowercase desktop file name for OBS
+            // Add more mappings as needed
+        };
+        toRemove = windowClassToDesktopFile[appClass] || appClass;
+        
+        var index = pinnedApps.indexOf(toRemove)
+        
         if (index !== -1) {
             var newPinnedApps = pinnedApps.slice()
             newPinnedApps.splice(index, 1)
             pinnedApps = newPinnedApps
             savePinnedApps()
         }
+    }
+    
+    // Universal app launching function
+    function launchApp(appIdentifier) {
+        console.log("[DOCK DEBUG] Launching app:", appIdentifier);
+        
+        // Debug: List all available desktop entries for troubleshooting
+        let allEntries = Object.keys(DesktopEntries.applications);
+        console.log("[DOCK DEBUG] Total desktop entries available:", allEntries.length);
+        console.log("[DOCK DEBUG] Available desktop entries:", allEntries.filter(k => k.toLowerCase().includes('edge') || k.toLowerCase().includes('nautilus') || k.toLowerCase().includes('microsoft')));
+        
+        // Map common window classes to desktop file IDs
+        let mappedId = appIdentifier;
+        if (appIdentifier === "Microsoft-edge-dev") {
+            mappedId = "microsoft-edge-dev.desktop";
+        } else if (appIdentifier === "org.gnome.Nautilus") {
+            mappedId = "org.gnome.Nautilus.desktop";
+        }
+        
+        console.log("[DOCK DEBUG] Original identifier:", appIdentifier);
+        console.log("[DOCK DEBUG] Mapped identifier:", mappedId);
+        
+        // Try to find the desktop entry first (like HyprMenu does)
+        let entry = DesktopEntries.applications[mappedId];
+        console.log("[DOCK DEBUG] Entry for mappedId:", mappedId, "found:", !!entry, "has execute:", !!(entry && entry.execute));
+        if (entry && entry.execute) {
+            console.log("[DOCK DEBUG] Using DesktopEntries.execute() for:", mappedId);
+            entry.execute();
+            return;
+        }
+        
+        // Try original identifier
+        entry = DesktopEntries.applications[appIdentifier];
+        console.log("[DOCK DEBUG] Entry for original:", appIdentifier, "found:", !!entry, "has execute:", !!(entry && entry.execute));
+        if (entry && entry.execute) {
+            console.log("[DOCK DEBUG] Using DesktopEntries.execute() for:", appIdentifier);
+            entry.execute();
+            return;
+        }
+        
+        // If no desktop entry found, try with .desktop extension
+        if (!appIdentifier.endsWith('.desktop')) {
+            let desktopId = appIdentifier + '.desktop';
+            entry = DesktopEntries.applications[desktopId];
+            console.log("[DOCK DEBUG] Entry for desktopId:", desktopId, "found:", !!entry, "has execute:", !!(entry && entry.execute));
+            if (entry && entry.execute) {
+                console.log("[DOCK DEBUG] Using DesktopEntries.execute() for:", desktopId);
+                entry.execute();
+                return;
+            }
+        }
+        
+        // Fallback: try to find by searching through all desktop entries
+        console.log("[DOCK DEBUG] Searching through all desktop entries...");
+        for (let [id, desktopEntry] of Object.entries(DesktopEntries.applications)) {
+            // Check if the app identifier matches the desktop entry name, exec, or id
+            if (desktopEntry.name && desktopEntry.name.toLowerCase() === appIdentifier.toLowerCase()) {
+                console.log("[DOCK DEBUG] Found desktop entry by name:", id);
+                desktopEntry.execute();
+                return;
+            }
+            if (desktopEntry.exec && desktopEntry.exec.toLowerCase().includes(appIdentifier.toLowerCase())) {
+                console.log("[DOCK DEBUG] Found desktop entry by exec:", id);
+                desktopEntry.execute();
+                return;
+            }
+            if (id.toLowerCase() === appIdentifier.toLowerCase()) {
+                console.log("[DOCK DEBUG] Found desktop entry by id:", id);
+                desktopEntry.execute();
+                return;
+            }
+        }
+        
+        // Final fallback: try gtk-launch for .desktop files
+        if (appIdentifier.endsWith('.desktop') || mappedId.endsWith('.desktop')) {
+            let desktopFile = appIdentifier.endsWith('.desktop') ? appIdentifier : mappedId;
+            console.log("[DOCK DEBUG] Trying gtk-launch for:", desktopFile);
+            Hyprland.dispatch(`exec gtk-launch ${desktopFile}`);
+            return;
+        }
+        
+        // Final fallback: try direct execution
+        console.log("[DOCK DEBUG] No desktop entry found, trying direct execution:", appIdentifier);
+        Hyprland.dispatch(`exec ${appIdentifier}`);
+    }
+    
+    // Universal function to find a window for a given app
+    function findWindowForApp(appIdentifier) {
+        // Normalize appIdentifier for special cases
+        var normalizedIdentifier = appIdentifier;
+        if (appIdentifier === "lutris" || appIdentifier === "net.lutris.lutris" || 
+            appIdentifier === "net.lutris.Lutris" || appIdentifier === "Lutris") {
+            normalizedIdentifier = "lutris";
+        }
+        if (appIdentifier === "obs" || appIdentifier === "com.obsproject.Studio" || 
+            appIdentifier === "com.obsproject.studio" || appIdentifier === "OBS") {
+            normalizedIdentifier = "obs";
+        }
+        
+        // Build mapping for .desktop files to possible window classes
+        var mapping = {
+            'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
+            'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
+            'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
+            'vesktop': ['vesktop', 'discord'],
+            'steam-native': ['steam', 'steam.exe'],
+            'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus'],
+            'org.gnome.nautilus': ['nautilus', 'org.gnome.nautilus'],
+            'lutris': ['lutris', 'net.lutris.lutris'],
+            'heroic': ['heroic', 'heroicgameslauncher'],
+            'obs': ['obs', 'com.obsproject.studio'],
+            'com.obsproject.Studio.desktop': ['obs', 'com.obsproject.studio'],
+            'cursor-cursor': ['cursor', 'Cursor'],
+            'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
+            'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
+        };
+        
+        // Build list of possible window classes for this app
+        var possibleClasses = [normalizedIdentifier.toLowerCase()];
+        if (mapping[normalizedIdentifier]) {
+            possibleClasses = possibleClasses.concat(mapping[normalizedIdentifier].map(c => c.toLowerCase()));
+        }
+        
+        // Find the window for this app across all monitors/workspaces
+        return HyprlandData.windowList.find(w => 
+            possibleClasses.includes(w.class.toLowerCase()) ||
+            possibleClasses.includes(w.initialClass.toLowerCase())
+        );
     }
     
     // Reorder pinned apps (for drag and drop)
@@ -296,65 +462,6 @@ Scope {
         
         // console.log("New pinnedApps:", JSON.stringify(pinnedApps))
         savePinnedApps()
-    }
-    
-    // FileView for persistence
-    FileView {
-        id: dockConfigView
-        path: configFilePath
-        
-        onLoaded: {
-            try {
-                const fileContents = dockConfigView.text()
-                // console.log("[DOCK DEBUG] Raw config file contents:", fileContents)
-                const config = JSON.parse(fileContents)
-                // console.log("[DOCK DEBUG] Parsed config:", JSON.stringify(config))
-                if (config) {
-                    // Load pinned apps
-                    if (config.pinnedApps) {
-                        // Migrate any known window class to desktop file name
-                        var windowClassToDesktopFile = {
-                            "photo.exe": "AffinityPhoto.desktop",
-                            "Photo.exe": "AffinityPhoto.desktop",
-                            "designer.exe": "AffinityDesigner.desktop",
-                            "Designer.exe": "AffinityDesigner.desktop"
-                            // Add more mappings as needed
-                        };
-                        var migratedPinnedApps = config.pinnedApps.map(function(app) {
-                            return windowClassToDesktopFile[app] || app;
-                        });
-                        // console.log("[DOCK DEBUG] Migrated pinnedApps:", JSON.stringify(migratedPinnedApps))
-                        dock.pinnedApps = migratedPinnedApps
-                        // console.log("[DOCK DEBUG] pinnedApps after setting:", JSON.stringify(dock.pinnedApps))
-                    }
-                    
-                    // Auto-hide setting is now managed by ConfigOptions.dock.autoHide
-                    // No need to load from dock_config.json
-                }
-                // console.log("[Dock] Config loaded")
-            } catch (e) {
-                // console.log("[Dock] Error parsing config: " + e)
-                // Initialize with defaults on parsing error
-                dock.pinnedApps = defaultPinnedApps
-                savePinnedApps()
-            }
-        }
-        
-        onLoadFailed: (error) => {
-            // Initialize with defaults if file doesn't exist
-            dock.pinnedApps = defaultPinnedApps
-            savePinnedApps()
-        }
-    }
-    
-    // Initialize icon theme system on component completion
-    Component.onCompleted: {
-        // Load config when component is ready
-        dockConfigView.reload()
-        
-        // Skip Hyprland blur commands since they're already configured in config files
-        // This prevents the "Invalid dispatcher" warnings
-        
         // Initialize icon theme system
         IconTheme.initializeIconTheme(StandardPaths.writableLocation(StandardPaths.HomeLocation));
         
@@ -362,7 +469,7 @@ Scope {
         // pinnedOnStartup behavior is handled in the settings UI
         
         // Auto-hide initialization is now handled in PanelWindow.onCompleted
-        console.log("[DOCK DEBUG] Component completed, autoHide value:", autoHide)
+// console.log("[DOCK DEBUG] Component completed, autoHide value:", autoHide)
         
         // Debug: Show what's in pinnedApps
     }
@@ -395,7 +502,7 @@ Scope {
             property bool reveal: !dock.autoHide || dockMouseArea.containsMouse
             
             onRevealChanged: {
-                console.log("[DOCK DEBUG] Reveal changed to:", reveal, "autoHide:", dock.autoHide, "dockMouseArea.containsMouse:", dockMouseArea.containsMouse)
+// console.log("[DOCK DEBUG] Reveal changed to:", reveal, "autoHide:", dock.autoHide, "dockMouseArea.containsMouse:", dockMouseArea.containsMouse)
             }
 
             // Basic configuration
@@ -404,13 +511,13 @@ Scope {
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
             
             onExclusiveZoneChanged: {
-                console.log("[DOCK DEBUG] Exclusive zone changed to:", exclusiveZone, "autoHide:", dock.autoHide, "implicitHeight:", implicitHeight)
+// console.log("[DOCK DEBUG] Exclusive zone changed to:", exclusiveZone, "autoHide:", dock.autoHide, "implicitHeight:", implicitHeight)
             }
 
 
 
             // Track active windows
-            property var activeWindows: []
+            // property var activeWindows: [] // This line is removed
             
             // Helper function for controlled logging
             function log(level, message) {
@@ -466,16 +573,27 @@ Scope {
                     return true;
                 })
                 
-                if (JSON.stringify(windows) !== JSON.stringify(activeWindows)) {
+                if (JSON.stringify(windows) !== JSON.stringify(dock.activeWindows)) {
                     log("debug", `Updating active windows: ${windows.length} windows found`)
                     log("debug", `Window list: ${JSON.stringify(windows.map(w => w.class))}`)
-                    activeWindows = windows
+                    dock.activeWindows = windows
                 }
             }
             
 
             
             function isWindowActive(windowClass) {
+                // Normalize windowClass for special cases
+                var normalizedWindowClass = windowClass;
+                if (windowClass === "lutris" || windowClass === "net.lutris.lutris" || 
+                    windowClass === "net.lutris.Lutris" || windowClass === "Lutris") {
+                    normalizedWindowClass = "lutris";
+                }
+                if (windowClass === "obs" || windowClass === "com.obsproject.Studio" || 
+                    windowClass === "com.obsproject.studio" || windowClass === "OBS") {
+                    normalizedWindowClass = "obs";
+                }
+                
                 // Map .desktop files to possible window classes and vice versa
                 var mapping = {
                     'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
@@ -492,11 +610,11 @@ Scope {
                         'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve'],
                         'Cider.desktop': ['cider', 'Cider', 'Cider.exe']
                     };
-                var targetClass = windowClass.toLowerCase();
+                var targetClass = normalizedWindowClass.toLowerCase();
                 var possibleClasses = [targetClass];
                 // If the pinned app is a .desktop file and has a mapping, add those classes
-                if (mapping[windowClass]) {
-                    possibleClasses = possibleClasses.concat(mapping[windowClass].map(c => c.toLowerCase()));
+                if (mapping[normalizedWindowClass]) {
+                    possibleClasses = possibleClasses.concat(mapping[normalizedWindowClass].map(c => c.toLowerCase()));
                 }
                 // If the pinned app is a window class and is mapped from a .desktop, add that .desktop
                 for (var key in mapping) {
@@ -504,10 +622,10 @@ Scope {
                         possibleClasses.push(key.toLowerCase());
                     }
                 }
-                log("debug", `[ISWINDOWACTIVE] Checking ${windowClass}, possible classes: ${JSON.stringify(possibleClasses)}`);
-                log("debug", `[ISWINDOWACTIVE] Active windows: ${JSON.stringify(activeWindows.map(w => w.class))}`);
-                var result = activeWindows.some(w => possibleClasses.includes(w.class.toLowerCase()));
-                log("debug", `[ISWINDOWACTIVE] Result for ${windowClass}: ${result}`);
+                log("debug", `[ISWINDOWACTIVE] Checking ${normalizedWindowClass}, possible classes: ${JSON.stringify(possibleClasses)}`);
+                log("debug", `[ISWINDOWACTIVE] Active windows: ${JSON.stringify(dock.activeWindows.map(w => w.class))}`);
+                var result = dock.activeWindows.some(w => possibleClasses.includes(w.class.toLowerCase()));
+                log("debug", `[ISWINDOWACTIVE] Result for ${normalizedWindowClass}: ${result}`);
                 return result;
             }
             
@@ -520,32 +638,7 @@ Scope {
                     Hyprland.dispatch(`focuswindow class:${appInfo.class}`)
                 } else {
                     log("debug", `[FOCUSORLAUNCH] Launching new instance`);
-                    let cmd;
-                    if (appInfo.class.endsWith('.desktop')) {
-                        // For .desktop files, try DesktopEntries first
-                        let entry = DesktopEntries.applications[appInfo.class];
-                        if (entry && entry.execute) {
-                            log("debug", `[FOCUSORLAUNCH] Using DesktopEntries.execute()`);
-                            entry.execute();
-                            return; // Exit early since execute() handles the launch
-                        }
-                        
-                        // Try the desktopIdToCommand mapping
-                        cmd = dock.desktopIdToCommand[appInfo.class];
-                        if (!cmd) {
-                            // Try to extract the actual Exec command
-                            cmd = dock.getDesktopFileExecCommand(appInfo.class);
-                            if (!cmd) {
-                                // Fallback to gio launch if we can't parse the desktop file
-                                cmd = `gio launch ${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/share/applications/${appInfo.class} || gio launch /usr/share/applications/${appInfo.class}`;
-                            }
-                        }
-                    } else {
-                        // For regular apps, use mapping or fallback
-                        cmd = desktopIdToCommand[appInfo.class] || appInfo.class.toLowerCase();
-                    }
-                    log("debug", `[FOCUSORLAUNCH] Executing command: ${cmd}`);
-                    Hyprland.dispatch(`exec ${cmd}`)
+                    dock.launchApp(appInfo.class);
                 }
             }
 
@@ -561,7 +654,7 @@ Scope {
                     var margin = dockRoot.reveal ? 0 : 
                         dock.autoHide ? (dockRoot.implicitHeight - dock.approachRegionHeight) :
                         (dockRoot.implicitHeight + 1)
-                    console.log("[DOCK DEBUG] topMargin calculated:", margin, "reveal:", dockRoot.reveal, "autoHide:", dock.autoHide, "implicitHeight:", dockRoot.implicitHeight, "approachRegionHeight:", dock.approachRegionHeight)
+// console.log("[DOCK DEBUG] topMargin calculated:", margin, "reveal:", dockRoot.reveal, "autoHide:", dock.autoHide, "implicitHeight:", dockRoot.implicitHeight, "approachRegionHeight:", dock.approachRegionHeight)
                     return margin
                 }
                     
@@ -570,11 +663,11 @@ Scope {
                 hoverEnabled: true
 
                 onEntered: {
-                    console.log("[DOCK DEBUG] Mouse area entered, autoHide:", dock.autoHide, "reveal:", dockRoot.reveal)
+// console.log("[DOCK DEBUG] Mouse area entered, autoHide:", dock.autoHide, "reveal:", dockRoot.reveal)
                 }
                 
                 onExited: {
-                    console.log("[DOCK DEBUG] Mouse area exited, autoHide:", dock.autoHide, "reveal:", dockRoot.reveal)
+// console.log("[DOCK DEBUG] Mouse area exited, autoHide:", dock.autoHide, "reveal:", dockRoot.reveal)
                 }
 
                 Behavior on anchors.topMargin {
@@ -725,19 +818,6 @@ Scope {
                                         var lowerBase = base.toLowerCase();
                                         var found = null;
                                         
-                                        if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                            // console.log('[AFFINITY DEBUG] pinnedId:', pinnedId, 'base:', base, 'lowerBase:', lowerBase);
-                // console.log('[AFFINITY DEBUG] Searching AppSearch.list for Affinity entries...');
-                                            for (var j = 0; j < AppSearch.list.length; j++) {
-                                                var searchApp = AppSearch.list[j];
-                                                if ((searchApp.desktopId && searchApp.desktopId.toLowerCase().indexOf('affinity') !== -1) ||
-                                                    (searchApp.name && searchApp.name.toLowerCase().indexOf('affinity') !== -1) ||
-                                                    (searchApp.exec && searchApp.exec.toLowerCase().indexOf('affinity') !== -1)) {
-                                                    // console.log('[AFFINITY DEBUG] Found potential match:', JSON.stringify(searchApp));
-                                                }
-                                            }
-                                        }
-                                        
                                         // 1. Try exact desktopId (case-insensitive, with and without .desktop)
                                         for (var i = 0; i < AppSearch.list.length; i++) {
                                             var app = AppSearch.list[i];
@@ -747,42 +827,30 @@ Scope {
                                                 app.desktopId.toLowerCase() === lowerBase
                                             )) {
                                                 found = app;
-                                                if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                    // console.log('[AFFINITY DEBUG] [1] Found by desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
-                                                }
                                                 break;
                                             }
                                         }
-                                        
                                         // 2. Try name (case-insensitive)
                                         if (!found) {
                                             for (var i = 0; i < AppSearch.list.length; i++) {
                                                 var app = AppSearch.list[i];
                                                 if (app.name && app.name.toLowerCase() === lowerBase) {
                                                     found = app;
-                                                    if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                        // console.log('[AFFINITY DEBUG] [2] Found by name:', app.name, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
-                                                    }
                                                     break;
                                                 }
                                             }
                                         }
-                                        
                                         // 3. Try exec (contains, case-insensitive)
                                         if (!found) {
                                             for (var i = 0; i < AppSearch.list.length; i++) {
                                                 var app = AppSearch.list[i];
                                                 if (app.exec && app.exec.toLowerCase().indexOf(lowerBase) !== -1) {
                                                     found = app;
-                                                    if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                        // console.log('[AFFINITY DEBUG] [3] Found by exec:', app.exec, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
-                                                    }
                                                     break;
                                                 }
                                             }
                                         }
-                                        
-                                        // 4. Try fuzzy name matching (for cases like "AffinityPhoto.desktop" -> "Affinity Photo")
+                                        // 4. Try fuzzy name matching
                                         if (!found) {
                                             for (var i = 0; i < AppSearch.list.length; i++) {
                                                 var app = AppSearch.list[i];
@@ -792,32 +860,60 @@ Scope {
                                                     (app.id && app.id.toLowerCase() === lowerBase)
                                                 )) {
                                                     found = app;
-                                                    if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                        // console.log('[AFFINITY DEBUG] [4] Found by fuzzy name/id:', app.name, 'id:', app.id, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
-                                                    }
                                                     break;
                                                 }
                                             }
                                         }
-                                        
                                         // 5. If found, ensure icon is valid
                                         if (found) {
-                                            // If icon is missing or empty, guess
                                             if (!found.icon || found.icon === "") {
                                                 found.icon = AppSearch.guessIcon(pinnedId);
-                                                if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                    // console.log('[AFFINITY DEBUG] [5] Guessed icon:', found.icon);
-                                                }
                                             }
                                             if (!found.iconUrl) {
                                                 found.iconUrl = null;
                                             }
-                                            if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                // console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(found));
+                                            // --- Merge real window data if running ---
+                                            var mapping = {
+                                                'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
+                                                'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
+                                                'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge', 'Microsoft-edge-dev'],
+                                                'vesktop': ['vesktop', 'discord', 'Vesktop', 'Discord'],
+                                                'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
+                                                'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
+                                                'org.gnome.nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
+                                                'lutris': ['lutris', 'net.lutris.lutris', 'net.lutris.Lutris', 'Lutris'],
+                                                'heroic': ['heroic', 'heroicgameslauncher', 'Heroic', 'HeroicGamesLauncher'],
+                                                'obs': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],
+                                                'com.obsproject.Studio.desktop': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],
+                                                'cursor-cursor': ['cursor', 'Cursor', 'cursor-cursor'],
+                                                'ptyxis': ['ptyxis', 'org.gnome.ptyxis', 'Ptyxis', 'Org.gnome.ptyxis'],
+                                                'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
+                                            };
+                                            var pinnedClassLower = pinnedId.toLowerCase();
+                                            var possibleClasses = [pinnedClassLower];
+                                            if (mapping[pinnedId]) {
+                                                possibleClasses = possibleClasses.concat(mapping[pinnedId].map(c => c.toLowerCase()));
+                                            }
+                                            if (mapping[pinnedClassLower]) {
+                                                possibleClasses = possibleClasses.concat(mapping[pinnedClassLower].map(c => c.toLowerCase()));
+                                            }
+                                            if (!pinnedClassLower.endsWith('.desktop')) {
+                                                possibleClasses.push(pinnedClassLower + '.desktop');
+                                            }
+                                            possibleClasses = Array.from(new Set(possibleClasses));
+                                            var runningWindow = HyprlandData.windowList.find(w => 
+                                                possibleClasses.includes((w.class || '').toLowerCase()) ||
+                                                possibleClasses.includes((w.initialClass || '').toLowerCase())
+                                            );
+                                            if (runningWindow) {
+                                                // Merge address, workspace, etc. into found
+                                                found.address = runningWindow.address;
+                                                found.workspace = runningWindow.workspace;
+                                                found.pid = runningWindow.pid;
+                                                found.title = runningWindow.title;
                                             }
                                             return found;
                                         }
-                                        
                                         // 6. Final fallback
                                         var fallback = {
                                             desktopId: pinnedId,
@@ -825,98 +921,32 @@ Scope {
                                             icon: AppSearch.guessIcon(pinnedId),
                                             iconUrl: null
                                         };
-                                        if (lowerPinnedId.indexOf('affinity') !== -1) {
-                                                            // console.log('[AFFINITY DEBUG] [6] Fallback guessIcon:', fallback.icon);
-                // console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(fallback));
-                                        }
                                         return fallback;
                                     }
                                     tooltip: modelData  // Use the app class name for pinned apps
                                     isActive: dockRoot.isWindowActive(modelData)
                                     isPinned: true
                                     onClicked: {
-                                        // Special-case handling for OBS and DaVinci Resolve
-                                        if (modelData === "com.obsproject.Studio") {
-                                            Hyprland.dispatch(`exec gtk-launch com.obsproject.Studio.desktop`)
-                                            return;
-                                        } else if (modelData === "resolve") {
-                                            Hyprland.dispatch(`exec gtk-launch com.blackmagicdesign.resolve.desktop`)
-                                            return;
-                                        }
-                                        // Build mapping for .desktop files to possible window classes
-                                        var mapping = {
-                                            'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
-                                            'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
-                                            'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
-                                            'vesktop': ['vesktop', 'discord'],
-                                            'steam-native': ['steam', 'steam.exe'],
-                                            'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus'],
-                                            'lutris': ['lutris', 'net.lutris.lutris'],
-                                            'heroic': ['heroic', 'heroicgameslauncher'],
-                                            'obs': ['obs', 'com.obsproject.studio'],
-                                            'com.obsproject.Studio.desktop': ['obs', 'com.obsproject.studio'],
-                                            'cursor-cursor': ['cursor', 'Cursor'],
-                                            'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
-                                            'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
-                                        };
-                                        
-                                        // Build list of possible window classes for this pinned app
-                                        var possibleClasses = [modelData.toLowerCase()];
-                                        if (mapping[modelData]) {
-                                            possibleClasses = possibleClasses.concat(mapping[modelData].map(c => c.toLowerCase()));
-                                        }
-                                        
-                                        // Find the window for this pinned app across all monitors/workspaces
-                                        var targetWindow = HyprlandData.windowList.find(w => 
-                                            possibleClasses.includes(w.class.toLowerCase()) ||
-                                            possibleClasses.includes(w.initialClass.toLowerCase())
-                                        )
-                                        // console.log("[DOCK DEBUG] Found target window:", targetWindow ? targetWindow.class : "none");
-                                        
+                                        // Universal approach: try to focus existing window first, then launch if not found
+                                        var targetWindow = dock.findWindowForApp(modelData);
                                         if (targetWindow) {
-                                            // console.log("[DOCK DEBUG] Window exists, focusing it");
-                                            // If window exists, focus it and switch to its workspace
+                                            // Focus existing window
                                             if (targetWindow.address) {
-                                                Hyprland.dispatch(`focuswindow address:${targetWindow.address}`)
-                                                
-                                                // Switch to the workspace containing the window
+                                                Hyprland.dispatch(`focuswindow address:${targetWindow.address}`);
                                                 if (targetWindow.workspace && targetWindow.workspace.id) {
-                                                    Hyprland.dispatch(`workspace ${targetWindow.workspace.id}`)
+                                                    Hyprland.dispatch(`workspace ${targetWindow.workspace.id}`);
                                                 }
                                             } else {
-                                                // Fallback to focusing by class
-                                                Hyprland.dispatch(`focuswindow class:${targetWindow.class}`)
+                                                Hyprland.dispatch(`focuswindow class:${targetWindow.class}`);
                                             }
                                         } else {
-                                            // console.log("[DOCK DEBUG] No window exists, launching app");
-                                            // If no window exists, launch the app
-                                            if (modelData.endsWith('.desktop')) {
-                                                let entry = DesktopEntries.applications[modelData];
-                                                if (!entry) {
-                                                    // console.log('[DOCK DEBUG] DesktopEntries.applications keys:', Object.keys(DesktopEntries.applications));
-                                                }
-                                                if (entry && entry.execute) {
-                                                    entry.execute();
-                                                } else {
-                                                    // Try the desktopIdToCommand mapping first
-                                                    let cmd = dock.desktopIdToCommand[modelData];
-                                                    if (cmd) {
-                                                        Hyprland.dispatch(`exec ${cmd}`);
-                                                    } else {
-                                                        // Fallback to gio launch
-                                                        Hyprland.dispatch(`exec gio launch ${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/share/applications/${modelData} || gio launch /usr/share/applications/${modelData}`);
-                                                    }
-                                                }
-                                            } else {
-                                                let cmd = dock.desktopIdToCommand[modelData] || modelData.toLowerCase();
-                                                // console.log("[DOCK DEBUG] Launching app:", modelData);
-                                                // console.log("[DOCK DEBUG] Command:", cmd);
-                                                Hyprland.dispatch(`exec ${cmd}`)
-                                            }
+                                            // Launch new instance
+                                            dock.launchApp(modelData);
                                         }
                                     }
                                     onUnpinApp: {
-                                                dock.removePinnedApp(modelData)
+                                        // Always use the canonical pinned id (modelData) for unpinning
+                                        dock.removePinnedApp(modelData)
                                     }
                                 }
                             }
@@ -935,11 +965,7 @@ Scope {
                             Repeater {
                                 id: nonPinnedAppsRepeater
                                 model: {
-                                    var nonPinnedApps = []
-                                    // console.log("[DOCK DEBUG] Active windows count:", dockRoot.activeWindows.length)
-                                    // console.log("[DOCK DEBUG] Active windows:", JSON.stringify(dockRoot.activeWindows.map(w => w.class)))
-                                    // console.log("[DOCK DEBUG] Pinned apps:", JSON.stringify(dock.pinnedApps))
-                                    // Build a mapping for .desktop files to possible window classes
+                                    var nonPinnedApps = [];
                                     var mapping = {
                                         'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
                                         'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
@@ -955,74 +981,317 @@ Scope {
                                         'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
                                         'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                                     };
-                                    // Build a set of all window classes covered by pinned apps
-                                    var pinnedClasses = new Set()
-                                    for (var i = 0; i < dock.pinnedApps.length; i++) {
-                                        var pin = dock.pinnedApps[i]
-                                        pinnedClasses.add(pin.toLowerCase())
-                                        if (mapping[pin]) {
-                                            mapping[pin].forEach(function(cls) {
-                                                pinnedClasses.add(cls.toLowerCase())
-                                            })
-                                        }
+                                    var reverseMapping = {
+                                        'photo.exe': 'AffinityPhoto.desktop',
+                                        'Photo.exe': 'AffinityPhoto.desktop',
+                                        'designer.exe': 'AffinityDesigner.desktop',
+                                        'Designer.exe': 'AffinityDesigner.desktop',
+                                        'microsoft-edge-dev': 'microsoft-edge-dev',
+                                        'msedge': 'microsoft-edge-dev',
+                                        'edge': 'microsoft-edge-dev',
+                                        'vesktop': 'vesktop',
+                                        'discord': 'vesktop',
+                                        'steam': 'steam-native',
+                                        'steam.exe': 'steam-native',
+                                        'nautilus': 'org.gnome.nautilus',
+                                        'org.gnome.nautilus': 'org.gnome.nautilus',
+                                        'lutris': 'lutris',
+                                        'net.lutris.lutris': 'lutris',
+                                        'heroic': 'heroic',
+                                        'heroicgameslauncher': 'heroic',
+                                        'obs': 'obs',
+                                        'com.obsproject.studio': 'obs',
+                                        'cursor': 'cursor-cursor',
+                                        'Cursor': 'cursor-cursor',
+                                        'ptyxis': 'ptyxis',
+                                        'org.gnome.ptyxis': 'ptyxis',
+                                        'davinci-resolve-studio-20': 'net.lutris.davinci-resolve-studio-20-1.desktop',
+                                        'DaVinci Resolve Studio 20': 'net.lutris.davinci-resolve-studio-20-1.desktop',
+                                        'resolve': 'net.lutris.davinci-resolve-studio-20-1.desktop',
+                                        'com.blackmagicdesign.resolve': 'net.lutris.davinci-resolve-studio-20-1.desktop'
+                                    };
+                                    var pinnedSet = new Set(dock.pinnedApps.map(a => a.toLowerCase()));
+                                    // Normalize pinned set for special cases like Lutris
+                                    var normalizedPinnedSet = new Set(pinnedSet);
+                                    // Add normalized versions for special cases
+                                    if (pinnedSet.has("lutris") || pinnedSet.has("net.lutris.lutris") || 
+                                        pinnedSet.has("net.lutris.Lutris") || pinnedSet.has("Lutris")) {
+                                        normalizedPinnedSet.add("lutris");
+                                        normalizedPinnedSet.add("net.lutris.lutris");
+                                        normalizedPinnedSet.add("net.lutris.Lutris");
+                                        normalizedPinnedSet.add("Lutris");
                                     }
-                                    for (var i = 0; i < dockRoot.activeWindows.length; i++) {
-                                        var activeWindow = dockRoot.activeWindows[i]
-                                        log("debug", `[UNPINNED][FULL] Window properties: ${JSON.stringify(activeWindow)}`);
-                                        log("debug", `[UNPINNED] Checking window: class='${activeWindow.class}', title='${activeWindow.title}'`);
-                                        // Additional filtering for unpinned apps to prevent windows without proper class names
-                                        if (!pinnedClasses.has(activeWindow.class.toLowerCase())) {
-                                            // Hide if this window's class matches a pinned app
-                                            var isPinnedClass = false;
-                                            for (var j = 0; j < dock.pinnedApps.length; j++) {
-                                                if (activeWindow.class && dock.pinnedApps[j].toLowerCase() === activeWindow.class.toLowerCase()) {
-                                                    isPinnedClass = true;
-                                                    log("debug", `[UNPINNED] Excluded: class matches pinned app '${activeWindow.class}'`);
-                                                    break;
-                                                }
-                                            }
-                                            if (isPinnedClass) {
-                                                continue;
-                                            }
-                                            // Skip windows with empty or invalid class names
-                                            if (!activeWindow.class || activeWindow.class.trim() === '') {
-                                                log("debug", `[UNPINNED] Excluded: missing or empty class`);
-                                                continue;
-                                            }
-                                            
-                                            // Skip windows with very short class names that might be temporary/placeholder
-                                            if (activeWindow.class.length < 2) {
-                                                log("debug", `[UNPINNED] Excluded: class too short`);
-                                                continue;
-                                            }
-                                            
-                                            // Skip windows with generic class names that don't represent real apps
-                                            var genericClasses = ['window', 'x11', 'xwayland', 'wayland', 'unknown', 'null', 'undefined'];
-                                            if (genericClasses.includes(activeWindow.class.toLowerCase())) {
-                                                log("debug", `[UNPINNED] Excluded: generic class '${activeWindow.class}'`);
-                                                continue;
-                                            }
-                                            
-                                            // Skip windows that don't have a proper title (optional additional check)
-                                            if (!activeWindow.title || activeWindow.title.trim() === '') {
-                                                log("debug", `[UNPINNED] Excluded: missing or empty title`);
-                                                continue;
-                                            }
-                                            
-                                            // Icon resolution is now handled in DockItem.qml, so we don't need to filter by icon here
-                                            log("debug", `[UNPINNED] Included: valid window`);
-                                            nonPinnedApps.push(activeWindow)
-                                        }
+                                    if (pinnedSet.has("obs") || pinnedSet.has("com.obsproject.Studio") || 
+                                        pinnedSet.has("com.obsproject.studio") || pinnedSet.has("OBS")) {
+                                        normalizedPinnedSet.add("obs");
+                                        normalizedPinnedSet.add("com.obsproject.Studio");
+                                        normalizedPinnedSet.add("com.obsproject.studio");
+                                        normalizedPinnedSet.add("OBS");
                                     }
-                                    // console.log("[DOCK DEBUG] Non-pinned apps found:", JSON.stringify(nonPinnedApps.map(w => w.class)))
-                                    return nonPinnedApps
+                                    
+                                    // Group windows by effective app identity
+                                    var groups = {};
+                                    for (var i = 0; i < dock.activeWindows.length; i++) {
+                                        var w = dock.activeWindows[i];
+                                        if (!w.class || w.class.trim() === '' || w.class.length < 2) continue;
+                                        var genericClasses = ['window', 'x11', 'xwayland', 'wayland', 'unknown', 'null', 'undefined'];
+                                        if (genericClasses.includes(w.class.toLowerCase())) continue;
+                                        if (!w.title || w.title.trim() === '') continue;
+                                        // Determine grouping key (desktop file if possible, else class)
+                                        var rawKey = reverseMapping[w.class] || reverseMapping[w.class.toLowerCase()] || w.class;
+                                        var key = rawKey.toLowerCase();
+                                        // Normalize OBS variants
+                                        if (key === "obs" || key === "com.obsproject.studio" || key === "com.obsproject.studio.desktop") {
+                                            key = "obs";
+                                        }
+                                        // Normalize Lutris variants
+                                        if (key === "lutris" || key === "net.lutris.lutris" || key === "net.lutris.lutris.desktop") {
+                                            key = "lutris";
+                                        }
+                                        // Debug log for window class and grouping key
+                                        console.log('[DOCK DEBUG] Window class:', w.class, '| Grouping key:', key, '| Title:', w.title, '| Address:', w.address);
+                                        // Skip if this app is pinned (check normalized set)
+                                        if (normalizedPinnedSet.has(key)) continue;
+                                        if (!groups[key]) groups[key] = [];
+                                        groups[key].push(w);
+                                    }
+                                    // For each group, create a single entry with all windows (toplevels)
+                                    for (var key in groups) {
+                                        var rep = groups[key][0];
+                                        var appObj = null;
+                                        // Try to find DesktopEntry for this group (like pinned logic)
+                                        appObj = AppSearch.list.find(a =>
+                                            (a.desktopId && a.desktopId.toLowerCase() === key.toLowerCase()) ||
+                                            (a.exec && a.exec.toLowerCase().includes(key.toLowerCase())) ||
+                                            (a.name && a.name.toLowerCase() === key.toLowerCase())
+                                        );
+                                        if (!appObj) {
+                                            // Fallback: minimal object
+                                            appObj = {
+                                                desktopId: key,
+                                                name: key,
+                                                icon: AppSearch.guessIcon(key),
+                                                iconUrl: null,
+                                                pinned: false,
+                                                toplevels: []
+                                            };
+                                        } else {
+                                            appObj = Object.assign({}, appObj, { pinned: false, toplevels: [] });
+                                        }
+                                        appObj.toplevels = groups[key];
+                                        // Attach window properties from the first window for focus/activation
+                                        appObj.class = rep.class;
+                                        appObj.title = rep.title;
+                                        appObj.address = rep.address;
+                                        appObj.workspace = rep.workspace;
+                                        nonPinnedApps.push(appObj);
+                                    }
+                                    return nonPinnedApps;
                                 }
                                 
                                 DockItem {
                                     appData: {
-                                        // For unpinned apps, use the window data directly
-                                        // The icon resolution is now handled in DockItem.qml
-                                        return modelData
+                                        // 100% port of pinned app logic, adapted for window classes
+                                        var windowClass = modelData.class;
+                                        var lowerWindowClass = windowClass.toLowerCase();
+                                        var base = windowClass.replace(/\.desktop$/i, "");
+                                        var lowerBase = base.toLowerCase();
+                                        var found = null;
+                                        
+                                        // Reverse mapping: try to find desktop file from window class
+                                        var reverseMapping = {
+                                            'photo.exe': 'AffinityPhoto.desktop',
+                                            'Photo.exe': 'AffinityPhoto.desktop',
+                                            'designer.exe': 'AffinityDesigner.desktop',
+                                            'Designer.exe': 'AffinityDesigner.desktop',
+                                            'microsoft-edge-dev': 'microsoft-edge-dev',
+                                            'msedge': 'microsoft-edge-dev',
+                                            'edge': 'microsoft-edge-dev',
+                                            'vesktop': 'vesktop',
+                                            'discord': 'vesktop',
+                                            'steam': 'steam-native',
+                                            'steam.exe': 'steam-native',
+                                            'nautilus': 'org.gnome.nautilus',
+                                            'org.gnome.nautilus': 'org.gnome.nautilus',
+                                            'lutris': 'lutris',
+                                            'net.lutris.lutris': 'lutris',
+                                            'heroic': 'heroic',
+                                            'heroicgameslauncher': 'heroic',
+                                            'obs': 'obs',
+                                            'com.obsproject.studio': 'obs',
+                                            'cursor': 'cursor-cursor',
+                                            'Cursor': 'cursor-cursor',
+                                            'ptyxis': 'ptyxis',
+                                            'org.gnome.ptyxis': 'ptyxis',
+                                            'davinci-resolve-studio-20': 'net.lutris.davinci-resolve-studio-20-1.desktop',
+                                            'DaVinci Resolve Studio 20': 'net.lutris.davinci-resolve-studio-20-1.desktop',
+                                            'resolve': 'net.lutris.davinci-resolve-studio-20-1.desktop',
+                                            'com.blackmagicdesign.resolve': 'net.lutris.davinci-resolve-studio-20-1.desktop'
+                                        };
+                                        
+                                        // Try to get desktop file name from reverse mapping
+                                        var mappedDesktopFile = reverseMapping[windowClass] || reverseMapping[lowerWindowClass];
+                                        if (mappedDesktopFile) {
+                                            // Use the mapped desktop file name for searching
+                                            var mappedLower = mappedDesktopFile.toLowerCase();
+                                            var mappedBase = mappedDesktopFile.replace(/\.desktop$/i, "");
+                                            var mappedLowerBase = mappedBase.toLowerCase();
+                                            
+                                            console.log('[REVERSE MAPPING] windowClass:', windowClass, 'mapped to:', mappedDesktopFile);
+                                            console.log('[REVERSE MAPPING] Searching for:', mappedLower, mappedLowerBase + ".desktop", mappedLowerBase);
+                                            
+                                            // Search using the mapped desktop file name
+                                            for (var i = 0; i < AppSearch.list.length; i++) {
+                                                var app = AppSearch.list[i];
+                                                if (app.desktopId && (
+                                                    app.desktopId.toLowerCase() === mappedLower ||
+                                                    app.desktopId.toLowerCase() === mappedLowerBase + ".desktop" ||
+                                                    app.desktopId.toLowerCase() === mappedLowerBase
+                                                )) {
+                                                    found = app;
+                                                    console.log('[REVERSE MAPPING] Found by mapped desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                                    break;
+                                                }
+                                            }
+                                            
+                                            // If not found, let's see what's in AppSearch.list for Affinity apps
+                                            if (!found && lowerWindowClass.indexOf('affinity') !== -1) {
+                                                console.log('[REVERSE MAPPING] Not found, checking AppSearch.list for Affinity entries...');
+                                                for (var j = 0; j < AppSearch.list.length; j++) {
+                                                    var searchApp = AppSearch.list[j];
+                                                    if ((searchApp.desktopId && searchApp.desktopId.toLowerCase().indexOf('affinity') !== -1) ||
+                                                        (searchApp.name && searchApp.name.toLowerCase().indexOf('affinity') !== -1)) {
+                                                        console.log('[REVERSE MAPPING] Found Affinity entry:', JSON.stringify(searchApp));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        if (lowerWindowClass.indexOf('affinity') !== -1) {
+                                            console.log('[AFFINITY DEBUG] windowClass:', windowClass, 'base:', base, 'lowerBase:', lowerBase);
+                                            console.log('[AFFINITY DEBUG] Searching AppSearch.list for Affinity entries...');
+                                            for (var j = 0; j < AppSearch.list.length; j++) {
+                                                var searchApp = AppSearch.list[j];
+                                                if ((searchApp.desktopId && searchApp.desktopId.toLowerCase().indexOf('affinity') !== -1) ||
+                                                    (searchApp.name && searchApp.name.toLowerCase().indexOf('affinity') !== -1) ||
+                                                    (searchApp.exec && searchApp.exec.toLowerCase().indexOf('affinity') !== -1)) {
+                                                    console.log('[AFFINITY DEBUG] Found potential match:', JSON.stringify(searchApp));
+                                                }
+                                            }
+                                        }
+                                        
+                                        // 1. Try exact desktopId (case-insensitive, with and without .desktop)
+                                        for (var i = 0; i < AppSearch.list.length; i++) {
+                                            var app = AppSearch.list[i];
+                                            if (app.desktopId && (
+                                                app.desktopId.toLowerCase() === lowerWindowClass ||
+                                                app.desktopId.toLowerCase() === lowerBase + ".desktop" ||
+                                                app.desktopId.toLowerCase() === lowerBase
+                                            )) {
+                                                found = app;
+                                                                                            if (lowerWindowClass.indexOf('affinity') !== -1) {
+                                                console.log('[AFFINITY DEBUG] [1] Found by desktopId:', app.desktopId, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                            }
+                                                break;
+                                            }
+                                        }
+                                        
+                                        // 2. Try name (case-insensitive)
+                                        if (!found) {
+                                            for (var i = 0; i < AppSearch.list.length; i++) {
+                                                var app = AppSearch.list[i];
+                                                if (app.name && app.name.toLowerCase() === lowerBase) {
+                                                    found = app;
+                                                                                                if (lowerWindowClass.indexOf('affinity') !== -1) {
+                                                console.log('[AFFINITY DEBUG] [2] Found by name:', app.name, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                            }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // 3. Try exec (contains, case-insensitive)
+                                        if (!found) {
+                                            for (var i = 0; i < AppSearch.list.length; i++) {
+                                                var app = AppSearch.list[i];
+                                                if (app.exec && app.exec.toLowerCase().indexOf(lowerBase) !== -1) {
+                                                    found = app;
+                                                                                                if (lowerWindowClass.indexOf('affinity') !== -1) {
+                                                console.log('[AFFINITY DEBUG] [3] Found by exec:', app.exec, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                            }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // 4. Try fuzzy name matching (for cases like "AffinityPhoto.desktop" -> "Affinity Photo")
+                                        if (!found) {
+                                            for (var i = 0; i < AppSearch.list.length; i++) {
+                                                var app = AppSearch.list[i];
+                                                if (app.name && (
+                                                    app.name.toLowerCase().indexOf(lowerBase) !== -1 ||
+                                                    app.name.toLowerCase().replace(/\s+/g, '') === lowerBase ||
+                                                    (app.id && app.id.toLowerCase() === lowerBase)
+                                                )) {
+                                                    found = app;
+                                                                                                if (lowerWindowClass.indexOf('affinity') !== -1) {
+                                                console.log('[AFFINITY DEBUG] [4] Found by fuzzy name/id:', app.name, 'id:', app.id, 'icon:', app.icon, 'iconUrl:', app.iconUrl);
+                                            }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // 5. If found, ensure icon is valid and add window properties
+                                        if (found) {
+                                            // If icon is missing or empty, guess
+                                            if (!found.icon || found.icon === "") {
+                                                found.icon = AppSearch.guessIcon(windowClass);
+                                                                                            if (lowerWindowClass.indexOf('affinity') !== -1) {
+                                                console.log('[AFFINITY DEBUG] [5] Guessed icon:', found.icon);
+                                            }
+                                            }
+                                            if (!found.iconUrl) {
+                                                found.iconUrl = null;
+                                            }
+                                            // Add window properties to the found app data
+                                            found.class = windowClass;
+                                            found.title = modelData.title;
+                                            found.address = modelData.address;
+                                            found.workspace = modelData.workspace;
+                                            if (lowerWindowClass.indexOf('affinity') !== -1) {
+                                                console.log('[AFFINITY DEBUG] [FINAL] appData:', JSON.stringify(found));
+                                            }
+                                            return found;
+                                        }
+                                        
+                                        // 6. Final fallback - create minimal object with guessed icon
+                                        var fallback = {
+                                            desktopId: windowClass,
+                                            name: windowClass,
+                                            icon: AppSearch.guessIcon(windowClass),
+                                            iconUrl: null,
+                                            class: windowClass,
+                                            title: modelData.title,
+                                            address: modelData.address,
+                                            workspace: modelData.workspace
+                                        };
+                                        if (
+                                            lowerWindowClass.indexOf('affinity') !== -1 ||
+                                            lowerWindowClass === 'designer.exe' ||
+                                            lowerWindowClass === 'photo.exe'
+                                        ) {
+                                            // If we have a mapped desktop file, use its SVG icon path
+                                            var mappedDesktopFile = reverseMapping[windowClass] || reverseMapping[lowerWindowClass];
+                                            if (mappedDesktopFile) {
+                                                var iconPath = "/home/matt/.local/share/icons/" + mappedDesktopFile.replace('.desktop', '.svg');
+                                                fallback.iconUrl = "file://" + iconPath;
+                                                fallback.icon = mappedDesktopFile.replace('.desktop', '');
+                                                console.log('[AFFINITY FALLBACK] Set iconUrl to', fallback.iconUrl, 'icon:', fallback.icon);
+                                            }
+                                        }
+                                        
+                                        return fallback;
                                     }
                                     tooltip: modelData.title || modelData.class
                                     isActive: true
@@ -1160,23 +1429,7 @@ Scope {
     }
     */
 
-    // Function to extract Exec command from desktop file
-    function getDesktopFileExecCommand(desktopFileName) {
-        try {
-            // Try user applications first, then system applications
-            var userPath = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/applications/" + desktopFileName
-            var systemPath = "/usr/share/applications/" + desktopFileName
-            
-            // Remove all dynamic QML FileView logic for desktop file reading
-            // Final fallback: use AppSearch.guessIcon() on the window class itself
-            var guessedIcon = AppSearch.guessIcon(desktopFileName)
-            // console.log('[DOCK DEBUG] Final fallback for', desktopFileName + ':', guessedIcon)
-            return guessedIcon || desktopFileName.toLowerCase()
-        } catch (e) {
-            // console.log("[DOCK DEBUG] Error reading desktop file", desktopFileName + ":", e)
-            return ""
-        }
-    }
+    // No longer needed - using DesktopEntries.execute() like HyprMenu
 
     // Manual function to force refresh all icons (useful for testing)
     function forceRefreshIcons() {
@@ -1226,32 +1479,27 @@ Scope {
         MenuItem {
             text: dockContextMenu.contextIsPinned ? qsTr("Unpin from dock") : qsTr("Pin to dock")
             onTriggered: {
-                if (dockContextMenu.contextIsPinned) dock.removePinnedApp(dockContextMenu.contextAppInfo.class)
-                else dock.addPinnedApp(dockContextMenu.contextAppInfo.class)
+                // console.log("[CONTEXT MENU DEBUG] Pin/Unpin triggered:", {
+                //     isPinned: dockContextMenu.contextIsPinned,
+                //     contextClass: dockContextMenu.contextAppInfo ? dockContextMenu.contextAppInfo.class : "no class",
+                //     contextAppInfo: dockContextMenu.contextAppInfo
+                // });
+                
+                if (dockContextMenu.contextIsPinned) {
+                    // console.log("[CONTEXT MENU DEBUG] Calling removePinnedApp with:", dockContextMenu.contextAppInfo.class);
+                    dock.removePinnedApp(dockContextMenu.contextAppInfo.class)
+                } else {
+                    // console.log("[CONTEXT MENU DEBUG] Calling addPinnedApp with:", dockContextMenu.contextAppInfo.class);
+                    dock.addPinnedApp(dockContextMenu.contextAppInfo.class)
+                }
             }
         }
         MenuItem {
             text: qsTr("Launch new instance")
             onTriggered: {
-                var command = ""
                 if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.class) {
-                    if (dockContextMenu.contextAppInfo.class.endsWith('.desktop')) {
-                        command = `gio launch ${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/share/applications/${dockContextMenu.contextAppInfo.class} || gio launch /usr/share/applications/${dockContextMenu.contextAppInfo.class}`;
-                    } else {
-                        var classLower = dockContextMenu.contextAppInfo.class.toLowerCase()
-                        var classWithDesktop = dockContextMenu.contextAppInfo.class + ".desktop"
-                        if (dock.desktopIdToCommand[dockContextMenu.contextAppInfo.class]) {
-                            command = dock.desktopIdToCommand[dockContextMenu.contextAppInfo.class]
-                        } else if (dock.desktopIdToCommand[classLower]) {
-                            command = dock.desktopIdToCommand[classLower]
-                        } else if (dock.desktopIdToCommand[classWithDesktop]) {
-                            command = dock.desktopIdToCommand[classWithDesktop]
-                        } else {
-                            command = dockContextMenu.contextAppInfo.command || dockContextMenu.contextAppInfo.class.toLowerCase()
-                        }
-                    }
+                    dock.launchApp(dockContextMenu.contextAppInfo.class)
                 }
-                Hyprland.dispatch(`exec ${command}`)
             }
         }
         MenuSeparator {}
@@ -1406,12 +1654,28 @@ Scope {
     }
 
     function openDockContextMenu(appInfo, isPinned, dockItem, mouse) {
+        // console.log("[CONTEXT MENU DEBUG] openDockContextMenu called with:", {
+        //     appInfo: appInfo,
+        //     isPinned: isPinned,
+        //     hasDockItem: !!dockItem,
+        //     mousePos: mouse ? Qt.point(mouse.x, mouse.y) : "no mouse"
+        // });
+        
         var finalAppInfo = appInfo
         
         // Normalize the app info - desktop entries use 'id', windows use 'class'
         if (appInfo && !appInfo.class && appInfo.id) {
+            // console.log("[CONTEXT MENU DEBUG] Normalizing appInfo - using id as class:", appInfo.id);
+            
+            // For pinned apps, ensure we preserve the full desktop file name
+            var classToUse = appInfo.id;
+            if (isPinned && !appInfo.id.endsWith('.desktop')) {
+                classToUse = appInfo.id + '.desktop';
+                // console.log("[CONTEXT MENU DEBUG] Added .desktop extension for pinned app:", appInfo.id, "->", classToUse);
+            }
+            
             finalAppInfo = {
-                class: appInfo.id,  // Use id as class for desktop entries
+                class: classToUse,  // Use id as class for desktop entries
                 name: appInfo.name,
                 address: appInfo.address,
                 pid: appInfo.pid,
@@ -1437,40 +1701,57 @@ Scope {
             var mapping = {
                 'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
                 'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
-                'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
-                'vesktop': ['vesktop', 'discord'],
-                'steam-native': ['steam', 'steam.exe'],
-                'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus'],
-                'lutris': ['lutris', 'net.lutris.lutris'],
-                'heroic': ['heroic', 'heroicgameslauncher'],
-                'obs': ['obs', 'com.obsproject.studio'],
-                'cursor-cursor': ['cursor', 'Cursor'],
-                'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
+                'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge', 'Microsoft-edge-dev'],
+                'vesktop': ['vesktop', 'discord', 'Vesktop', 'Discord'],
+                'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
+                'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
+                'org.gnome.nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
+                'lutris': ['lutris', 'net.lutris.lutris', 'net.lutris.Lutris', 'Lutris'],
+                'heroic': ['heroic', 'heroicgameslauncher', 'Heroic', 'HeroicGamesLauncher'],
+                'obs': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],
+                'com.obsproject.Studio.desktop': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],
+                'cursor-cursor': ['cursor', 'Cursor', 'cursor-cursor'],
+                'ptyxis': ['ptyxis', 'org.gnome.ptyxis', 'Ptyxis', 'Org.gnome.ptyxis'],
                 'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
             };
-            
             // Build list of possible window classes for this pinned app
-            var possibleClasses = [finalAppInfo.class.toLowerCase()];
+            var pinnedClassLower = finalAppInfo.class.toLowerCase();
+            var possibleClasses = [pinnedClassLower];
             if (mapping[finalAppInfo.class]) {
                 possibleClasses = possibleClasses.concat(mapping[finalAppInfo.class].map(c => c.toLowerCase()));
             }
-            
-            // Find the window for this pinned app
+            if (mapping[pinnedClassLower]) {
+                possibleClasses = possibleClasses.concat(mapping[pinnedClassLower].map(c => c.toLowerCase()));
+            }
+            // Add .desktop suffix variant
+            if (!pinnedClassLower.endsWith('.desktop')) {
+                possibleClasses.push(pinnedClassLower + '.desktop');
+            }
+            // Remove duplicates
+            possibleClasses = Array.from(new Set(possibleClasses));
+            // Find the window for this pinned app (case-insensitive)
             var targetWindow = HyprlandData.windowList.find(w => 
-                possibleClasses.includes(w.class.toLowerCase()) ||
-                possibleClasses.includes(w.initialClass.toLowerCase())
-            )
-            
-                    if (targetWindow) {
-            // Use the actual window data instead of the simple appInfo
-            finalAppInfo = targetWindow
-        }
+                possibleClasses.includes((w.class || '').toLowerCase()) ||
+                possibleClasses.includes((w.initialClass || '').toLowerCase())
+            );
+            if (targetWindow) {
+                var mergedAppInfo = Object.assign({}, targetWindow);
+                mergedAppInfo.class = finalAppInfo.class; // Preserve the desktop file name
+                mergedAppInfo.id = finalAppInfo.id; // Preserve the desktop file ID
+                finalAppInfo = mergedAppInfo;
+            }
         }
         
         // Now set the context with the final app info
         dockContextMenu.contextAppInfo = finalAppInfo
         dockContextMenu.contextIsPinned = isPinned
         dockContextMenu.contextDockItem = dockItem
+        
+        // console.log("[CONTEXT MENU DEBUG] Final context set:", {
+        //     contextAppInfo: finalAppInfo,
+        //     contextIsPinned: isPinned,
+        //     contextClass: finalAppInfo ? finalAppInfo.class : "no class"
+        // });
         
         // Just open the menu at default position for now
         dockContextMenu.open()

@@ -33,6 +33,11 @@ ApplicationWindow {
             component: "modules/settings/StyleConfig.qml"
         },
         {
+            name: "Bar",
+            icon: "view_agenda",
+            component: "modules/settings/BarConfig.qml"
+        },
+        {
             name: "Interface",
             icon: "cards",
             component: "modules/settings/InterfaceConfig.qml"

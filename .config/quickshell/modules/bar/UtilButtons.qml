@@ -30,7 +30,7 @@ Rectangle {
                 horizontalAlignment: Qt.AlignHCenter
                 fill: 1
                 text: "screenshot_region"
-                iconSize: Appearance.font.pixelSize.large
+                iconSize: ConfigOptions.getIconSize()
                 color: Appearance.colors.colOnLayer2
             }
 
@@ -45,7 +45,7 @@ Rectangle {
                 horizontalAlignment: Qt.AlignHCenter
                 fill: 1
                 text: "colorize"
-                iconSize: Appearance.font.pixelSize.large
+                iconSize: ConfigOptions.getIconSize()
                 color: Appearance.colors.colOnLayer2
             }
 
@@ -60,7 +60,7 @@ Rectangle {
                 horizontalAlignment: Qt.AlignHCenter
                 fill: 0
                 text: "keyboard"
-                iconSize: Appearance.font.pixelSize.large
+                iconSize: ConfigOptions.getIconSize()
                 color: Appearance.colors.colOnLayer2
             }
 
@@ -75,7 +75,7 @@ Rectangle {
                 horizontalAlignment: Qt.AlignHCenter
                 fill: 0
                 text: "mic"
-                iconSize: Appearance.font.pixelSize.large
+                iconSize: ConfigOptions.getIconSize()
                 color: Appearance.colors.colOnLayer2
             }
 
@@ -90,7 +90,7 @@ Rectangle {
                 horizontalAlignment: Qt.AlignHCenter
                 fill: 0
                 text: "dark_mode"
-                iconSize: Appearance.font.pixelSize.large
+                iconSize: ConfigOptions.getIconSize()
                 color: Appearance.colors.colOnLayer2
             }
 

@@ -22,9 +22,9 @@ Item {
     readonly property int workspaceGroup: Math.floor((monitor.activeWorkspace?.id - 1) / (ConfigOptions.bar?.workspaces?.shown || 1))
     property list<bool> workspaceOccupied: []
     property int widgetPadding: 4
-    property int workspaceButtonWidth: 26
-    property real workspaceIconSize: workspaceButtonWidth * 0.69
-    property real workspaceIconSizeShrinked: workspaceButtonWidth * 0.55
+    property int workspaceButtonWidth: ConfigOptions.getWorkspaceIconSize()
+    property real workspaceIconSize: ConfigOptions.getWorkspaceIconSize()
+    property real workspaceIconSizeShrinked: ConfigOptions.getWorkspaceIconSize() * 0.8
     property real workspaceIconOpacityShrinked: 1
     property real workspaceIconMarginShrinked: -4
     property int workspaceIndexInGroup: (monitor.activeWorkspace?.id - 1) % (ConfigOptions.bar?.workspaces?.shown || 1)

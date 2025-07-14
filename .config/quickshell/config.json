@@ -1,7 +1,7 @@
 {
   "logging": {
     "enabled": true,
-    "debug": true,
+    "debug": false,
     "info": true,
     "warning": true,
     "error": true,
@@ -11,17 +11,19 @@
   },
   "bar": {
     "showBackground": true,
-    "bottom": false,
     "borderless": false,
-    "topLeftIcon": "spark",
-    "resources": {
-      "alwaysShowSwap": true,
-      "alwaysShowCpu": false
-    },
+    "transparency": 0.55,
+    "height": 40,
+    "iconSize": 24,
+    "workspaceIconSize": 24,
+    "indicatorIconSize": 24,
+    "systrayIconSize": 24,
+    "logoIconSize": 32,
     "workspaces": {
-      "shown": 10,
-      "alwaysShowNumbers": false,
-      "showNumberDelay": 150
+      "shown": 10
+    },
+    "weather": {
+      "enable": true
     }
   },
   "dock": {

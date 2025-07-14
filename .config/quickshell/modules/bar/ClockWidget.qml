@@ -6,9 +6,14 @@ import QtQuick.Layouts
 
 Rectangle {
     property bool borderless: ConfigOptions.bar?.borderless ?? false
-    property bool showSeconds: ConfigOptions.clock?.showSeconds ?? false
+    property bool showSeconds: ConfigOptions.time?.showSeconds ?? false
+    property bool showDate: ConfigOptions.time?.showDate ?? true
+    property int fontSize: ConfigOptions.time?.display?.fontSize ?? 0
+    property bool bold: ConfigOptions.time?.display?.bold ?? false
+    property bool italic: ConfigOptions.time?.display?.italic ?? false
+    
     implicitWidth: colLayout.implicitWidth + 2.1
-    implicitHeight: 28
+    implicitHeight: showDate ? 28 : 16
     color: "transparent"
 
     ColumnLayout {
@@ -17,7 +22,9 @@ Rectangle {
         spacing: 0
 
         StyledText {
-            font.pixelSize: Appearance.font.pixelSize.small - 1  // Make the time text smaller
+            font.pixelSize: fontSize > 0 ? fontSize : (Appearance.font.pixelSize.small - 1)
+            font.weight: bold ? Font.Bold : Font.Normal
+            font.italic: italic
             color: Appearance.colors.colOnLayer0
             text: DateTime.time
             horizontalAlignment: Text.AlignHCenter
@@ -25,11 +32,14 @@ Rectangle {
         }
 
         StyledText {
-            font.pixelSize: Appearance.font.pixelSize.tiny - 0.5  // Make the date text smaller
+            font.pixelSize: fontSize > 0 ? fontSize - 2 : (Appearance.font.pixelSize.tiny - 0.5)
+            font.weight: bold ? Font.Bold : Font.Normal
+            font.italic: italic
             color: Appearance.colors.colOnLayer0
             text: DateTime.date
             horizontalAlignment: Text.AlignHCenter
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            visible: showDate && DateTime.date.length > 0
         }
     }
 }

@@ -58,8 +58,8 @@ Scope {
             Rectangle {
                 id: settingsWindow
                 anchors.centerIn: parent
-                width: Math.min(parent.width - 80, 1400)
-                height: Math.min(parent.height - 80, 900)
+                width: Math.min(parent.width - 80, 1920)
+                height: Math.min(parent.height - 80, 1080)
                 
                 radius: Appearance.rounding.verylarge
                 color: "transparent"
@@ -162,31 +162,31 @@ Scope {
                                             "index": 0
                                         },
                                         {
-                                            "id": "dock", 
-                                            "icon": "dock",
-                                            "title": "Dock",
-                                            "subtitle": "Application dock settings",
-                                            "index": 1
-                                        },
-                                        {
-                                            "id": "appearance", 
+                                            "id": "appearance",
                                             "icon": "palette",
                                             "title": "Appearance",
-                                            "subtitle": "Colors, themes & visual effects",
-                                            "index": 2
+                                            "subtitle": "Colors, bar & dock",
+                                            "index": 1
                                         },
                                         {
                                             "id": "system",
                                             "icon": "settings",
                                             "title": "System",
-                                            "subtitle": "Audio, battery & networking",
+                                            "subtitle": "Audio, battery, time & keyboard",
+                                            "index": 2
+                                        },
+                                        {
+                                            "id": "apps",
+                                            "icon": "apps",
+                                            "title": "Apps",
+                                            "subtitle": "Default apps & handlers",
                                             "index": 3
                                         },
                                         {
                                             "id": "about",
                                             "icon": "info",
                                             "title": "About",
-                                            "subtitle": "System info & documentation",
+                                            "subtitle": "About QuickShell",
                                             "index": 4
                                         }
                                     ]
@@ -413,9 +413,9 @@ Scope {
                                         text: {
                                             switch(settingsWindow.selectedTab) {
                                                 case 0: return "tune";
-                                                case 1: return "dock";
-                                                case 2: return "palette";
-                                                case 3: return "settings";
+                                                case 1: return "palette";
+                                                case 2: return "settings";
+                                                case 3: return "apps";
                                                 case 4: return "info";
                                                 default: return "tune";
                                             }
@@ -433,9 +433,9 @@ Scope {
                                         text: {
                                             switch(settingsWindow.selectedTab) {
                                                 case 0: return "Interface Settings";
-                                                case 1: return "Dock Settings";
-                                                case 2: return "Appearance Settings";
-                                                case 3: return "System Settings";
+                                                case 1: return "Appearance Settings";
+                                                case 2: return "System Settings";
+                                                case 3: return "Apps Settings";
                                                 case 4: return "About QuickShell";
                                                 default: return "Interface Settings";
                                             }
@@ -450,9 +450,9 @@ Scope {
                                         text: {
                                             switch(settingsWindow.selectedTab) {
                                                 case 0: return "Configure your desktop interface and behavior";
-                                                case 1: return "Configure application dock appearance and behavior";
-                                                case 2: return "Customize colors, themes and visual effects";
-                                                case 3: return "Manage system services and hardware settings";
+                                                case 1: return "Customize colors, bar and dock appearance";
+                                                case 2: return "Manage system services, time, keyboard and hardware settings";
+                                                case 3: return "Configure default applications and handlers";
                                                 case 4: return "System information and help resources";
                                                 default: return "Configure your desktop interface and behavior";
                                             }
@@ -491,9 +491,9 @@ Scope {
                                     sourceComponent: {
                                         switch(settingsWindow.selectedTab) {
                                             case 0: return interfaceConfigComponent;
-                                            case 1: return dockConfigComponent;
-                                            case 2: return styleConfigComponent;
-                                            case 3: return servicesConfigComponent;
+                                            case 1: return appearanceConfigComponent;
+                                            case 2: return systemConfigComponent;
+                                            case 3: return appsConfigComponent;
                                             case 4: return aboutComponent;
                                             default: return interfaceConfigComponent;
                                         }
@@ -508,26 +508,11 @@ Scope {
             }
 
             // Components for each settings page
-            Component { 
-                id: interfaceConfigComponent
-                InterfaceConfig {}
-            }
-            Component { 
-                id: dockConfigComponent
-                DockConfig {}
-            }
-            Component { 
-                id: styleConfigComponent
-                StyleConfig {}
-            }
-            Component { 
-                id: servicesConfigComponent
-                ServicesConfig {}
-            }
-            Component { 
-                id: aboutComponent
-                About {}
-            }
+            Component { id: interfaceConfigComponent; InterfaceConfig {} }
+            Component { id: appearanceConfigComponent; AppearanceConfig {} }
+            Component { id: systemConfigComponent; SystemConfig {} }
+            Component { id: aboutComponent; About {} }
+            Component { id: appsConfigComponent; AppsConfig {} }
         }
     }
 

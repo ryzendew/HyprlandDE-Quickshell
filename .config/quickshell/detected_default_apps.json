@@ -1,0 +1,237 @@
+{
+  "web": [
+    {
+      "name": "Microsoft Edge (dev)",
+      "icon": "microsoft-edge-dev",
+      "exec": "/usr/bin/microsoft-edge-dev %U"
+    },
+    {
+      "name": "Web",
+      "icon": "org.gnome.Epiphany",
+      "exec": "epiphany %U"
+    },
+    {
+      "name": "Tor Browser",
+      "icon": "torbrowser",
+      "exec": "torbrowser-launcher %u"
+    },
+    {
+      "name": "Chromium",
+      "icon": "chromium",
+      "exec": "/usr/bin/chromium %U"
+    }
+  ],
+  "mail": [],
+  "calendar": [
+    {
+      "name": "Calendar",
+      "icon": "org.gnome.Calendar",
+      "exec": "gnome-calendar %U"
+    }
+  ],
+  "music": [
+    {
+      "name": "Qt V4L2 test Utility",
+      "icon": "qv4l2",
+      "exec": "qv4l2"
+    },
+    {
+      "name": "Qt V4L2 video capture utility",
+      "icon": "qvidcap",
+      "exec": "qvidcap"
+    },
+    {
+      "name": "mpv Media Player",
+      "icon": "mpv",
+      "exec": "mpv --player-operation-mode=pseudo-gui -- %U"
+    },
+    {
+      "name": "Volume Control",
+      "icon": "multimedia-volume-control",
+      "exec": "pavucontrol"
+    },
+    {
+      "name": "Camera",
+      "icon": "org.gnome.Snapshot",
+      "exec": "snapshot"
+    },
+    {
+      "name": "Videos",
+      "icon": "org.gnome.Totem",
+      "exec": "totem %U"
+    },
+    {
+      "name": "Audio Player",
+      "icon": "org.gnome.Decibels",
+      "exec": "org.gnome.Decibels %U"
+    },
+    {
+      "name": "Music",
+      "icon": "org.gnome.Music",
+      "exec": "gnome-music"
+    },
+    {
+      "name": "VLC media player",
+      "icon": "vlc",
+      "exec": "/usr/bin/vlc --started-from-file %U"
+    },
+    {
+      "name": "PulseAudio Volume Control",
+      "icon": "multimedia-volume-control",
+      "exec": "pavucontrol-qt"
+    },
+    {
+      "name": "OBS Studio",
+      "icon": "com.obsproject.Studio",
+      "exec": "obs"
+    },
+    {
+      "name": "Cider",
+      "icon": "cider",
+      "exec": "cider %U"
+    }
+  ],
+  "video": [
+    {
+      "name": "Qt V4L2 test Utility",
+      "icon": "qv4l2",
+      "exec": "qv4l2"
+    },
+    {
+      "name": "Qt V4L2 video capture utility",
+      "icon": "qvidcap",
+      "exec": "qvidcap"
+    },
+    {
+      "name": "mpv Media Player",
+      "icon": "mpv",
+      "exec": "mpv --player-operation-mode=pseudo-gui -- %U"
+    },
+    {
+      "name": "Volume Control",
+      "icon": "multimedia-volume-control",
+      "exec": "pavucontrol"
+    },
+    {
+      "name": "Camera",
+      "icon": "org.gnome.Snapshot",
+      "exec": "snapshot"
+    },
+    {
+      "name": "Videos",
+      "icon": "org.gnome.Totem",
+      "exec": "totem %U"
+    },
+    {
+      "name": "Audio Player",
+      "icon": "org.gnome.Decibels",
+      "exec": "org.gnome.Decibels %U"
+    },
+    {
+      "name": "Music",
+      "icon": "org.gnome.Music",
+      "exec": "gnome-music"
+    },
+    {
+      "name": "VLC media player",
+      "icon": "vlc",
+      "exec": "/usr/bin/vlc --started-from-file %U"
+    },
+    {
+      "name": "PulseAudio Volume Control",
+      "icon": "multimedia-volume-control",
+      "exec": "pavucontrol-qt"
+    },
+    {
+      "name": "OBS Studio",
+      "icon": "com.obsproject.Studio",
+      "exec": "obs"
+    },
+    {
+      "name": "Cider",
+      "icon": "cider",
+      "exec": "cider %U"
+    }
+  ],
+  "photos": [
+    {
+      "name": "Eye of GNOME",
+      "icon": "org.gnome.eog",
+      "exec": "eog %U"
+    },
+    {
+      "name": "Document Viewer",
+      "icon": "org.gnome.Evince",
+      "exec": "evince %U"
+    },
+    {
+      "name": "Image Viewer",
+      "icon": "org.gnome.Loupe",
+      "exec": "loupe %U"
+    },
+    {
+      "name": "Document Scanner",
+      "icon": "org.gnome.SimpleScan",
+      "exec": "simple-scan"
+    },
+    {
+      "name": "Pinta",
+      "icon": "pinta",
+      "exec": "pinta %F"
+    },
+    {
+      "name": "Krita",
+      "icon": "krita",
+      "exec": "krita %F"
+    },
+    {
+      "name": "Affinity Photo",
+      "icon": "/home/matt/.local/share/icons/AffinityPhoto.svg",
+      "exec": "env WINEPREFIX=/home/matt/.AffinityLinux WINEDEBUG=-all /home/matt/.AffinityLinux/ElementalWarriorWine/bin/wine \"/home/matt/.AffinityLinux/drive_c/Program Files/Affinity/Photo 2/Photo.exe\""
+    }
+  ],
+  "text_editor": [
+    {
+      "name": "Vim",
+      "icon": "gvim",
+      "exec": "vim %F"
+    },
+    {
+      "name": "Micro",
+      "icon": "micro",
+      "exec": "micro %F"
+    },
+    {
+      "name": "gedit",
+      "icon": "org.gnome.gedit",
+      "exec": "gedit %U"
+    },
+    {
+      "name": "Text Editor",
+      "icon": "org.gnome.TextEditor",
+      "exec": "gnome-text-editor %U"
+    },
+    {
+      "name": "Neovim",
+      "icon": "nvim",
+      "exec": "nvim %F"
+    },
+    {
+      "name": "Code - OSS",
+      "icon": "com.visualstudio.code.oss",
+      "exec": "code-oss %F"
+    },
+    {
+      "name": "Cursor",
+      "icon": "cursor",
+      "exec": "/usr/bin/cursor --no-sandbox %U"
+    }
+  ],
+  "file_manager": [
+    {
+      "name": "Files",
+      "icon": "org.gnome.Nautilus",
+      "exec": "nautilus --new-window %U"
+    }
+  ]
+}

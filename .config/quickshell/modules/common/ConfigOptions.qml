@@ -47,23 +47,17 @@ Singleton {
     }
 
     property QtObject bar: QtObject {
-        property bool bottom: false // Instead of top
-        property QtObject resources: QtObject {
-            property bool alwaysShowSwap: true
-            property bool alwaysShowCpu: false
-        }
+        property bool showBackground: true
+        property bool borderless: false
+        property real transparency: 0.55
+        property int height: 40
+        property int iconSize: undefined
+        property int workspaceIconSize: undefined
+        property int indicatorIconSize: undefined
+        property int systrayIconSize: undefined
+        property int logoIconSize: undefined
         property QtObject workspaces: QtObject {
             property int shown: 10
-            property bool alwaysShowNumbers: false
-            property int showNumberDelay: 150 // milliseconds
-            property bool showAppIcons: true
-        }
-        property QtObject utilButtons: QtObject {
-            property bool showScreenSnip: true
-            property bool showColorPicker: true
-            property bool showMicToggle: true
-            property bool showKeyboardToggle: true
-            property bool showDarkModeToggle: true
         }
         property QtObject weather: QtObject {
             property bool enable: true
@@ -177,6 +171,27 @@ Singleton {
         // https://doc.qt.io/qt-6/qtime.html#toString
         property string format: "hh:mm"
         property string dateFormat: "dddd, dd/MM"
+        property string timeZone: "system" // "system" or specific timezone like "America/New_York"
+        property bool use24Hour: false
+        property bool showSeconds: false
+        property bool showDate: true
+        property bool showDayOfWeek: true
+        property bool showYear: false
+        property string customTimeFormat: ""
+        property string customDateFormat: ""
+        property QtObject display: QtObject {
+            property bool showInBar: true
+            property bool showInDock: false
+            property bool showInSidebar: false
+            property int fontSize: 0 // 0 = auto, otherwise specific size
+            property bool bold: false
+            property bool italic: false
+        }
+        property QtObject localization: QtObject {
+            property string locale: "system" // "system" or specific locale like "en_US"
+            property bool useLocalizedNames: true
+            property string firstDayOfWeek: "monday" // "monday" or "sunday"
+        }
     }
 
     property QtObject hacks: QtObject {
@@ -195,4 +210,9 @@ Singleton {
         property bool suppressMediaDebug: true // Suppress media player debug spam
     }
 
+    function getIconSize() { return bar.iconSize !== undefined ? bar.iconSize : Math.round(bar.height * 0.7); }
+    function getWorkspaceIconSize() { return bar.workspaceIconSize !== undefined ? bar.workspaceIconSize : Math.round(bar.height * 0.7); }
+    function getIndicatorIconSize() { return bar.indicatorIconSize !== undefined ? bar.indicatorIconSize : Math.round(bar.height * 0.7); }
+    function getSystrayIconSize() { return bar.systrayIconSize !== undefined ? bar.systrayIconSize : Math.round(bar.height * 0.7); }
+    function getLogoIconSize() { return bar.logoIconSize !== undefined ? bar.logoIconSize : Math.round(bar.height * 0.8); }
 }
