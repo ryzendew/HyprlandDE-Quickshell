@@ -12,6 +12,7 @@ import "root:/modules/common/functions/color_utils.js" as ColorUtils
 import "root:/modules/common/functions/file_utils.js" as FileUtils
 
 ColumnLayout {
+    clip: false
     spacing: 24
 
     Process {

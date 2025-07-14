@@ -7,6 +7,7 @@ import "root:/modules/common/widgets/"
 import "root:/modules/common/functions/color_utils.js" as ColorUtils
 
 ColumnLayout {
+    clip: false
     spacing: 24
     anchors.left: parent ? parent.left : undefined
     anchors.leftMargin: 40

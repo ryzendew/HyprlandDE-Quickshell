@@ -7,6 +7,7 @@ import "root:/modules/common/widgets/"
 import "root:/modules/common/functions/color_utils.js" as ColorUtils
 
 ColumnLayout {
+    clip: false
     spacing: 24
     anchors.left: parent ? parent.left : undefined
     anchors.leftMargin: 40
@@ -14,9 +15,9 @@ ColumnLayout {
     // Bar Configuration Section
     Rectangle {
         Layout.fillWidth: true
-        Layout.preferredHeight: childrenRect.height + 40
         Layout.topMargin: 16
         Layout.bottomMargin: 16
+        anchors.margins: 8
         radius: Appearance.rounding.large
         color: Appearance.colors.colLayer1
         border.width: 2

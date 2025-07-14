@@ -13,6 +13,7 @@ import QtQuick.Window
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import "root:/services/"
 import "root:/modules/common/"
 import "root:/modules/common/widgets/"
@@ -58,6 +59,7 @@ ApplicationWindow {
     visible: true
     onClosing: Qt.quit()
     title: "illogical-impulse Settings"
+    WlrLayershell.namespace: "quickshell:settings"
 
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
@@ -67,7 +69,62 @@ ApplicationWindow {
     minimumHeight: 400
     width: 1100
     height: 750
-    color: Appearance.m3colors.m3background
+    color: "transparent"
+
+    // Modern Background with transparency and blur
+    Rectangle {
+        id: settingsBackground
+        anchors.fill: parent
+        radius: Appearance.rounding.windowRounding
+        
+        gradient: Gradient {
+            GradientStop { 
+                position: 0.0
+                color: Qt.rgba(
+                    Appearance.colors.colLayer1.r,
+                    Appearance.colors.colLayer1.g,
+                    Appearance.colors.colLayer1.b,
+                    0.75
+                )
+            }
+            GradientStop { 
+                position: 1.0
+                color: Qt.rgba(
+                    Appearance.colors.colLayer1.r,
+                    Appearance.colors.colLayer1.g,
+                    Appearance.colors.colLayer1.b,
+                    0.65
+                )
+            }
+        }
+        
+        border.width: 1
+        border.color: Qt.rgba(
+            Appearance.colors.colOutline.r,
+            Appearance.colors.colOutline.g,
+            Appearance.colors.colOutline.b,
+            0.3
+        )
+        
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            source: settingsBackground
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.15)
+            shadowVerticalOffset: 8
+            shadowHorizontalOffset: 0
+            shadowBlur: 24
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 1
+            radius: parent.radius - 1
+            color: "transparent"
+            border.color: Qt.rgba(1, 1, 1, 0.08)
+            border.width: 1
+        }
+    }
 
     ColumnLayout {
         anchors {
@@ -200,8 +257,52 @@ ApplicationWindow {
             Rectangle { // Content container
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: Appearance.m3colors.m3surfaceContainerLow
                 radius: Appearance.rounding.windowRounding - root.contentPadding
+                // Sidebar style: gradient, border, blur
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: Qt.rgba(
+                            Appearance.colors.colLayer1.r,
+                            Appearance.colors.colLayer1.g,
+                            Appearance.colors.colLayer1.b,
+                            0.75
+                        )
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: Qt.rgba(
+                            Appearance.colors.colLayer1.r,
+                            Appearance.colors.colLayer1.g,
+                            Appearance.colors.colLayer1.b,
+                            0.65
+                        )
+                    }
+                }
+                border.width: 1
+                border.color: Qt.rgba(
+                    Appearance.colors.colOutline.r,
+                    Appearance.colors.colOutline.g,
+                    Appearance.colors.colOutline.b,
+                    0.3
+                )
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    source: parent
+                    shadowEnabled: true
+                    shadowColor: Qt.rgba(0, 0, 0, 0.15)
+                    shadowVerticalOffset: 8
+                    shadowHorizontalOffset: 0
+                    shadowBlur: 24
+                }
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 1
+                    radius: parent.radius - 1
+                    color: "transparent"
+                    border.color: Qt.rgba(1, 1, 1, 0.08)
+                    border.width: 1
+                }
 
                 Loader {
                     id: pageLoader

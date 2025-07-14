@@ -60,23 +60,46 @@ Scope {
                 anchors.centerIn: parent
                 width: Math.min(parent.width - 80, 1920)
                 height: Math.min(parent.height - 80, 1080)
-                
+                anchors.margins: 24
+                clip: false
                 radius: Appearance.rounding.verylarge
-                color: "transparent"
-                
-                // Modern elevation with subtle shadow
+                // Sidebar style: gradient, border, blur
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: Qt.rgba(
+                            Appearance.colors.colLayer1.r,
+                            Appearance.colors.colLayer1.g,
+                            Appearance.colors.colLayer1.b,
+                            0.75
+                        )
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: Qt.rgba(
+                            Appearance.colors.colLayer1.r,
+                            Appearance.colors.colLayer1.g,
+                            Appearance.colors.colLayer1.b,
+                            0.65
+                        )
+                    }
+                }
+                border.width: 1
+                border.color: Qt.rgba(
+                    Appearance.colors.colOutline.r,
+                    Appearance.colors.colOutline.g,
+                    Appearance.colors.colOutline.b,
+                    0.3
+                )
                 Rectangle {
                     anchors.fill: parent
-                    anchors.margins: -4
-                    radius: parent.radius + 2
-                    color: ColorUtils.transparentize(Appearance.m3colors.m3shadow, 0.08)
-                    z: -1
+                    anchors.margins: 1
+                    radius: parent.radius - 1
+                    color: "transparent"
+                    border.color: Qt.rgba(1, 1, 1, 0.08)
+                    border.width: 1
                 }
-
-                // Subtle border
-                border.width: 1
-                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.1)
-
+                
                 Keys.onPressed: (event) => {
                     if (event.key === Qt.Key_Escape) {
                         settingsRoot.hide();
@@ -155,39 +178,32 @@ Scope {
                                 Repeater {
                                     model: [
                                         {
-                                            "id": "interface",
-                                            "icon": "tune",
-                                            "title": "Interface",
-                                            "subtitle": "Bar, workspaces & layout",
-                                            "index": 0
-                                        },
-                                        {
                                             "id": "appearance",
                                             "icon": "palette",
                                             "title": "Appearance",
                                             "subtitle": "Colors, bar & dock",
-                                            "index": 1
+                                            "index": 0
                                         },
                                         {
                                             "id": "system",
                                             "icon": "settings",
                                             "title": "System",
                                             "subtitle": "Audio, battery, time & keyboard",
-                                            "index": 2
+                                            "index": 1
                                         },
                                         {
                                             "id": "apps",
                                             "icon": "apps",
                                             "title": "Apps",
                                             "subtitle": "Default apps & handlers",
-                                            "index": 3
+                                            "index": 2
                                         },
                                         {
                                             "id": "about",
                                             "icon": "info",
                                             "title": "About",
                                             "subtitle": "About QuickShell",
-                                            "index": 4
+                                            "index": 3
                                         }
                                     ]
 
@@ -412,12 +428,11 @@ Scope {
                                         anchors.centerIn: parent
                                         text: {
                                             switch(settingsWindow.selectedTab) {
-                                                case 0: return "tune";
-                                                case 1: return "palette";
-                                                case 2: return "settings";
-                                                case 3: return "apps";
-                                                case 4: return "info";
-                                                default: return "tune";
+                                                case 0: return "palette";
+                                                case 1: return "settings";
+                                                case 2: return "apps";
+                                                case 3: return "info";
+                                                default: return "palette";
                                             }
                                         }
                                         iconSize: 28
@@ -432,12 +447,11 @@ Scope {
                                     StyledText {
                                         text: {
                                             switch(settingsWindow.selectedTab) {
-                                                case 0: return "Interface Settings";
-                                                case 1: return "Appearance Settings";
-                                                case 2: return "System Settings";
-                                                case 3: return "Apps Settings";
-                                                case 4: return "About QuickShell";
-                                                default: return "Interface Settings";
+                                                case 0: return "Appearance Settings";
+                                                case 1: return "System Settings";
+                                                case 2: return "Apps Settings";
+                                                case 3: return "About QuickShell";
+                                                default: return "Appearance Settings";
                                             }
                                         }
                                         font.family: Appearance.font.family.title
@@ -449,12 +463,11 @@ Scope {
                                     StyledText {
                                         text: {
                                             switch(settingsWindow.selectedTab) {
-                                                case 0: return "Configure your desktop interface and behavior";
-                                                case 1: return "Customize colors, bar and dock appearance";
-                                                case 2: return "Manage system services, time, keyboard and hardware settings";
-                                                case 3: return "Configure default applications and handlers";
-                                                case 4: return "System information and help resources";
-                                                default: return "Configure your desktop interface and behavior";
+                                                case 0: return "Customize colors, bar and dock appearance";
+                                                case 1: return "Manage system services, time, keyboard and hardware settings";
+                                                case 2: return "Configure default applications and handlers";
+                                                case 3: return "System information and help resources";
+                                                default: return "Customize colors, bar and dock appearance";
                                             }
                                         }
                                         font.pixelSize: Appearance.font.pixelSize.normal
@@ -490,12 +503,11 @@ Scope {
                                     width: parent.width
                                     sourceComponent: {
                                         switch(settingsWindow.selectedTab) {
-                                            case 0: return interfaceConfigComponent;
-                                            case 1: return appearanceConfigComponent;
-                                            case 2: return systemConfigComponent;
-                                            case 3: return appsConfigComponent;
-                                            case 4: return aboutComponent;
-                                            default: return interfaceConfigComponent;
+                                            case 0: return appearanceConfigComponent;
+                                            case 1: return systemConfigComponent;
+                                            case 2: return appsConfigComponent;
+                                            case 3: return aboutComponent;
+                                            default: return appearanceConfigComponent;
                                         }
                                     }
                                 }
@@ -508,7 +520,6 @@ Scope {
             }
 
             // Components for each settings page
-            Component { id: interfaceConfigComponent; InterfaceConfig {} }
             Component { id: appearanceConfigComponent; AppearanceConfig {} }
             Component { id: systemConfigComponent; SystemConfig {} }
             Component { id: aboutComponent; About {} }
