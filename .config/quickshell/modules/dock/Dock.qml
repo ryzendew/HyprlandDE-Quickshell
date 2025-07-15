@@ -73,7 +73,7 @@ Scope {
     
     // 1. Update pinned apps file path
     property string pinnedAppsFilePath: `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/Quickshell/Dock/PinnedApps.conf`
-    property string oldConfigFilePath: `${Quickshell.configDir}/dock_config.json`
+    property string oldConfigFilePath: `${StandardPaths.writableLocation(StandardPaths.ConfigLocation)}/quickshell/dock_config.json`
 
     // 2. On startup, initialize pinned apps array
     Component.onCompleted: {

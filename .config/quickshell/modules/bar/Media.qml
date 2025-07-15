@@ -282,6 +282,7 @@ Item {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: -9 // Move the visualizer up
+            width: parent.width // Use the pill width for bar count calculation
             fillColor: Appearance.colors.colPrimary
             values: Cava.values
             opacity: 0.08 // Increased semi-transparent effect
