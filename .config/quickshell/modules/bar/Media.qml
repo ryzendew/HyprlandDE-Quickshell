@@ -90,8 +90,14 @@ Item {
     }
 
     Layout.fillHeight: true
-    // Set the pill's width to match content (album art + text + progress bar + padding)
-    implicitWidth: albumArtContainer.width + albumArtistText.width + 24
+    // Set the pill's width to match content (album art + song title + artist text + progress bar + padding)
+    implicitWidth: {
+        var albumArtWidth = albumArtContainer ? albumArtContainer.width : 40
+        var songTitleWidth = songTitle ? songTitle.contentWidth : 0
+        var artistTextWidth = albumArtistText ? albumArtistText.contentWidth : 0
+        var maxTextWidth = Math.max(songTitleWidth, artistTextWidth)
+        return albumArtWidth + maxTextWidth + 40
+    }
     implicitHeight: 40
 
 
@@ -280,9 +286,10 @@ Item {
         CircularSpectrum {
             id: pillSpectrum
             anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.rightMargin: 2 // Add 2px padding on the right side
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: -9 // Move the visualizer up
-            width: parent.width // Use the pill width for bar count calculation
             fillColor: Appearance.colors.colPrimary
             values: Cava.values
             opacity: 0.08 // Increased semi-transparent effect
@@ -440,12 +447,13 @@ Item {
             // Song name on top
             StyledText {
                 id: songTitle
-                Layout.fillWidth: true
+                Layout.fillWidth: false
+                Layout.preferredWidth: contentWidth
                 text: activePlayer?.trackTitle || cleanedTitle
                 color: Appearance.colors.colOnLayer1
                 font.pixelSize: Appearance.font.pixelSize.normal
                 font.weight: Font.Medium
-                elide: Text.ElideRight
+                elide: Text.ElideNone
                 maximumLineCount: 1
             }
             MultiEffect {
@@ -465,6 +473,8 @@ Item {
                 spacing: 0 // No extra spacing needed
                 StyledText {
                     id: albumArtistText
+                    Layout.fillWidth: false
+                    Layout.preferredWidth: contentWidth
                     color: Appearance.colors.colOnLayer1
                     opacity: 0.7
                     text: {
@@ -478,7 +488,7 @@ Item {
                         return main + timeText
                     }
                     font.pixelSize: Appearance.font.pixelSize.smaller
-                    elide: Text.ElideRight
+                    elide: Text.ElideNone
                     maximumLineCount: 1
                     visible: text.length > 0
                 }

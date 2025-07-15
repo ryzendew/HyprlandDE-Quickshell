@@ -809,7 +809,7 @@ Scope {
 
                     Rectangle {
                         id: dockContent
-                        width: dockItemsLayout.width + 8
+                        width: parent.width
                         height: parent.height
                         anchors.centerIn: parent
                         radius: ConfigOptions.dock.radius
@@ -1504,6 +1504,8 @@ Scope {
                                 Layout.preferredWidth: mediaComponent.implicitWidth + 40
                                 Layout.preferredHeight: dockHeight * 0.65
                                 Layout.rightMargin: dockHeight * 0.25
+                                Layout.fillWidth: false // Allow natural width expansion
+                                Layout.maximumWidth: -1 // Remove maximum width constraint
 
                                 Media {
                                     id: mediaComponent
