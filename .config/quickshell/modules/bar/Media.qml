@@ -4,22 +4,39 @@ import "root:/services"
 import "root:/modules/common/functions/string_utils.js" as StringUtils
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
 import Quickshell.Hyprland
+import QtQuick.Effects
 
 Item {
     id: root
     property bool borderless: ConfigOptions.bar?.borderless ?? false
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || qsTr("No media")
+    // Properties to control progress bar position
+    property int progressBarYOffset: 35 // Positive moves down, negative moves up
+    property int progressBarXOffset: 3 // Positive moves right, negative moves left
+    property int progressBarWidth: 0 // Set this to control the width of the progress bar
+    // Properties to control time display position
+    property int timeYOffset: 20 // Positive moves down, negative moves up
+    property int timeXOffset: 290 // Positive moves right, negative moves left
 
     property string artUrl: activePlayer?.trackArtUrl || ""
     property string artDownloadLocation: Directories.coverArt
     property string artFileName: artUrl ? Qt.md5(artUrl) + ".jpg" : ""
     property string artFilePath: artFileName ? `${artDownloadLocation}/${artFileName}` : ""
     property bool downloaded: false
+    
+    // Visualizer properties
+    property bool showVisualizer: ConfigOptions.bar.media.showVisualizer
+    property string visualizerType: ConfigOptions.bar.media.visualizerType
+    property int visualizerBars: ConfigOptions.bar.media.visualizerBars
+    
+    // Cava visualizer service
+    readonly property var cavaValues: Cava.values
 
     // Function to get application icon from MPRIS player
     function getPlayerIcon() {
@@ -73,7 +90,8 @@ Item {
     }
 
     Layout.fillHeight: true
-    implicitWidth: rowLayout.implicitWidth + rowLayout.spacing * 2
+    // Set the pill's width to match content (album art + text + progress bar + padding)
+    implicitWidth: albumArtContainer.width + albumArtistText.width + 24
     implicitHeight: 40
 
 
@@ -244,7 +262,7 @@ Item {
 
     Rectangle { // Background
         anchors.centerIn: parent
-        width: parent.width
+        width: root.implicitWidth // Match the content width
         implicitHeight: 56
         anchors.leftMargin: 0
         anchors.rightMargin: 0
@@ -257,6 +275,18 @@ Item {
             0.35
         )
         radius: Appearance.rounding.small
+
+        // Cava visualizer as pill background
+        CircularSpectrum {
+            id: pillSpectrum
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: -9 // Move the visualizer up
+            fillColor: Appearance.colors.colPrimary
+            values: Cava.values
+            opacity: 0.08 // Increased semi-transparent effect
+            z: 0
+        }
     }
 
     onArtUrlChanged: {
@@ -331,66 +361,71 @@ Item {
         id: rowLayout
         spacing: 10
         anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.leftMargin: 12
-        anchors.rightMargin: 12
-        anchors.topMargin: 2
         height: parent.height - anchors.topMargin
 
-        // Album art on the left
-        Rectangle {
+        // Album art on the left with visualizer
+        Item {
             id: albumArtContainer
             Layout.preferredWidth: 40
             Layout.preferredHeight: 40
             Layout.leftMargin: 2
-            radius: 6
-            color: Qt.rgba(
-                Appearance.colors.colLayer1.r,
-                Appearance.colors.colLayer1.g,
-                Appearance.colors.colLayer1.b,
-                0.65
-            )
-            border.color: Qt.rgba(
-                Appearance.colors.colOnLayer1.r,
-                Appearance.colors.colOnLayer1.g,
-                Appearance.colors.colOnLayer1.b,
-                0.6
-            )
-            border.width: 3
-            visible: root.activePlayer
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: -8
-            layer.enabled: true
-            layer.smooth: true
-            clip: true // Ensure content is clipped to rounded rect
-            
-            // Make album art image fill the container with 1px padding
-            Image {
-                anchors.fill: parent
-                anchors.margins: 3
-                source: root.downloaded ? Qt.resolvedUrl(root.artFilePath) : ""
-                fillMode: Image.PreserveAspectCrop
-                cache: false
-                asynchronous: true
-                visible: root.downloaded && status === Image.Ready
+            visible: root.activePlayer
+
+            // Album art on top
+            Rectangle {
+                id: albumArtRect
+                anchors.centerIn: parent
+                width: 40
+                height: 40
+                radius: 8
+                color: Qt.rgba(
+                    Appearance.colors.colLayer1.r,
+                    Appearance.colors.colLayer1.g,
+                    Appearance.colors.colLayer1.b,
+                    0.65
+                )
+                border.color: Qt.rgba(
+                    Appearance.colors.colOnLayer1.r,
+                    Appearance.colors.colOnLayer1.g,
+                    Appearance.colors.colOnLayer1.b,
+                    0.6
+                )
+                border.width: 2
                 layer.enabled: true
                 layer.smooth: true
-                onStatusChanged: {
-                    if (status === Image.Error) {
-                        root.downloaded = false
+                clip: true
+
+                // Album art image with rounded corners
+                Image {
+                    id: albumArtImage
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    source: root.downloaded ? Qt.resolvedUrl(root.artFilePath) : ""
+                    fillMode: Image.PreserveAspectCrop
+                    cache: false
+                    asynchronous: true
+                    visible: root.downloaded && status === Image.Ready
+                    layer.enabled: true
+                    layer.smooth: true
+                    onStatusChanged: {
+                        if (status === Image.Error) {
+                            root.downloaded = false
+                        }
                     }
                 }
-            }
-            
-            // Show player icon when no album art is available
-            // Use MaterialSymbol or Material Icons font for fallback
-            MaterialSymbol {
-                anchors.centerIn: parent
-                iconSize: 20
-                text: "music_note"
-                color: Appearance.colors.colOnLayer1
-                visible: !root.downloaded || albumArtContainer.children[0].status !== Image.Ready
+
+                // Show player icon when no album art is available or image failed to load
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    iconSize: 20
+                    text: "music_note"
+                    color: Appearance.colors.colOnLayer1
+                    visible: !root.downloaded || albumArtImage.status !== Image.Ready
+                }
             }
         }
 
@@ -412,75 +447,102 @@ Item {
                 elide: Text.ElideRight
                 maximumLineCount: 1
             }
+            MultiEffect {
+                anchors.fill: songTitle
+                source: songTitle
+                shadowEnabled: true
+                shadowColor: "black"
+                shadowBlur: 1.0
+                shadowVerticalOffset: 1.5
+                shadowOpacity: 0.7
+            }
 
             // Album - Artist name with time display
             RowLayout {
-                Layout.fillWidth: true
-                spacing: 2
-                
+                id: albumInfoRow
+                Layout.topMargin: -20
+                spacing: 0 // No extra spacing needed
                 StyledText {
                     id: albumArtistText
-                    Layout.fillWidth: true
                     color: Appearance.colors.colOnLayer1
                     opacity: 0.7
                     text: {
                         var parts = []
                         if (activePlayer?.trackAlbum) parts.push(activePlayer.trackAlbum)
                         if (activePlayer?.trackArtist) parts.push(activePlayer.trackArtist)
-                        return parts.join(" - ")
+                        var main = parts.join(" - ")
+                        var currentTime = formatTime(Math.max(0, displayPosition))
+                        var timeRemaining = formatTime(Math.max(0, displayLength - displayPosition))
+                        var timeText = (root.activePlayer ? (" " + currentTime + " / " + timeRemaining) : "")
+                        return main + timeText
                     }
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     elide: Text.ElideRight
                     maximumLineCount: 1
                     visible: text.length > 0
                 }
-                
-            StyledText {
-                    id: timeDisplay
-                color: Appearance.colors.colOnLayer1
-                    opacity: 0.6
-                    text: {
-                        var currentTime = formatTime(Math.max(0, displayPosition))
-                        var totalTime = formatTime(Math.max(0, displayLength))
-                        return currentTime + " / " + totalTime
-                    }
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                    visible: root.activePlayer
+                MultiEffect {
+                    anchors.fill: albumArtistText
+                    source: albumArtistText
+                    shadowEnabled: true
+                    shadowColor: "black"
+                    shadowBlur: 1.0
+                    shadowVerticalOffset: 1.5
+                    shadowOpacity: 0.7
                 }
+                // Removed separate time StyledText and MultiEffect
             }
+        }
+    }
 
-            // Progress bar at the bottom
-            Rectangle {
-                id: progressBarBackground
-                Layout.fillWidth: true
-                Layout.preferredHeight: 3
-                Layout.topMargin: 4
-                Layout.leftMargin: -41
-                radius: 1.5
-                color: Qt.rgba(
-                    Appearance.m3colors.m3secondaryContainer.r,
-                    Appearance.m3colors.m3secondaryContainer.g,
-                    Appearance.m3colors.m3secondaryContainer.b,
-                    0.4
-                )
-                visible: root.activePlayer
+    // Time display absolutely positioned
+    // StyledText {
+    //     id: timeDisplay
+    //     x: timeXOffset
+    //     y: timeYOffset
+    //     color: Appearance.colors.colOnLayer1
+    //     opacity: 0.6
+    //     text: {
+    //         var currentTime = formatTime(Math.max(0, displayPosition))
+    //         var timeRemaining = formatTime(Math.max(0, displayLength - displayPosition))
+    //         return currentTime + " / -" + timeRemaining
+    //     }
+    //     font.pixelSize: Appearance.font.pixelSize.smaller
+    //     font.weight: Font.Bold
+    //     visible: root.activePlayer
+    // }
 
-                Rectangle {
-                    id: progressBarFill
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width * Math.max(0, Math.min(1, displayPosition / Math.max(1, displayLength)))
-                    height: parent.height
-                    radius: parent.radius
-                    color: Appearance.m3colors.m3primary
-                    
-                    Behavior on width {
-                        enabled: activePlayer?.playbackState == MprisPlaybackState.Playing
-                        NumberAnimation {
-                            duration: 300
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+    // Progress bar absolutely positioned
+    Rectangle {
+        id: progressBarBackground
+        anchors.top: rowLayout.top
+        anchors.left: rowLayout.left
+        anchors.topMargin: progressBarYOffset
+        anchors.leftMargin: progressBarXOffset
+        width: albumArtistText.width + 55 // 4px more than before
+        height: 3
+        radius: 1.5
+        color: Qt.rgba(
+            Appearance.m3colors.m3secondaryContainer.r,
+            Appearance.m3colors.m3secondaryContainer.g,
+            Appearance.m3colors.m3secondaryContainer.b,
+            0.4
+        )
+        visible: root.activePlayer
+
+        Rectangle {
+            id: progressBarFill
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width * Math.max(0, Math.min(1, displayPosition / Math.max(1, displayLength)))
+            height: parent.height
+            radius: parent.radius
+            color: Appearance.m3colors.m3primary
+            Behavior on width {
+                enabled: activePlayer?.playbackState == MprisPlaybackState.Playing
+                NumberAnimation {
+                    duration: 300
+                    easing.type: Easing.OutCubic
                 }
             }
         }

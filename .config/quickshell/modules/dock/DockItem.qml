@@ -48,6 +48,19 @@ Rectangle {
     property real dragStartY: 0
     property int dragThreshold: 10
     
+    // Computed properties for multi-window dots
+    readonly property bool hasMultipleWindows: {
+        if (!appData || !appData.toplevels) return false
+        if (!Array.isArray(appData.toplevels)) return false
+        return appData.toplevels.length > 1
+    }
+    
+    readonly property int windowCount: {
+        if (!appData || !appData.toplevels) return 0
+        if (!Array.isArray(appData.toplevels)) return 0
+        return Math.min(appData.toplevels.length, 5)
+    }
+    
     // --- Signals ---
     // Emitted when the item is clicked (left click)
     signal clicked()
@@ -103,38 +116,47 @@ Rectangle {
     }
 
     // --- Icon ---
-    // The app icon, centered in the item using proper Quickshell icon handling
     Item {
         id: iconContainer
         anchors.centerIn: parent
         width: ConfigOptions.dock.iconSize
         height: ConfigOptions.dock.iconSize
 
-        // Use proper icon source resolution according to Quickshell docs
         Image {
             id: appIcon
             anchors.fill: parent
             property string resolvedSource: (function() {
                 if (!appData) {
-// console.log('[DOCK DEBUG] appData is null/undefined for DockItem');
                     return "image://icon/application-x-executable";
                 }
-                // For desktop entries, use iconUrl or fallback to icon name
                 if (appData.iconUrl) {
-// console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source:', appData.iconUrl);
                     return appData.iconUrl;
                 }
                 if (appData.icon) {
-// console.log('[DOCK DEBUG] appData:', JSON.stringify(appData), 'icon source:', "image://icon/" + appData.icon);
                     return "image://icon/" + appData.icon;
                 }
-                // Final fallback - same for both pinned and unpinned
-// console.log('[DOCK DEBUG] No icon found, using fallback for appData:', JSON.stringify(appData));
                 return "image://icon/application-x-executable";
             })()
             source: resolvedSource
             smooth: true
             mipmap: true
+        }
+
+        // --- Multi-window Dots ---
+        Row {
+            id: multiWindowDots
+            spacing: 3
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 2
+            visible: hasMultipleWindows
+            Repeater {
+                model: windowCount
+                delegate: Rectangle {
+                    width: 6; height: 6; radius: 3
+                    color: Appearance.colors.colPrimary
+                }
+            }
         }
     }
 

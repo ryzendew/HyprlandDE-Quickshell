@@ -62,6 +62,11 @@ Singleton {
         property QtObject weather: QtObject {
             property bool enable: true
         }
+        property QtObject media: QtObject {
+            property bool showVisualizer: true
+            property string visualizerType: "circular" // "circular", "radial", "diamond", "fire"
+            property int visualizerBars: 44
+        }
     }
 
     property QtObject dock: QtObject {

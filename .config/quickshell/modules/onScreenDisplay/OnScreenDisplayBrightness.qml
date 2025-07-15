@@ -48,7 +48,7 @@ Scope {
 
     Loader {
         id: osdLoader
-        active: showOsdValues
+        active: showOsdValues || false
 
         sourceComponent: PanelWindow {
             id: osdRoot
@@ -75,7 +75,7 @@ Scope {
 
             implicitWidth: columnLayout.implicitWidth
             implicitHeight: columnLayout.implicitHeight
-            visible: osdLoader.active
+            visible: osdLoader.active || false
 
             ColumnLayout {
                 id: columnLayout

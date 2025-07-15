@@ -193,17 +193,16 @@ Loader {
             RowLayout {
                 spacing: 3
                 anchors {
-                    top: iconImageLoader.bottom
-                    topMargin: 2
+                    bottom: parent.bottom
+                    bottomMargin: 4
                     horizontalCenter: parent.horizontalCenter
                 }
                 Repeater {
-                    model: Math.min(appToplevel.toplevels.length, 3)
+                    model: Math.min(appToplevel.toplevels.length, 5)
                     delegate: Rectangle {
                         required property int index
                         radius: Appearance.rounding.full
-                        implicitWidth: (appToplevel.toplevels.length <= 3) ? 
-                            root.countDotWidth : root.countDotHeight // Circles when too many
+                        implicitWidth: root.countDotWidth
                         implicitHeight: root.countDotHeight
                         color: appIsActive ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.4)
                     }

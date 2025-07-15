@@ -223,4 +223,33 @@ Menu {
             dockItemMenu.closeApp()
         }
     }
+
+    MenuItem {
+        text: qsTr("Close All Windows")
+        icon.name: "window-close"
+        contentItem: Text {
+            text: qsTr("Close All Windows")
+            color: "#ff6666"
+            font: pinMenuItem.font
+        }
+        background: Rectangle {
+            color: closeMenuItem.highlighted ? Qt.rgba(
+                Appearance.colors.colError.r,
+                Appearance.colors.colError.g,
+                Appearance.colors.colError.b,
+                0.2
+            ) : "transparent"
+            radius: Appearance.rounding.small
+        }
+        onTriggered: {
+            if (appInfo && appInfo.toplevels && appInfo.toplevels.length > 0) {
+                for (var i = 0; i < appInfo.toplevels.length; ++i) {
+                    var win = appInfo.toplevels[i];
+                    if (win && win.address) {
+                        Hyprland.dispatch(`closewindow address:${win.address}`);
+                    }
+                }
+            }
+        }
+    }
 }
