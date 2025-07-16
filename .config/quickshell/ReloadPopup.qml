@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 import Qt5Compat.GraphicalEffects
 
 Scope {
@@ -34,18 +35,29 @@ Scope {
 		PanelWindow {
 			id: popup
 
-			anchors.top: true
-			margins.top: 50
+			exclusionMode: ExclusionMode.Normal
+			WlrLayershell.namespace: "quickshell:reloadPopup"
+			WlrLayershell.layer: WlrLayer.Overlay
+			color: "transparent"
+
+			anchors {
+				top: true
+				left: true
+				right: true
+			}
+			mask: Region {
+				item: modernRect
+			}
 
 			implicitWidth: modernRect.width
 			implicitHeight: modernRect.height
 
-			color: "transparent"
-
 			// Modern glass effect background
 			Rectangle {
 				id: modernRect
-				anchors.centerIn: parent
+				anchors.horizontalCenter: parent.horizontalCenter
+				anchors.top: parent.top
+				anchors.topMargin: 0
 				width: Math.max(320, layout.implicitWidth + 60)
 				height: layout.implicitHeight + 40
 				radius: 20

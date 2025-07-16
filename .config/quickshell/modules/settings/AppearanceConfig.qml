@@ -27,6 +27,7 @@ ColumnLayout {
             Repeater {
                 model: [
                     { "id": "appearance", "title": "Appearance", "icon": "palette", "subtitle": "Colors, themes & visual effects" },
+                    { "id": "logo", "title": "Logo", "icon": "image", "subtitle": "System logo selection" },
                     { "id": "bar", "title": "Bar", "icon": "view_agenda", "subtitle": "Top bar settings" },
                     { "id": "dock", "title": "Dock", "icon": "dock", "subtitle": "Application dock settings" }
                 ]
@@ -102,6 +103,7 @@ ColumnLayout {
         sourceComponent: {
             switch(appearanceTab.selectedSubTab) {
                 case "appearance": return appearanceComponent;
+                case "logo": return logoComponent;
                 case "bar": return barComponent;
                 case "dock": return dockComponent;
                 default: return appearanceComponent;
@@ -111,6 +113,7 @@ ColumnLayout {
 
     // Sub-components
     Component { id: appearanceComponent; StyleConfig {} }
+    Component { id: logoComponent; LogoConfig {} }
     Component { id: barComponent; BarConfig {} }
     Component { id: dockComponent; DockConfig {} }
 

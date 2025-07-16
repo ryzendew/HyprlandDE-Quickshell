@@ -135,13 +135,83 @@ Scope {
                     }
                 }
 
-                // Bottom border - matching sidebar style
+                // Individual borders - top, left, right, bottom
                 Rectangle {
+                    id: topBorder
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    height: 3
+                    visible: ConfigOptions.bar.borderTop ?? false
+                    z: 10
+                    
+                    color: {
+                        let colorStr = ConfigOptions.bar.borderColor || "#ffffff"
+                        let opacity = ConfigOptions.bar.borderOpacity || 0.12
+                        let color = Qt.color(colorStr)
+                        return Qt.rgba(color.r, color.g, color.b, opacity)
+                    }
+                    
+                    layer.enabled: true
+                    layer.smooth: true
+                }
+
+                Rectangle {
+                    id: leftBorder
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 3
+                    visible: ConfigOptions.bar.borderLeft ?? false
+                    z: 10
+                    
+                    color: {
+                        let colorStr = ConfigOptions.bar.borderColor || "#ffffff"
+                        let opacity = ConfigOptions.bar.borderOpacity || 0.12
+                        let color = Qt.color(colorStr)
+                        return Qt.rgba(color.r, color.g, color.b, opacity)
+                    }
+                    
+                    layer.enabled: true
+                    layer.smooth: true
+                }
+
+                Rectangle {
+                    id: rightBorder
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 3
+                    visible: ConfigOptions.bar.borderRight ?? false
+                    z: 10
+                    
+                    color: {
+                        let colorStr = ConfigOptions.bar.borderColor || "#ffffff"
+                        let opacity = ConfigOptions.bar.borderOpacity || 0.12
+                        let color = Qt.color(colorStr)
+                        return Qt.rgba(color.r, color.g, color.b, opacity)
+                    }
+                    
+                    layer.enabled: true
+                    layer.smooth: true
+                }
+
+                Rectangle {
+                    id: bottomBorder
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
-                    height: 1
-                    color: Qt.rgba(1, 1, 1, 0.12)
+                    height: 3
+                    visible: ConfigOptions.bar.borderBottom ?? true
+                    z: 10
+                    
+                    color: {
+                        let colorStr = ConfigOptions.bar.borderColor || "#ffffff"
+                        let opacity = ConfigOptions.bar.borderOpacity || 0.12
+                        let color = Qt.color(colorStr)
+                        return Qt.rgba(color.r, color.g, color.b, opacity)
+                    }
+                    
                     layer.enabled: true
                     layer.smooth: true
                 }
@@ -211,19 +281,29 @@ Scope {
                                 implicitHeight: barHeight
 
                                 antialiasing: true
-                                Image {
-                                    id: archLogo
+                                Item {
                                     anchors.centerIn: parent
                                     width: logoIconSize
                                     height: logoIconSize
-                                    source: "root:/logo/Nobara-linux-logo.svg"
-                                    fillMode: Image.PreserveAspectFit
-                                    smooth: true
-                                    antialiasing: true
-                                    sourceSize.width: logoIconSize
-                                    sourceSize.height: logoIconSize
-                                    layer.enabled: true
-                                    layer.smooth: true
+                                    
+                                    Image {
+                                        id: archLogo
+                                        anchors.fill: parent
+                                        source: "root:/assets/icons/" + (ConfigOptions.appearance.logo || "distro-nobara-symbolic.svg")
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        antialiasing: true
+                                        sourceSize.width: logoIconSize
+                                        sourceSize.height: logoIconSize
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                    }
+                                    
+                                    ColorOverlay {
+                                        anchors.fill: archLogo
+                                        source: archLogo
+                                        color: ConfigOptions.appearance.logoColor || "#ffffff"
+                                    }
                                 }
                                 
                                 MouseArea {

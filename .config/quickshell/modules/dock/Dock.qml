@@ -245,92 +245,636 @@ Scope {
     // Auto-hide is now managed through ConfigOptions.dock.autoHide
     // Use the settings UI to toggle auto-hide
     
-    // Add a new app to pinned apps
+    // Add a new app to pinned apps - ROBUST VERSION
     function addPinnedApp(appClass) {
-// console.log("[DOCK DEBUG] addPinnedApp called with:", appClass);
-        // Map window class to desktop file if known
-        var windowClassToDesktopFile = {
+        console.log("[PIN DEBUG] addPinnedApp called with:", appClass);
+        
+        // Use the same comprehensive mapping as removePinnedApp
+        var comprehensiveMapping = {
+            // Affinity apps
             "photo.exe": "AffinityPhoto.desktop",
             "Photo.exe": "AffinityPhoto.desktop",
+            "affinityphoto": "AffinityPhoto.desktop",
+            "AffinityPhoto": "AffinityPhoto.desktop",
+            "AffinityPhoto.desktop": "AffinityPhoto.desktop",
             "designer.exe": "AffinityDesigner.desktop",
             "Designer.exe": "AffinityDesigner.desktop",
-            "net.lutris.lutris": "lutris",  // Normalize Lutris to always use "lutris"
-            "net.lutris.Lutris": "lutris",  // Handle capital L variation
-            "lutris": "lutris",  // Ensure Lutris is always "lutris"
-            "Lutris": "lutris",   // Handle capital L variation
-            "com.obsproject.Studio": "obs",  // Normalize OBS to always use "obs"
-            "com.obsproject.studio": "obs",  // Handle lowercase s variation
-            "obs": "obs",  // Ensure OBS is always "obs"
-            "OBS": "obs",   // Handle uppercase variation
-            "steam": "steam-native",  // Normalize Steam to always use "steam-native"
-            "steam.exe": "steam-native",  // Handle .exe variation
-            "Steam": "steam-native",  // Handle capital S variation
-            "Steam.exe": "steam-native",  // Handle capital S with .exe variation
-            "org.gnome.ptyxis": "ptyxis",  // Normalize Ptyxis to always use "ptyxis"
-            "ptyxis": "ptyxis",  // Ensure Ptyxis is always "ptyxis"
-            "Ptyxis": "ptyxis",  // Handle capital P variation
-            "Org.gnome.ptyxis": "ptyxis"  // Handle capital O variation
-            // Add more mappings as needed
+            "affinitydesigner": "AffinityDesigner.desktop",
+            "AffinityDesigner": "AffinityDesigner.desktop",
+            "AffinityDesigner.desktop": "AffinityDesigner.desktop",
+            
+            // Lutris variations
+            "net.lutris.lutris": "lutris",
+            "net.lutris.Lutris": "lutris",
+            "lutris": "lutris",
+            "Lutris": "lutris",
+            "lutris.desktop": "lutris",
+            
+            // OBS variations
+            "com.obsproject.Studio": "obs",
+            "com.obsproject.studio": "obs",
+            "com.obsproject.Studio.desktop": "obs",
+            "com.obsproject.studio.desktop": "obs",
+            "obs": "obs",
+            "OBS": "obs",
+            "obs-studio": "obs",
+            "obs-studio.desktop": "obs",
+            
+            // Steam variations
+            "steam": "steam-native",
+            "steam.exe": "steam-native",
+            "Steam": "steam-native",
+            "Steam.exe": "steam-native",
+            "steam-native": "steam-native",
+            "steam-native.desktop": "steam-native",
+            "com.valvesoftware.Steam": "steam-native",
+            "com.valvesoftware.Steam.desktop": "steam-native",
+            
+            // Nautilus variations
+            "nautilus": "org.gnome.Nautilus",
+            "org.gnome.nautilus": "org.gnome.Nautilus",
+            "org.gnome.Nautilus": "org.gnome.Nautilus",
+            "org.gnome.Nautilus.desktop": "org.gnome.Nautilus",
+            "files": "org.gnome.Nautilus",
+            "gnome-files": "org.gnome.Nautilus",
+            
+            // Microsoft Edge variations
+            "microsoft-edge-dev": "microsoft-edge-dev",
+            "microsoft-edge": "microsoft-edge-dev",
+            "microsoft-edge.desktop": "microsoft-edge-dev",
+            "msedge": "microsoft-edge-dev",
+            "edge": "microsoft-edge-dev",
+            
+            // Vesktop/Discord variations
+            "vesktop": "vesktop",
+            "discord": "vesktop",
+            "discord.desktop": "vesktop",
+            "Vesktop": "vesktop",
+            "Discord": "vesktop",
+            
+            // Heroic variations
+            "heroic": "heroic",
+            "heroicgameslauncher": "heroic",
+            "heroic.desktop": "heroic",
+            "heroicgameslauncher.desktop": "heroic",
+            "Heroic": "heroic",
+            "HeroicGamesLauncher": "heroic",
+            
+            // Ptyxis variations
+            "org.gnome.ptyxis": "ptyxis",
+            "org.gnome.ptyxis.desktop": "ptyxis",
+            "ptyxis": "ptyxis",
+            "Ptyxis": "ptyxis",
+            "ptyxis.desktop": "ptyxis",
+            "Org.gnome.ptyxis": "ptyxis",
+            
+            // Cider variations
+            "cider": "cider",
+            "Cider": "cider",
+            "Cider.desktop": "cider",
+            "cider.desktop": "cider",
+            
+            // Cursor variations
+            "cursor": "cursor-cursor",
+            "Cursor": "cursor-cursor",
+            "cursor-cursor": "cursor-cursor",
+            "cursor-cursor.desktop": "cursor-cursor",
+            
+            // DaVinci Resolve variations
+            "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "net.lutris.davinci-resolve-studio-20-1.desktop": "net.lutris.davinci-resolve-studio-20-1.desktop"
         };
-        var toPin = windowClassToDesktopFile[appClass] || appClass;
-// console.log("[DOCK DEBUG] Mapped to:", toPin);
-        // Check if app is already pinned
-        if (!pinnedApps.includes(toPin)) {
-            // Create a new array to trigger QML reactivity
-            var newPinnedApps = pinnedApps.slice()
-            newPinnedApps.push(toPin)
-            pinnedApps = newPinnedApps
-// console.log("[DOCK DEBUG] Added to pinned apps, calling savePinnedApps");
-            savePinnedApps()
+        
+        // Normalize the input (case-insensitive lookup)
+        var normalizedInput = appClass.toLowerCase();
+        var toPin = null;
+        
+        // First, try exact match (case-insensitive)
+        for (var key in comprehensiveMapping) {
+            if (key.toLowerCase() === normalizedInput) {
+                toPin = comprehensiveMapping[key];
+                console.log("[PIN DEBUG] Found exact match:", key, "->", toPin);
+                break;
+            }
+        }
+        
+        // If no exact match, try partial matching
+        if (!toPin) {
+            for (var key in comprehensiveMapping) {
+                if (key.toLowerCase().includes(normalizedInput) || normalizedInput.includes(key.toLowerCase())) {
+                    toPin = comprehensiveMapping[key];
+                    console.log("[PIN DEBUG] Found partial match:", key, "->", toPin);
+                    break;
+                }
+            }
+        }
+        
+        // If still no match, use the original input
+        if (!toPin) {
+            toPin = appClass;
+            console.log("[PIN DEBUG] No mapping found, using original:", toPin);
+        }
+        
+        // Check if app is already pinned (case-insensitive)
+        var alreadyPinned = false;
+        for (var i = 0; i < pinnedApps.length; i++) {
+            if (pinnedApps[i].toLowerCase() === toPin.toLowerCase()) {
+                alreadyPinned = true;
+                console.log("[PIN DEBUG] App already pinned:", pinnedApps[i]);
+                break;
+            }
+        }
+        
+        // Also check with .desktop extension
+        if (!alreadyPinned && !toPin.endsWith('.desktop')) {
+            var withDesktop = toPin + '.desktop';
+            for (var i = 0; i < pinnedApps.length; i++) {
+                if (pinnedApps[i].toLowerCase() === withDesktop.toLowerCase()) {
+                    alreadyPinned = true;
+                    console.log("[PIN DEBUG] App already pinned with .desktop extension:", pinnedApps[i]);
+                    break;
+                }
+            }
+        }
+        
+        // Add the app if not already pinned
+        if (!alreadyPinned) {
+            var newPinnedApps = pinnedApps.slice();
+            newPinnedApps.push(toPin);
+            pinnedApps = newPinnedApps;
+            console.log("[PIN DEBUG] Successfully added:", toPin);
+            savePinnedApps();
+            return true; // Success
         } else {
-// console.log("[DOCK DEBUG] App already pinned:", toPin);
+            console.log("[PIN DEBUG] App already pinned, skipping:", toPin);
+            return false; // Already pinned
         }
     }
     
-    // Remove an app from pinned apps
+    // Remove an app from pinned apps - ROBUST VERSION
     function removePinnedApp(appClass) {
-        // For pinned apps, appClass is already the desktop file name
-        // For unpinned apps, we need to map window class to desktop file
-        var toRemove = appClass;
+        console.log("[UNPIN DEBUG] removePinnedApp called with:", appClass);
         
-        // Apply mapping for both window classes and desktop files
-        var windowClassToDesktopFile = {
+        // Comprehensive mapping for all app variations
+        var comprehensiveMapping = {
+            // Affinity apps
             "photo.exe": "AffinityPhoto.desktop",
             "Photo.exe": "AffinityPhoto.desktop",
+            "affinityphoto": "AffinityPhoto.desktop",
+            "AffinityPhoto": "AffinityPhoto.desktop",
+            "AffinityPhoto.desktop": "AffinityPhoto.desktop",
             "designer.exe": "AffinityDesigner.desktop",
             "Designer.exe": "AffinityDesigner.desktop",
-            "net.lutris.lutris": "lutris",  // Normalize Lutris to always use "lutris"
-            "net.lutris.Lutris": "lutris",  // Handle capital L variation
-            "lutris": "lutris",  // Ensure Lutris is always "lutris"
-            "Lutris": "lutris",   // Handle capital L variation
-            "com.obsproject.Studio": "obs",  // Normalize OBS to always use "obs"
-            "com.obsproject.studio": "obs",  // Handle lowercase s variation
-            "obs": "obs",  // Ensure OBS is always "obs"
-            "OBS": "obs",   // Handle uppercase variation
-            "com.obsproject.Studio.desktop": "obs",  // Handle desktop file name for OBS
-            "com.obsproject.studio.desktop": "obs",   // Handle lowercase desktop file name for OBS
-            "steam": "steam-native",  // Normalize Steam to always use "steam-native"
-            "steam.exe": "steam-native",  // Handle .exe variation
-            "Steam": "steam-native",  // Handle capital S variation
-            "Steam.exe": "steam-native",  // Handle capital S with .exe variation
-            "steam-native.desktop": "steam-native",  // Handle desktop file name for Steam
-            "org.gnome.ptyxis": "ptyxis",  // Normalize Ptyxis to always use "ptyxis"
-            "ptyxis": "ptyxis",  // Ensure Ptyxis is always "ptyxis"
-            "Ptyxis": "ptyxis",  // Handle capital P variation
-            "Org.gnome.ptyxis": "ptyxis",  // Handle capital O variation
-            "ptyxis.desktop": "ptyxis"  // Handle desktop file name for Ptyxis
-            // Add more mappings as needed
+            "affinitydesigner": "AffinityDesigner.desktop",
+            "AffinityDesigner": "AffinityDesigner.desktop",
+            "AffinityDesigner.desktop": "AffinityDesigner.desktop",
+            
+            // Lutris variations
+            "net.lutris.lutris": "lutris",
+            "net.lutris.Lutris": "lutris",
+            "lutris": "lutris",
+            "Lutris": "lutris",
+            "lutris.desktop": "lutris",
+            
+            // OBS variations
+            "com.obsproject.Studio": "obs",
+            "com.obsproject.studio": "obs",
+            "com.obsproject.Studio.desktop": "obs",
+            "com.obsproject.studio.desktop": "obs",
+            "obs": "obs",
+            "OBS": "obs",
+            "obs-studio": "obs",
+            "obs-studio.desktop": "obs",
+            
+            // Steam variations
+            "steam": "steam-native",
+            "steam.exe": "steam-native",
+            "Steam": "steam-native",
+            "Steam.exe": "steam-native",
+            "steam-native": "steam-native",
+            "steam-native.desktop": "steam-native",
+            "com.valvesoftware.Steam": "steam-native",
+            "com.valvesoftware.Steam.desktop": "steam-native",
+            
+            // Nautilus variations
+            "nautilus": "org.gnome.Nautilus",
+            "org.gnome.nautilus": "org.gnome.Nautilus",
+            "org.gnome.Nautilus": "org.gnome.Nautilus",
+            "org.gnome.Nautilus.desktop": "org.gnome.Nautilus",
+            "files": "org.gnome.Nautilus",
+            "gnome-files": "org.gnome.Nautilus",
+            
+            // Microsoft Edge variations
+            "microsoft-edge-dev": "microsoft-edge-dev",
+            "microsoft-edge": "microsoft-edge-dev",
+            "microsoft-edge.desktop": "microsoft-edge-dev",
+            "msedge": "microsoft-edge-dev",
+            "edge": "microsoft-edge-dev",
+            
+            // Vesktop/Discord variations
+            "vesktop": "vesktop",
+            "discord": "vesktop",
+            "discord.desktop": "vesktop",
+            "Vesktop": "vesktop",
+            "Discord": "vesktop",
+            
+            // Heroic variations
+            "heroic": "heroic",
+            "heroicgameslauncher": "heroic",
+            "heroic.desktop": "heroic",
+            "heroicgameslauncher.desktop": "heroic",
+            "Heroic": "heroic",
+            "HeroicGamesLauncher": "heroic",
+            
+            // Ptyxis variations
+            "org.gnome.ptyxis": "ptyxis",
+            "org.gnome.ptyxis.desktop": "ptyxis",
+            "ptyxis": "ptyxis",
+            "Ptyxis": "ptyxis",
+            "ptyxis.desktop": "ptyxis",
+            "Org.gnome.ptyxis": "ptyxis",
+            
+            // Cider variations
+            "cider": "cider",
+            "Cider": "cider",
+            "Cider.desktop": "cider",
+            "cider.desktop": "cider",
+            
+            // Cursor variations
+            "cursor": "cursor-cursor",
+            "Cursor": "cursor-cursor",
+            "cursor-cursor": "cursor-cursor",
+            "cursor-cursor.desktop": "cursor-cursor",
+            
+            // DaVinci Resolve variations
+            "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "net.lutris.davinci-resolve-studio-20-1.desktop": "net.lutris.davinci-resolve-studio-20-1.desktop"
         };
-        toRemove = windowClassToDesktopFile[appClass] || appClass;
         
-        var index = pinnedApps.indexOf(toRemove)
+        // Normalize the input (case-insensitive lookup)
+        var normalizedInput = appClass.toLowerCase();
+        var toRemove = null;
         
-        if (index !== -1) {
-            var newPinnedApps = pinnedApps.slice()
-            newPinnedApps.splice(index, 1)
-            pinnedApps = newPinnedApps
-            savePinnedApps()
+        // First, try exact match (case-insensitive)
+        for (var key in comprehensiveMapping) {
+            if (key.toLowerCase() === normalizedInput) {
+                toRemove = comprehensiveMapping[key];
+                console.log("[UNPIN DEBUG] Found exact match:", key, "->", toRemove);
+                break;
+            }
         }
+        
+        // If no exact match, try partial matching
+        if (!toRemove) {
+            for (var key in comprehensiveMapping) {
+                if (key.toLowerCase().includes(normalizedInput) || normalizedInput.includes(key.toLowerCase())) {
+                    toRemove = comprehensiveMapping[key];
+                    console.log("[UNPIN DEBUG] Found partial match:", key, "->", toRemove);
+                    break;
+                }
+            }
+        }
+        
+        // If still no match, use the original input
+        if (!toRemove) {
+            toRemove = appClass;
+            console.log("[UNPIN DEBUG] No mapping found, using original:", toRemove);
+        }
+        
+        // Find the app in pinned apps (case-insensitive)
+        var index = -1;
+        for (var i = 0; i < pinnedApps.length; i++) {
+            if (pinnedApps[i].toLowerCase() === toRemove.toLowerCase()) {
+                index = i;
+                console.log("[UNPIN DEBUG] Found in pinned apps at index:", index, "value:", pinnedApps[i]);
+                break;
+            }
+        }
+        
+        // Also try with .desktop extension if not found
+        if (index === -1 && !toRemove.endsWith('.desktop')) {
+            var withDesktop = toRemove + '.desktop';
+            for (var i = 0; i < pinnedApps.length; i++) {
+                if (pinnedApps[i].toLowerCase() === withDesktop.toLowerCase()) {
+                    index = i;
+                    console.log("[UNPIN DEBUG] Found with .desktop extension at index:", index, "value:", pinnedApps[i]);
+                    break;
+                }
+            }
+        }
+        
+        // Remove the app if found
+        if (index !== -1) {
+            var newPinnedApps = pinnedApps.slice();
+            var removedApp = newPinnedApps.splice(index, 1)[0];
+            pinnedApps = newPinnedApps;
+            console.log("[UNPIN DEBUG] Successfully removed:", removedApp);
+            savePinnedApps();
+            return true; // Success
+        } else {
+            console.log("[UNPIN DEBUG] App not found in pinned apps:", toRemove);
+            console.log("[UNPIN DEBUG] Current pinned apps:", JSON.stringify(pinnedApps));
+            return false; // Not found
+        }
+    }
+    
+    // Utility function to check if an app is pinned
+    function isAppPinned(appClass) {
+        console.log("[PIN CHECK DEBUG] isAppPinned called with:", appClass);
+        
+        // Use the same comprehensive mapping
+        var comprehensiveMapping = {
+            // Affinity apps
+            "photo.exe": "AffinityPhoto.desktop",
+            "Photo.exe": "AffinityPhoto.desktop",
+            "affinityphoto": "AffinityPhoto.desktop",
+            "AffinityPhoto": "AffinityPhoto.desktop",
+            "AffinityPhoto.desktop": "AffinityPhoto.desktop",
+            "designer.exe": "AffinityDesigner.desktop",
+            "Designer.exe": "AffinityDesigner.desktop",
+            "affinitydesigner": "AffinityDesigner.desktop",
+            "AffinityDesigner": "AffinityDesigner.desktop",
+            "AffinityDesigner.desktop": "AffinityDesigner.desktop",
+            
+            // Lutris variations
+            "net.lutris.lutris": "lutris",
+            "net.lutris.Lutris": "lutris",
+            "lutris": "lutris",
+            "Lutris": "lutris",
+            "lutris.desktop": "lutris",
+            
+            // OBS variations
+            "com.obsproject.Studio": "obs",
+            "com.obsproject.studio": "obs",
+            "com.obsproject.Studio.desktop": "obs",
+            "com.obsproject.studio.desktop": "obs",
+            "obs": "obs",
+            "OBS": "obs",
+            "obs-studio": "obs",
+            "obs-studio.desktop": "obs",
+            
+            // Steam variations
+            "steam": "steam-native",
+            "steam.exe": "steam-native",
+            "Steam": "steam-native",
+            "Steam.exe": "steam-native",
+            "steam-native": "steam-native",
+            "steam-native.desktop": "steam-native",
+            "com.valvesoftware.Steam": "steam-native",
+            "com.valvesoftware.Steam.desktop": "steam-native",
+            
+            // Nautilus variations
+            "nautilus": "org.gnome.Nautilus",
+            "org.gnome.nautilus": "org.gnome.Nautilus",
+            "org.gnome.Nautilus": "org.gnome.Nautilus",
+            "org.gnome.Nautilus.desktop": "org.gnome.Nautilus",
+            "files": "org.gnome.Nautilus",
+            "gnome-files": "org.gnome.Nautilus",
+            
+            // Microsoft Edge variations
+            "microsoft-edge-dev": "microsoft-edge-dev",
+            "microsoft-edge": "microsoft-edge-dev",
+            "microsoft-edge.desktop": "microsoft-edge-dev",
+            "msedge": "microsoft-edge-dev",
+            "edge": "microsoft-edge-dev",
+            
+            // Vesktop/Discord variations
+            "vesktop": "vesktop",
+            "discord": "vesktop",
+            "discord.desktop": "vesktop",
+            "Vesktop": "vesktop",
+            "Discord": "vesktop",
+            
+            // Heroic variations
+            "heroic": "heroic",
+            "heroicgameslauncher": "heroic",
+            "heroic.desktop": "heroic",
+            "heroicgameslauncher.desktop": "heroic",
+            "Heroic": "heroic",
+            "HeroicGamesLauncher": "heroic",
+            
+            // Ptyxis variations
+            "org.gnome.ptyxis": "ptyxis",
+            "org.gnome.ptyxis.desktop": "ptyxis",
+            "ptyxis": "ptyxis",
+            "Ptyxis": "ptyxis",
+            "ptyxis.desktop": "ptyxis",
+            "Org.gnome.ptyxis": "ptyxis",
+            
+            // Cider variations
+            "cider": "cider",
+            "Cider": "cider",
+            "Cider.desktop": "cider",
+            "cider.desktop": "cider",
+            
+            // Cursor variations
+            "cursor": "cursor-cursor",
+            "Cursor": "cursor-cursor",
+            "cursor-cursor": "cursor-cursor",
+            "cursor-cursor.desktop": "cursor-cursor",
+            
+            // DaVinci Resolve variations
+            "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "net.lutris.davinci-resolve-studio-20-1.desktop": "net.lutris.davinci-resolve-studio-20-1.desktop"
+        };
+        
+        // Normalize the input (case-insensitive lookup)
+        var normalizedInput = appClass.toLowerCase();
+        var normalizedApp = null;
+        
+        // First, try exact match (case-insensitive)
+        for (var key in comprehensiveMapping) {
+            if (key.toLowerCase() === normalizedInput) {
+                normalizedApp = comprehensiveMapping[key];
+                console.log("[PIN CHECK DEBUG] Found exact match:", key, "->", normalizedApp);
+                break;
+            }
+        }
+        
+        // If no exact match, try partial matching
+        if (!normalizedApp) {
+            for (var key in comprehensiveMapping) {
+                if (key.toLowerCase().includes(normalizedInput) || normalizedInput.includes(key.toLowerCase())) {
+                    normalizedApp = comprehensiveMapping[key];
+                    console.log("[PIN CHECK DEBUG] Found partial match:", key, "->", normalizedApp);
+                    break;
+                }
+            }
+        }
+        
+        // If still no match, use the original input
+        if (!normalizedApp) {
+            normalizedApp = appClass;
+            console.log("[PIN CHECK DEBUG] No mapping found, using original:", normalizedApp);
+        }
+        
+        // Check if app is pinned (case-insensitive)
+        for (var i = 0; i < pinnedApps.length; i++) {
+            if (pinnedApps[i].toLowerCase() === normalizedApp.toLowerCase()) {
+                console.log("[PIN CHECK DEBUG] App is pinned:", pinnedApps[i]);
+                return true;
+            }
+        }
+        
+        // Also check with .desktop extension
+        if (!normalizedApp.endsWith('.desktop')) {
+            var withDesktop = normalizedApp + '.desktop';
+            for (var i = 0; i < pinnedApps.length; i++) {
+                if (pinnedApps[i].toLowerCase() === withDesktop.toLowerCase()) {
+                    console.log("[PIN CHECK DEBUG] App is pinned with .desktop extension:", pinnedApps[i]);
+                    return true;
+                }
+            }
+        }
+        
+        console.log("[PIN CHECK DEBUG] App is not pinned:", normalizedApp);
+        return false;
+    }
+    
+    // Utility function to get canonical app name
+    function getCanonicalAppName(appClass) {
+        console.log("[CANONICAL DEBUG] getCanonicalAppName called with:", appClass);
+        
+        // Use the same comprehensive mapping
+        var comprehensiveMapping = {
+            // Affinity apps
+            "photo.exe": "AffinityPhoto.desktop",
+            "Photo.exe": "AffinityPhoto.desktop",
+            "affinityphoto": "AffinityPhoto.desktop",
+            "AffinityPhoto": "AffinityPhoto.desktop",
+            "AffinityPhoto.desktop": "AffinityPhoto.desktop",
+            "designer.exe": "AffinityDesigner.desktop",
+            "Designer.exe": "AffinityDesigner.desktop",
+            "affinitydesigner": "AffinityDesigner.desktop",
+            "AffinityDesigner": "AffinityDesigner.desktop",
+            "AffinityDesigner.desktop": "AffinityDesigner.desktop",
+            
+            // Lutris variations
+            "net.lutris.lutris": "lutris",
+            "net.lutris.Lutris": "lutris",
+            "lutris": "lutris",
+            "Lutris": "lutris",
+            "lutris.desktop": "lutris",
+            
+            // OBS variations
+            "com.obsproject.Studio": "obs",
+            "com.obsproject.studio": "obs",
+            "com.obsproject.Studio.desktop": "obs",
+            "com.obsproject.studio.desktop": "obs",
+            "obs": "obs",
+            "OBS": "obs",
+            "obs-studio": "obs",
+            "obs-studio.desktop": "obs",
+            
+            // Steam variations
+            "steam": "steam-native",
+            "steam.exe": "steam-native",
+            "Steam": "steam-native",
+            "Steam.exe": "steam-native",
+            "steam-native": "steam-native",
+            "steam-native.desktop": "steam-native",
+            "com.valvesoftware.Steam": "steam-native",
+            "com.valvesoftware.Steam.desktop": "steam-native",
+            
+            // Nautilus variations
+            "nautilus": "org.gnome.Nautilus",
+            "org.gnome.nautilus": "org.gnome.Nautilus",
+            "org.gnome.Nautilus": "org.gnome.Nautilus",
+            "org.gnome.Nautilus.desktop": "org.gnome.Nautilus",
+            "files": "org.gnome.Nautilus",
+            "gnome-files": "org.gnome.Nautilus",
+            
+            // Microsoft Edge variations
+            "microsoft-edge-dev": "microsoft-edge-dev",
+            "microsoft-edge": "microsoft-edge-dev",
+            "microsoft-edge.desktop": "microsoft-edge-dev",
+            "msedge": "microsoft-edge-dev",
+            "edge": "microsoft-edge-dev",
+            
+            // Vesktop/Discord variations
+            "vesktop": "vesktop",
+            "discord": "vesktop",
+            "discord.desktop": "vesktop",
+            "Vesktop": "vesktop",
+            "Discord": "vesktop",
+            
+            // Heroic variations
+            "heroic": "heroic",
+            "heroicgameslauncher": "heroic",
+            "heroic.desktop": "heroic",
+            "heroicgameslauncher.desktop": "heroic",
+            "Heroic": "heroic",
+            "HeroicGamesLauncher": "heroic",
+            
+            // Ptyxis variations
+            "org.gnome.ptyxis": "ptyxis",
+            "org.gnome.ptyxis.desktop": "ptyxis",
+            "ptyxis": "ptyxis",
+            "Ptyxis": "ptyxis",
+            "ptyxis.desktop": "ptyxis",
+            "Org.gnome.ptyxis": "ptyxis",
+            
+            // Cider variations
+            "cider": "cider",
+            "Cider": "cider",
+            "Cider.desktop": "cider",
+            "cider.desktop": "cider",
+            
+            // Cursor variations
+            "cursor": "cursor-cursor",
+            "Cursor": "cursor-cursor",
+            "cursor-cursor": "cursor-cursor",
+            "cursor-cursor.desktop": "cursor-cursor",
+            
+            // DaVinci Resolve variations
+            "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
+            "net.lutris.davinci-resolve-studio-20-1.desktop": "net.lutris.davinci-resolve-studio-20-1.desktop"
+        };
+        
+        // Normalize the input (case-insensitive lookup)
+        var normalizedInput = appClass.toLowerCase();
+        var canonicalName = null;
+        
+        // First, try exact match (case-insensitive)
+        for (var key in comprehensiveMapping) {
+            if (key.toLowerCase() === normalizedInput) {
+                canonicalName = comprehensiveMapping[key];
+                console.log("[CANONICAL DEBUG] Found exact match:", key, "->", canonicalName);
+                break;
+            }
+        }
+        
+        // If no exact match, try partial matching
+        if (!canonicalName) {
+            for (var key in comprehensiveMapping) {
+                if (key.toLowerCase().includes(normalizedInput) || normalizedInput.includes(key.toLowerCase())) {
+                    canonicalName = comprehensiveMapping[key];
+                    console.log("[CANONICAL DEBUG] Found partial match:", key, "->", canonicalName);
+                    break;
+                }
+            }
+        }
+        
+        // If still no match, use the original input
+        if (!canonicalName) {
+            canonicalName = appClass;
+            console.log("[CANONICAL DEBUG] No mapping found, using original:", canonicalName);
+        }
+        
+        console.log("[CANONICAL DEBUG] Returning canonical name:", canonicalName);
+        return canonicalName;
     }
     
     // Universal app launching function
@@ -339,74 +883,9 @@ Scope {
         Hyprland.dispatch(`exec echo "$(date): ===== STARTING APP LAUNCH =====" >> /tmp/dock_debug.log`);
         Hyprland.dispatch(`exec echo "$(date): Launching app: ${appIdentifier}" >> /tmp/dock_debug.log`);
         
-        // STEP 1: Handle specific apps that need direct command execution
-        if (appIdentifier.toLowerCase() === "obs" || appIdentifier.toLowerCase().includes("obs")) {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Direct OBS launch ===" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec echo "$(date): Dispatching: exec obs" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec obs`);
-            return;
-        }
-        
-        if (appIdentifier.toLowerCase() === "lutris" || appIdentifier.toLowerCase().includes("lutris")) {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Direct Lutris launch ===" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec echo "$(date): Dispatching: exec lutris" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec lutris`);
-            return;
-        }
-        
-        if (appIdentifier.toLowerCase() === "microsoft-edge-dev" || appIdentifier.toLowerCase().includes("microsoft-edge-dev")) {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Direct Microsoft Edge Dev launch ===" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec echo "$(date): Dispatching: exec microsoft-edge-dev" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec microsoft-edge-dev`);
-            return;
-        }
-        
-        if (appIdentifier.toLowerCase() === "ptyxis" || appIdentifier.toLowerCase().includes("ptyxis")) {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Direct Ptyxis launch ===" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec echo "$(date): Dispatching: exec ptyxis" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec ptyxis`);
-            return;
-        }
-        
-        if (appIdentifier.toLowerCase() === "nautilus" || appIdentifier.toLowerCase().includes("nautilus") || 
-            appIdentifier.toLowerCase() === "org.gnome.nautilus" || appIdentifier.toLowerCase() === "org.gnome.nautilus.desktop") {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Direct Nautilus launch ===" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec echo "$(date): Dispatching: exec nautilus" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec nautilus`);
-            return;
-        }
-        
-        if (appIdentifier.toLowerCase() === "steam" || appIdentifier.toLowerCase().includes("steam")) {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Direct Steam launch ===" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec echo "$(date): Dispatching: exec steam" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec steam`);
-            return;
-        }
-        
-        if (appIdentifier.toLowerCase() === "heroic" || appIdentifier.toLowerCase().includes("heroic")) {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Direct Heroic launch ===" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec echo "$(date): Dispatching: exec heroic" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec heroic`);
-            return;
-        }
-        
-        if (appIdentifier.toLowerCase() === "vesktop" || appIdentifier.toLowerCase().includes("vesktop")) {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Direct Vesktop launch ===" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec echo "$(date): Dispatching: exec vesktop" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec vesktop`);
-            return;
-        }
-        
-        if (appIdentifier.toLowerCase() === "cider" || appIdentifier.toLowerCase().includes("cider")) {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Direct Cider launch ===" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec echo "$(date): Dispatching: exec Cider" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(`exec Cider`);
-            return;
-        }
-
-        // STEP 2: Handle Affinity apps - use direct Wine commands
+        // STEP 1: Handle Affinity apps - use direct Wine commands (keep existing special handling)
         if (appIdentifier.toLowerCase().includes("affinity") || appIdentifier.toLowerCase().includes("photo") || appIdentifier.toLowerCase().includes("designer")) {
-            Hyprland.dispatch(`exec echo "$(date): === STEP 2: Affinity app detection ===" >> /tmp/dock_debug.log`);
+            Hyprland.dispatch(`exec echo "$(date): === STEP 1: Affinity app detection ===" >> /tmp/dock_debug.log`);
             
             // Handle specific Affinity app names - use direct Wine commands (check these first)
             if (appIdentifier === "AffinityPhoto" || appIdentifier === "AffinityPhoto.desktop") {
@@ -418,15 +897,6 @@ Scope {
             
             if (appIdentifier === "AffinityDesigner" || appIdentifier === "AffinityDesigner.desktop") {
                 let cmd = `exec env WINEPREFIX=/home/matt/.AffinityLinux /home/matt/.AffinityLinux/ElementalWarriorWine/bin/wine "/home/matt/.AffinityLinux/drive_c/Program Files/Affinity/Designer 2/Designer.exe"`;
-                Hyprland.dispatch(`exec echo "$(date): Dispatching: ${cmd}" >> /tmp/dock_debug.log`);
-                Hyprland.dispatch(cmd);
-                return;
-            }
-            
-            // Check if it's a .desktop file and try gio launch with full path (fallback)
-            if (appIdentifier.endsWith('.desktop')) {
-                let desktopPath = `~/.local/share/applications/${appIdentifier}`;
-                let cmd = `exec gio launch "${desktopPath}"`;
                 Hyprland.dispatch(`exec echo "$(date): Dispatching: ${cmd}" >> /tmp/dock_debug.log`);
                 Hyprland.dispatch(cmd);
                 return;
@@ -467,12 +937,10 @@ Scope {
             }
         }
 
-        // STEP 3: Try DesktopEntries with appIdentifier directly
-        Hyprland.dispatch(`exec echo "$(date): === STEP 3: DesktopEntries with appIdentifier ===" >> /tmp/dock_debug.log`);
+        // STEP 2: Try DesktopEntries first (most reliable for desktop files)
+        Hyprland.dispatch(`exec echo "$(date): === STEP 2: DesktopEntries ===" >> /tmp/dock_debug.log`);
         let entry = DesktopEntries.applications[appIdentifier];
-        if (entry) {
-            Hyprland.dispatch(`exec echo "$(date): Entry for appIdentifier: ${appIdentifier} found: true" >> /tmp/dock_debug.log`);
-            if (entry.execute) {
+        if (entry && entry.execute) {
                 Hyprland.dispatch(`exec echo "$(date): SUCCESS: Using DesktopEntries.execute() for: ${appIdentifier}" >> /tmp/dock_debug.log`);
                 try {
                     entry.execute();
@@ -480,17 +948,14 @@ Scope {
                 return;
                 } catch (e) {
                     Hyprland.dispatch(`exec echo "$(date): ERROR in execute(): ${e}" >> /tmp/dock_debug.log`);
-                }
             }
         }
 
-        // STEP 4: Try DesktopEntries with .desktop extension
-        Hyprland.dispatch(`exec echo "$(date): === STEP 4: DesktopEntries with .desktop extension ===" >> /tmp/dock_debug.log`);
-        let desktopId = appIdentifier.endsWith('.desktop') ? appIdentifier : appIdentifier + '.desktop';
+        // STEP 3: Try DesktopEntries with .desktop extension
+        if (!appIdentifier.endsWith('.desktop')) {
+            let desktopId = appIdentifier + '.desktop';
         let entry2 = DesktopEntries.applications[desktopId];
-        if (entry2) {
-            Hyprland.dispatch(`exec echo "$(date): Entry for desktopId: ${desktopId} found: true" >> /tmp/dock_debug.log`);
-            if (entry2.execute) {
+            if (entry2 && entry2.execute) {
                 Hyprland.dispatch(`exec echo "$(date): SUCCESS: Using DesktopEntries.execute() for: ${desktopId}" >> /tmp/dock_debug.log`);
                 try {
                     entry2.execute();
@@ -502,11 +967,75 @@ Scope {
             }
         }
 
-        // STEP 5: Try gio launch
-        Hyprland.dispatch(`exec echo "$(date): === STEP 5: gio launch ===" >> /tmp/dock_debug.log`);
-        let cmd5 = `exec gio launch ${appIdentifier}`;
-        Hyprland.dispatch(`exec echo "$(date): Dispatching: ${cmd5}" >> /tmp/dock_debug.log`);
-        Hyprland.dispatch(cmd5);
+        // STEP 4: Try common app-specific fallbacks
+        Hyprland.dispatch(`exec echo "$(date): === STEP 4: App-specific fallbacks ===" >> /tmp/dock_debug.log`);
+        
+        // Common app name mappings for fallback
+        let appFallbacks = {
+            'obs': ['com.obsproject.Studio', 'com.obsproject.Studio.desktop', 'obs-studio'],
+            'lutris': ['net.lutris.lutris', 'net.lutris.lutris.desktop'],
+            'steam': ['steam-native', 'steam-native.desktop', 'com.valvesoftware.Steam'],
+            'nautilus': ['org.gnome.Nautilus', 'org.gnome.Nautilus.desktop', 'files'],
+            'microsoft-edge-dev': ['microsoft-edge', 'microsoft-edge.desktop'],
+            'vesktop': ['discord', 'discord.desktop'],
+            'heroic': ['heroicgameslauncher', 'heroicgameslauncher.desktop'],
+            'ptyxis': ['org.gnome.ptyxis', 'org.gnome.ptyxis.desktop'],
+            'cider': ['Cider', 'Cider.desktop']
+        };
+        
+        // Try fallback names for the current app
+        if (appFallbacks[appIdentifier]) {
+            for (let fallback of appFallbacks[appIdentifier]) {
+                let fallbackCmd = `exec gio launch ${fallback}`;
+                Hyprland.dispatch(`exec echo "$(date): Trying app-specific fallback: ${fallbackCmd}" >> /tmp/dock_debug.log`);
+                Hyprland.dispatch(fallbackCmd);
+            }
+        }
+
+        // STEP 5: Try different launcher strategies based on app type
+        Hyprland.dispatch(`exec echo "$(date): === STEP 5: Launcher strategies ===" >> /tmp/dock_debug.log`);
+        
+        // For .desktop files, try gio first, then gtk-launch
+        if (appIdentifier.endsWith('.desktop')) {
+            // Try gio launch first
+            let gioCmd = `exec gio launch ${appIdentifier}`;
+            Hyprland.dispatch(`exec echo "$(date): Trying gio launch: ${gioCmd}" >> /tmp/dock_debug.log`);
+            Hyprland.dispatch(gioCmd);
+            
+            // Try gtk-launch as fallback
+            let gtkCmd = `exec gtk-launch ${appIdentifier}`;
+            Hyprland.dispatch(`exec echo "$(date): Trying gtk-launch fallback: ${gtkCmd}" >> /tmp/dock_debug.log`);
+            Hyprland.dispatch(gtkCmd);
+            
+            // Try with full path as additional fallback
+            let desktopPath = `~/.local/share/applications/${appIdentifier}`;
+            let pathCmd = `exec gio launch "${desktopPath}"`;
+            Hyprland.dispatch(`exec echo "$(date): Trying full path fallback: ${pathCmd}" >> /tmp/dock_debug.log`);
+            Hyprland.dispatch(pathCmd);
+        } else {
+            // For non-desktop files, try gio first, then direct command
+            let gioCmd = `exec gio launch ${appIdentifier}`;
+            Hyprland.dispatch(`exec echo "$(date): Trying gio launch: ${gioCmd}" >> /tmp/dock_debug.log`);
+            Hyprland.dispatch(gioCmd);
+            
+            // Try direct command execution as fallback
+            let directCmd = `exec ${appIdentifier}`;
+            Hyprland.dispatch(`exec echo "$(date): Trying direct command fallback: ${directCmd}" >> /tmp/dock_debug.log`);
+            Hyprland.dispatch(directCmd);
+            
+            // Try with .desktop extension as additional fallback
+            let desktopCmd = `exec gio launch ${appIdentifier}.desktop`;
+            Hyprland.dispatch(`exec echo "$(date): Trying .desktop extension fallback: ${desktopCmd}" >> /tmp/dock_debug.log`);
+            Hyprland.dispatch(desktopCmd);
+        }
+
+        // STEP 6: Try comprehensive system fallbacks
+        Hyprland.dispatch(`exec echo "$(date): === STEP 6: System fallbacks ===" >> /tmp/dock_debug.log`);
+        
+        // Try to find the app in system PATH and launch it
+        let whichCmd = `exec which ${appIdentifier} && exec ${appIdentifier}`;
+        Hyprland.dispatch(`exec echo "$(date): Trying system PATH fallback: ${whichCmd}" >> /tmp/dock_debug.log`);
+        Hyprland.dispatch(whichCmd);
 
         // FINAL: Log failure
         Hyprland.dispatch(`exec echo "$(date): FAILED TO LAUNCH: ${appIdentifier}" >> /tmp/dock_debug.log`);
@@ -847,7 +1376,12 @@ Scope {
                         Rectangle {
                             anchors.fill: parent
                             color: "transparent"
-                            border.color: Qt.rgba(1, 1, 1, 0.15)
+                            border.color: Qt.rgba(
+                                Qt.color(ConfigOptions.dock.borderColor || "#ffffff").r,
+                                Qt.color(ConfigOptions.dock.borderColor || "#ffffff").g,
+                                Qt.color(ConfigOptions.dock.borderColor || "#ffffff").b,
+                                ConfigOptions.dock.borderOpacity || 0.15
+                            )
                             border.width: 1
                             radius: parent.radius
                             antialiasing: true
@@ -858,7 +1392,12 @@ Scope {
                             anchors.fill: parent
                             anchors.margins: 1
                             color: "transparent"
-                            border.color: Qt.rgba(1, 1, 1, 0.05)
+                            border.color: Qt.rgba(
+                                Qt.color(ConfigOptions.dock.innerBorderColor || "#ffffff").r,
+                                Qt.color(ConfigOptions.dock.innerBorderColor || "#ffffff").g,
+                                Qt.color(ConfigOptions.dock.innerBorderColor || "#ffffff").b,
+                                ConfigOptions.dock.innerBorderOpacity || 0.05
+                            )
                             border.width: 1
                             radius: parent.radius - 1
                             antialiasing: true
@@ -896,11 +1435,15 @@ Scope {
                                     }
                                     
                                     // Arch Linux logo
-                                    Image {
+                                    Item {
                                         anchors.centerIn: parent
-                                        source: "root:/logo/Nobara-linux-logo.svg"
                                         width: parent.width * 0.75
                                         height: parent.height * 0.75
+                                        
+                                        Image {
+                                            id: dockLogo
+                                            anchors.fill: parent
+                                            source: "root:/assets/icons/" + (ConfigOptions.appearance.logo || "distro-nobara-symbolic.svg")
                                         fillMode: Image.PreserveAspectFit
                                         smooth: true
                                         antialiasing: true
@@ -908,6 +1451,13 @@ Scope {
                                         sourceSize.height: parent.height * 0.75
                                         layer.enabled: true
                                         layer.smooth: true
+                                        }
+                                        
+                                        ColorOverlay {
+                                            anchors.fill: dockLogo
+                                            source: dockLogo
+                                            color: ConfigOptions.appearance.logoColor || "#ffffff"
+                                        }
                                     }
                                     
                                     MouseArea {
@@ -1463,12 +2013,9 @@ Scope {
                                     }
                                     
                                     onClicked: {
-                                        // Special-case handling for OBS and DaVinci Resolve
-                                        if (modelData === "com.obsproject.Studio") {
-                                            Hyprland.dispatch(`exec gtk-launch com.obsproject.Studio.desktop`)
-                                            return;
-                                        } else if (modelData === "resolve") {
-                                            Hyprland.dispatch(`exec gtk-launch com.blackmagicdesign.resolve.desktop`)
+                                        // Use the unified launcher for all apps
+                                        if (modelData.class) {
+                                            dock.launchApp(modelData.class);
                                             return;
                                         }
                                         // For unpinned apps, we already have the specific window

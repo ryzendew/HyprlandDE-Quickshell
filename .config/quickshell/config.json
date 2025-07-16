@@ -1,10 +1,10 @@
 {
   "logging": {
-    "enabled": true,
+    "enabled": false,
     "debug": false,
-    "info": true,
-    "warning": true,
-    "error": true,
+    "info": false,
+    "warning": false,
+    "error": false,
     "suppressIconWarnings": true,
     "suppressQmlWarnings": true,
     "suppressHyprlandWarnings": true

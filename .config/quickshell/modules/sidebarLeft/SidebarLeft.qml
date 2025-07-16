@@ -248,7 +248,7 @@ Scope {
                                     id: nobaraLogo
                                     width: 25
                                     height: 25
-                                    source: "root:/assets/icons/Nobara-linux-logo.svg"
+                                    source: "root:/assets/icons/" + (ConfigOptions.appearance.logo || "distro-nobara-symbolic.svg")
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
                                     antialiasing: true
@@ -260,7 +260,7 @@ Scope {
                                 ColorOverlay {
                                     anchors.fill: nobaraLogo
                                     source: nobaraLogo
-                                    color: "white"
+                                    color: ConfigOptions.appearance.logoColor || "#ffffff"
                                 }
                             }
 

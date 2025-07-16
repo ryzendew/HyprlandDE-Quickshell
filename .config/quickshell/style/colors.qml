@@ -77,6 +77,11 @@ Singleton {
         property color colLayer2Disabled: ColorUtils.mix(colLayer2, m3colors.m3background, 0.8)
         property color colLayer3Hover: ColorUtils.mix(colLayer3, colOnLayer3, 0.90)
         property color colLayer3Active: ColorUtils.mix(colLayer3, colOnLayer3, 0.80)
-        property color colPrimaryHover: ColorUtils.mix(m3colors.m3primary, colLayer1Hover, 0.85)
+        property color colPrimary: m3colors.m3primary
+        property color colPrimaryHover: ColorUtils.mix(colPrimary, colLayer1Hover, 0.87)
+        property color colPrimaryActive: ColorUtils.mix(colPrimary, colLayer1Active, 0.7)
+        property color colPrimaryContainer: m3colors.m3primaryContainer
+        property color colPrimaryContainerHover: ColorUtils.mix(colPrimaryContainer, colLayer1Hover, 0.7)
+        property color colPrimaryContainerActive: ColorUtils.mix(colPrimaryContainer, colLayer1Active, 0.6)
     }
 } 

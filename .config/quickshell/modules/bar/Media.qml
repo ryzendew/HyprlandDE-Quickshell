@@ -457,6 +457,8 @@ Item {
                 maximumLineCount: 1
             }
             MultiEffect {
+                Layout.fillWidth: false
+                Layout.fillHeight: false
                 anchors.fill: songTitle
                 source: songTitle
                 shadowEnabled: true
@@ -493,6 +495,8 @@ Item {
                     visible: text.length > 0
                 }
                 MultiEffect {
+                    Layout.fillWidth: false
+                    Layout.fillHeight: false
                     anchors.fill: albumArtistText
                     source: albumArtistText
                     shadowEnabled: true

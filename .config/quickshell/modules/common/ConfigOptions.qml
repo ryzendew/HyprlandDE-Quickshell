@@ -16,6 +16,8 @@ Singleton {
     property QtObject appearance: QtObject {
         property int fakeScreenRounding: 0 // 0: None | 1: Always | 2: When not fullscreen
         property bool transparency: false
+        property string logo: "Nobara-linux-logo.svg" // Default logo
+        property string logoColor: "#ffffff" // Default logo color (white)
         property QtObject palette: QtObject {
             property string type: "auto"
         }
@@ -48,7 +50,6 @@ Singleton {
 
     property QtObject bar: QtObject {
         property bool showBackground: true
-        property bool borderless: false
         property real transparency: 0.55
         property int height: 40
         property int iconSize: undefined
@@ -56,6 +57,12 @@ Singleton {
         property int indicatorIconSize: undefined
         property int systrayIconSize: undefined
         property int logoIconSize: undefined
+        property string borderColor: "#ffffff" // Bar border color (white with opacity)
+        property real borderOpacity: 0.12 // Bar border opacity (0.0-1.0)
+        property bool borderTop: false // Top border visibility
+        property bool borderBottom: true // Bottom border visibility
+        property bool borderLeft: false // Left border visibility
+        property bool borderRight: false // Right border visibility
         property QtObject workspaces: QtObject {
             property int shown: 10
         }
@@ -84,6 +91,10 @@ Singleton {
         property bool showPreviews: true // Show window previews on hover
         property bool showLabels: false // Show app labels under icons
         property real transparency: 0.9 // Dock background transparency (0.0-1.0)
+        property string borderColor: "#ffffff" // Dock border color (white with opacity)
+        property real borderOpacity: 0.15 // Dock border opacity (0.0-1.0)
+        property string innerBorderColor: "#ffffff" // Dock inner border color (white with opacity)
+        property real innerBorderOpacity: 0.05 // Dock inner border opacity (0.0-1.0)
         property list<string> pinnedApps: [] // IDs of pinned entries
     }
 

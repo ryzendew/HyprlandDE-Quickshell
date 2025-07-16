@@ -41,13 +41,13 @@ Item {
             y: root.height - height
             radius: 0
             color: Qt.rgba(
-                Qt.lerp(Qt.rgba(Qt.colorEqual(root.fillColor, "transparent") ? "#FFD700" : root.fillColor),
+                Qt.lerp(Qt.colorEqual(root.fillColor, "transparent") ? "#FFD700" : root.fillColor,
                         Qt.colorEqual(root.fillColor2, "transparent") ? "#FFA500" : root.fillColor2,
                         index / (root.barCount - 1)).r,
-                Qt.lerp(Qt.rgba(Qt.colorEqual(root.fillColor, "transparent") ? "#FFD700" : root.fillColor),
+                Qt.lerp(Qt.colorEqual(root.fillColor, "transparent") ? "#FFD700" : root.fillColor,
                         Qt.colorEqual(root.fillColor2, "transparent") ? "#FFA500" : root.fillColor2,
                         index / (root.barCount - 1)).g,
-                Qt.lerp(Qt.rgba(Qt.colorEqual(root.fillColor, "transparent") ? "#FFD700" : root.fillColor),
+                Qt.lerp(Qt.colorEqual(root.fillColor, "transparent") ? "#FFD700" : root.fillColor,
                         Qt.colorEqual(root.fillColor2, "transparent") ? "#FFA500" : root.fillColor2,
                         index / (root.barCount - 1)).b,
                 0.2

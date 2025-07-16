@@ -1,4 +1,3 @@
-import "../sidebarRight/quickToggles"
 import "root:/modules/common/widgets"
 import "root:/modules/common"
 import "root:/services"
@@ -6,559 +5,655 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 
+/**
+ * System Status Tab - Split into Dashboard and System Info
+ * 70% System Dashboard + 30% System Information (bottom)
+ */
 Rectangle {
     id: root
     radius: Appearance.rounding.normal
     color: "transparent"
     border.color: Qt.rgba(1, 1, 1, 0.12)
-    border.width: 5
+    border.width: 1
     
-    // GPU Properties
-    property int gpuUtil: 0
-    property int gpuTemp: 0
-    property int gpuMemUsed: 0
-    property int gpuMemTotal: 1
-    property real gpuMemPercent: gpuMemTotal > 0 ? gpuMemUsed / gpuMemTotal : 0
-    property int gpuCoreClock: 0
-    property int gpuMemClock: 0
-    property string gpuModel: "NVIDIA GPU"
-    property bool gpuAvailable: false
-    
-    // CPU Properties
-    property string cpuModel: "CPU"
-    property real cpuClock: 0
-    property real cpuTemp: 0
-    property real cpuUsage: 0
-    property string cpuTempSource: ""
-    property int cpuMaxTemp: 90
-    property int gpuMaxTemp: 85
-    property bool cpuAvailable: false
-    
-    // History Arrays
-    property var cpuHistory: []
-    property var gpuHistory: []
-    property var memoryHistory: []
-    property int historyLength: 60
-    
-    // Power Profile Properties
-    property string currentPowerProfile: "balanced"
-    property bool powerProfilesAvailable: false
-
-    // --- CPU Model ---
-    Process {
-        id: cpuInfoProc
-        command: ["bash", "-c", "cat /proc/cpuinfo | grep 'model name' | head -1"]
-        onExited: {
-            if (cpuInfoProc.stdout) {
-                var modelLine = cpuInfoProc.stdout.trim()
-                var modelParts = modelLine.split(/:\s+/)
-                if (modelParts.length > 1) {
-                    root.cpuModel = modelParts[1].trim()
-                    root.cpuAvailable = true
-                } else {
-                    root.cpuModel = modelLine
-                    root.cpuAvailable = true
-                }
-            }
-        }
-    }
-    
-    // --- CPU Clock ---
-    Timer {
-        interval: 2000; running: true; repeat: true
-        onTriggered: cpuClockProc.running = true
-    }
-    Process {
-        id: cpuClockProc
-        command: ["bash", "-c", "cat /proc/cpuinfo | grep 'cpu MHz' | head -1"]
-        onExited: {
-            if (cpuClockProc.stdout) {
-                var clockMatch = cpuClockProc.stdout.match(/cpu MHz\s+:\s+([0-9.]+)/)
-                if (clockMatch) {
-                    root.cpuClock = parseFloat(clockMatch[1])
-                }
-            }
-        }
-    }
-    
-    // --- CPU Temp (try sensors, fallback to /sys/class/thermal) ---
-    Timer {
-        interval: 2000; running: true; repeat: true
-        onTriggered: cpuTempProc.running = true
-    }
-    Process {
-        id: cpuTempProc
-        command: ["bash", "-c", "sensors || cat /sys/class/thermal/thermal_zone0/temp"]
-        onExited: {
-            var found = false
-            if (cpuTempProc.stdout) {
-                var lines = cpuTempProc.stdout.split("\n")
-                for (var i = 0; i < lines.length; ++i) {
-                    var l = lines[i].trim()
-                    // Accept common CPU temp labels
-                    if (l.match(/^CPU:/) || l.match(/^Tctl:/) || l.match(/^Package id 0:/) || l.match(/^Core [0-9]+:/)) {
-                        var tempMatch = l.match(/([+\-]?[0-9]+\.[0-9]+)°C/)
-                        if (tempMatch) {
-                            root.cpuTemp = parseFloat(tempMatch[1])
-                            root.cpuTempSource = "sensors"
-                            found = true
-                            break
-                        }
-                    }
-                }
-                if (!found) {
-                    // fallback: try thermal_zone0
-                    for (var i = 0; i < lines.length; ++i) {
-                        if (/^[0-9]+$/.test(lines[i].trim())) {
-                            root.cpuTemp = parseInt(lines[i].trim()) / 1000.0
-                            root.cpuTempSource = "thermal_zone0"
-                            found = true
-                            break
-                        }
-                    }
-                }
-            }
-            if (!found) {
-                root.cpuTemp = 0
-                root.cpuTempSource = "unavailable"
-            }
-        }
-    }
-    
-    // --- CPU Usage (parse /proc/stat) ---
-    property var lastCpuStat: null
-    Timer {
-        interval: 2000; running: true; repeat: true
-        onTriggered: cpuStatProc.running = true
-    }
-    Process {
-        id: cpuStatProc
-        command: ["bash", "-c", "cat /proc/stat | head -1"]
-        onExited: {
-            if (cpuStatProc.stdout) {
-                var parts = cpuStatProc.stdout.trim().split(/\s+/)
-                if (parts[0] === "cpu") {
-                    var total = 0
-                    for (var i = 1; i < parts.length; ++i) total += parseInt(parts[i])
-                    var idle = parseInt(parts[4])
-                    if (root.lastCpuStat) {
-                        var diffTotal = total - root.lastCpuStat.total
-                        var diffIdle = idle - root.lastCpuStat.idle
-                        if (diffTotal > 0) {
-                            root.cpuUsage = 1 - (diffIdle / diffTotal)
-                        }
-                    }
-                    root.lastCpuStat = { total: total, idle: idle }
-                }
-            }
-        }
-    }
-    
-    // --- GPU (Nvidia) ---
-    Process {
-        id: gpuQuery
-        command: ["nvidia-smi", "--query-gpu=name,utilization.gpu,temperature.gpu,memory.used,memory.total,clocks.gr,clocks.mem", "--format=csv,noheader,nounits"]
-        onExited: {
-            if (gpuQuery.stdout) {
-                var parts = gpuQuery.stdout.trim().split(/,\s*/)
-                if (parts.length >= 7) {
-                    root.gpuModel = parts[0]
-                    root.gpuUtil = parseInt(parts[1])
-                    root.gpuTemp = parseInt(parts[2])
-                    root.gpuMemUsed = parseInt(parts[3])
-                    root.gpuMemTotal = parseInt(parts[4])
-                    root.gpuCoreClock = parseInt(parts[5])
-                    root.gpuMemClock = parseInt(parts[6])
-                    root.gpuAvailable = true
-                }
-            }
-        }
-    }
-    
-    // --- GPU (AMD/Intel Fallback) ---
-    Timer {
-        interval: 2000; running: true; repeat: true
-        onTriggered: gpuFallbackQuery.running = true
-    }
-    Process {
-        id: gpuFallbackQuery
-        command: ["bash", "-c", "sensors || cat /sys/class/drm/card0/device/hwmon/hwmon*/temp1_input"]
-        onExited: {
-            var found = false
-            if (gpuFallbackQuery.stdout) {
-                var lines = gpuFallbackQuery.stdout.split("\n")
-                for (var i = 0; i < lines.length; ++i) {
-                    var l = lines[i].trim()
-                    // Try to match common GPU temp labels
-                    if (l.match(/^edge:/) || l.match(/^temp1:/) || l.match(/^GPU:/)) {
-                        var tempMatch = l.match(/([+\-]?[0-9]+\.[0-9]+)°C/)
-                        if (tempMatch) {
-                            root.gpuTemp = parseFloat(tempMatch[1])
-                            root.gpuAvailable = true
-                            found = true
-                            break
-                        }
-                    }
-                    // Try sysfs fallback (raw value)
-                    if (/^[0-9]+$/.test(l)) {
-                        root.gpuTemp = parseInt(l) / 1000.0
-                        root.gpuAvailable = true
-                        found = true
-                        break
-                    }
-                }
-            }
-            if (!found) {
-                root.gpuAvailable = false
-            }
-        }
-    }
-    
-    // --- Power Profile Detection ---
-    Process {
-        id: powerProfileProc
-        command: ["bash", "-c", "powerprofilesctl get 2>/dev/null || echo 'balanced'"]
-        onExited: {
-            if (powerProfileProc.stdout) {
-                root.currentPowerProfile = powerProfileProc.stdout.trim()
-                root.powerProfilesAvailable = true
-            }
-        }
-    }
-    
-    // --- Refresh Button ---
     Component.onCompleted: {
-        cpuInfoProc.running = true
-        cpuClockProc.running = true
-        cpuTempProc.running = true
-        gpuQuery.running = true
-        cpuStatProc.running = true
-        powerProfileProc.running = true
-    }
-
-    // Usage history update
-    Timer {
-        interval: 1000; running: true; repeat: true
-        onTriggered: {
-            cpuHistory = cpuHistory.concat([ResourceUsage.cpuUsage]).slice(-historyLength)
-            gpuHistory = gpuHistory.concat([gpuUtil / 100]).slice(-historyLength)
-            memoryHistory = memoryHistory.concat([ResourceUsage.memoryUsedPercentage]).slice(-historyLength)
+        console.log("FanControlPage: SystemMonitor available:", typeof SystemMonitor !== 'undefined')
+        if (SystemMonitor) {
+            console.log("FanControlPage: SystemMonitor properties:", SystemMonitor.cpuModel, SystemMonitor.cpuUsage)
         }
     }
+    
+    // Helper function to format network speeds
+    function formatNetworkSpeed(bytesPerSecond) {
+        if (bytesPerSecond < 1024) {
+            return bytesPerSecond.toFixed(1) + " B/s"
+        } else if (bytesPerSecond < 1024 * 1024) {
+            return (bytesPerSecond / 1024).toFixed(1) + " KB/s"
+        } else if (bytesPerSecond < 1024 * 1024 * 1024) {
+            return (bytesPerSecond / 1024 / 1024).toFixed(1) + " MB/s"
+        } else {
+            return (bytesPerSecond / 1024 / 1024 / 1024).toFixed(1) + " GB/s"
+        }
+    }
+    
 
+    
+    // Main layout - split into two sections vertically
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 16
         spacing: 16
 
-        // Power Profile Toggles (Caelestia style)
-        ColumnLayout {
+        // System Dashboard Section (65% height)
+        Rectangle {
+            id: dashboardSection
             Layout.fillWidth: true
-            Layout.preferredHeight: powerProfilesAvailable ? 180 : 0
-            spacing: 4
-            visible: powerProfilesAvailable
+            Layout.fillHeight: true
+            Layout.preferredHeight: parent.height * 0.65
+            radius: 12
+            color: Qt.rgba(0.1, 0.1, 0.15, 0.8)
+            border.color: Qt.rgba(1, 1, 1, 0.1)
+            border.width: 1
             
-            // Header
-            Rectangle {
-                Layout.fillWidth: true
-                height: 48
-                color: Qt.rgba(Appearance.colors.colLayer2.r, Appearance.colors.colLayer2.g, Appearance.colors.colLayer2.b, 0.55)
-                border.color: Appearance.colors.colOnLayer0
-                border.width: 1
-                radius: Appearance.rounding.medium
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 0
+            // Dashboard title
                     StyledText {
-                        Layout.fillWidth: true
-                        text: qsTr("Power Profile")
+                id: dashboardTitle
+                text: "System Dashboard"
                         font.pixelSize: Appearance.font.pixelSize.large
-                        font.bold: true
+                font.weight: Font.Bold
                         color: "white"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.margins: 16
             }
-
-            // Performance Mode
+            
+            // Refresh button
             Rectangle {
-                Layout.fillWidth: true
-                height: 54
-                color: currentPowerProfile === "performance" ? Appearance.m3colors.m3primary : Appearance.colors.colLayer1
-                border.color: Appearance.colors.colOnLayer0
-                border.width: 1
-                radius: Appearance.rounding.medium
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 4
-                    anchors.rightMargin: 4
-                    spacing: 12
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    Item { Layout.fillWidth: true }
-                    MaterialSymbol {
-                        iconSize: 28
-                        fill: currentPowerProfile === "performance" ? 1 : 0
-                        text: "speed"
-                        color: currentPowerProfile === "performance" ? "#FFFFFF" : "#FFFFFF"
-                    }
-                    StyledText {
-                        text: qsTr("Performance")
-                        font.pixelSize: Appearance.font.pixelSize.large
-                        font.bold: true
-                        color: currentPowerProfile === "performance" ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer0
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Item { Layout.fillWidth: true }
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        setPowerProfile.running = true
-                        setPowerProfile.command = ["powerprofilesctl", "set", "performance"]
-                    }
-                }
-            }
-
-            // Balanced Mode
-            Rectangle {
-                Layout.fillWidth: true
-                height: 54
-                color: currentPowerProfile === "balanced" ? Appearance.m3colors.m3primary : Appearance.colors.colLayer1
-                border.color: Appearance.colors.colOnLayer0
-                border.width: 1
-                radius: Appearance.rounding.medium
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 4
-                    anchors.rightMargin: 4
-                    spacing: 12
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    Item { Layout.fillWidth: true }
-                    MaterialSymbol {
-                        iconSize: 28
-                        fill: currentPowerProfile === "balanced" ? 1 : 0
-                        text: "balance"
-                        color: currentPowerProfile === "balanced" ? "#FFFFFF" : "#FFFFFF"
-                    }
-                    StyledText {
-                        text: qsTr("Balanced")
-                        font.pixelSize: Appearance.font.pixelSize.large
-                        font.bold: true
-                        color: currentPowerProfile === "balanced" ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer0
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Item { Layout.fillWidth: true }
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        setPowerProfile.running = true
-                        setPowerProfile.command = ["powerprofilesctl", "set", "balanced"]
-                    }
-                }
-            }
-
-            // Power Saver Mode
-            Rectangle {
-                Layout.fillWidth: true
-                height: 54
-                color: currentPowerProfile === "power-saver" ? Appearance.m3colors.m3primary : Appearance.colors.colLayer1
-                border.color: Appearance.colors.colOnLayer0
-                border.width: 1
-                radius: Appearance.rounding.medium
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 4
-                    anchors.rightMargin: 4
-                    spacing: 12
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    Item { Layout.fillWidth: true }
-                    MaterialSymbol {
-                        iconSize: 28
-                        fill: currentPowerProfile === "power-saver" ? 1 : 0
-                        text: "battery_saver"
-                        color: currentPowerProfile === "power-saver" ? "#FFFFFF" : "#FFFFFF"
-                    }
-                    StyledText {
-                        text: qsTr("Power Saver")
-                        font.pixelSize: Appearance.font.pixelSize.large
-                        font.bold: true
-                        color: currentPowerProfile === "power-saver" ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer0
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Item { Layout.fillWidth: true }
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        setPowerProfile.running = true
-                        setPowerProfile.command = ["powerprofilesctl", "set", "power-saver"]
-                    }
-                }
-            }
-        }
-
-        // System Stats Header
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 64
-            Rectangle {
-                radius: Appearance.rounding.full
-                color: Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.3)
+                id: refreshButton
+                width: 32
+                height: 32
+                radius: 6
+                color: Qt.rgba(0.15, 0.15, 0.2, 0.8)
                 border.color: Qt.rgba(1, 1, 1, 0.1)
                 border.width: 1
-                height: 64
-                width: 180
-                anchors.horizontalCenter: parent.horizontalCenter
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: 8
-                    Layout.alignment: Qt.AlignVCenter // Ensure vertical centering
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.margins: 16
+                
                     MaterialSymbol {
-                        text: "info"
-                        iconSize: 24
-                        color: Appearance.colors.colAccent
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    StyledText {
-                        text: qsTr("System Status")
-                        font.pixelSize: Appearance.font.pixelSize.normal
-                        font.weight: Font.Bold
-                        color: "white"
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
-            }
-            Item { Layout.fillWidth: true }
-            Rectangle {
-                radius: Appearance.rounding.full
-                color: Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.3)
-                border.color: Qt.rgba(1, 1, 1, 0.1)
-                border.width: 1
-                height: 40
-                width: 40
-                QuickToggleButton {
                     anchors.centerIn: parent
-                    buttonIcon: "refresh"
-                    implicitWidth: 32
-                    implicitHeight: 32
-                    onClicked: {
-                        cpuInfoProc.running = true;
-                        cpuClockProc.running = true;
-                        cpuTempProc.running = true;
-                        gpuQuery.running = true;
-                        cpuStatProc.running = true;
-                        powerProfileProc.running = true;
-                    }
-                    StyledToolTip { content: qsTr("Refresh stats") }
+                    text: "refresh"
+                    iconSize: 16
+                    color: "white"
                 }
+                
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
-                    onEntered: parent.color = Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.45)
-                    onExited: parent.color = Qt.rgba(Appearance.colors.colLayer1.r, Appearance.colors.colLayer1.g, Appearance.colors.colLayer1.b, 0.3)
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        // Force refresh of all data
+                        if (SystemMonitor) {
+                            SystemMonitor.updateCpuUsage()
+                            SystemMonitor.updateMemoryUsage()
+                            SystemMonitor.updateDiskUsage()
+                            SystemMonitor.updateNetworkUsage()
+                            SystemMonitor.updateGpuData()
+                            SystemMonitor.updateCpuDetails()
+                            SystemMonitor.updateSystemInfo()
+                        }
+                    }
+                    onEntered: parent.color = Qt.rgba(0.2, 0.2, 0.25, 0.8)
+                    onExited: parent.color = Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                }
+            }
+            
+            // Dashboard grid
+            GridLayout {
+                anchors.top: dashboardTitle.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: 16
+                anchors.topMargin: 24
+                columns: 2
+                rowSpacing: 12
+                columnSpacing: 12
+                
+                // GPU Widget
+                DashboardWidget {
+                    title: "GPU"
+                    value: SystemMonitor ? SystemMonitor.gpuUsage : 0
+                    valueText: (SystemMonitor && SystemMonitor.gpuAvailable) ? 
+                        Math.round(SystemMonitor.gpuUsage * 100) + "%" : "N/A"
+                    subtitle: (SystemMonitor && SystemMonitor.gpuAvailable) ? 
+                        SystemMonitor.gpuModel + " • " + Math.round(SystemMonitor.gpuTemperature) + "°C" + 
+                        (SystemMonitor.gpuMemoryTotal > 0 ? " • " + (SystemMonitor.gpuMemoryUsage / 1024 / 1024 / 1024).toFixed(1) + " GB VRAM" : "") : 
+                        "No GPU detected"
+                    history: SystemMonitor ? SystemMonitor.gpuHistory : []
+                    graphColor: "#8b5cf6"  // Purple
+                Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+                
+                // Memory Widget
+                DashboardWidget {
+                    title: "Memory"
+                    value: SystemMonitor ? SystemMonitor.memoryUsage : 0
+                    valueText: SystemMonitor ? (SystemMonitor.memoryUsed / 1024 / 1024 / 1024).toFixed(1) + " GB" : "0.0 GB"
+                    subtitle: SystemMonitor ? "Used of " + (SystemMonitor.memoryTotal / 1024 / 1024 / 1024).toFixed(1) + " GB • " + 
+                        Math.round(SystemMonitor.memoryUsage * 100) + "%" : "No memory data"
+                    history: SystemMonitor ? SystemMonitor.memoryHistory : []
+                    graphColor: "#3b82f6"  // Blue
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+                
+                // CPU Widget
+                DashboardWidget {
+                    title: "CPU"
+                    value: SystemMonitor ? SystemMonitor.cpuUsage : 0
+                    valueText: (SystemMonitor && SystemMonitor.cpuAvailable) ? 
+                        Math.round(SystemMonitor.cpuUsage * 100) + "%" : "N/A"
+                    subtitle: (SystemMonitor && SystemMonitor.cpuAvailable) ? 
+                        SystemMonitor.cpuModel + " • " + SystemMonitor.cpuClock.toFixed(1) + " GHz • " + 
+                        Math.round(SystemMonitor.cpuTemperature) + "°C • " + 
+                        SystemMonitor.cpuCores + " cores" : 
+                        "No CPU data"
+                    history: SystemMonitor ? SystemMonitor.cpuHistory : []
+                    graphColor: "#10b981"  // Green
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+                
+                // Disk Widget
+                DashboardWidget {
+                    title: "Disk"
+                    value: SystemMonitor ? SystemMonitor.diskUsage : 0
+                    valueText: (SystemMonitor && SystemMonitor.diskAvailable) ? 
+                        Math.round(SystemMonitor.diskUsage * 100) + "%" : "N/A"
+                    subtitle: (SystemMonitor && SystemMonitor.diskAvailable) ? 
+                        (SystemMonitor.diskUsed / 1024 / 1024 / 1024).toFixed(1) + " GB used of " + 
+                        (SystemMonitor.diskTotal / 1024 / 1024 / 1024).toFixed(1) + " GB • " + 
+                        (SystemMonitor.diskFree / 1024 / 1024 / 1024).toFixed(1) + " GB free • " + 
+                        SystemMonitor.diskDevice + " on " + SystemMonitor.diskMountPoint : 
+                        "No disk data"
+                    history: SystemMonitor ? SystemMonitor.diskHistory : []
+                    graphColor: "#ef4444"  // Red
+                Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+                
+                // Network Widget
+                DashboardWidget {
+                    title: "Network"
+                    value: SystemMonitor ? (SystemMonitor.networkAvailable ? Math.min(SystemMonitor.networkTotalSpeed / 1024 / 1024 / 50, 1.0) : 0) : 0  // Normalize to 0-1 range (50 MB/s max)
+                    valueText: SystemMonitor && SystemMonitor.networkAvailable ? 
+                        formatNetworkSpeed(SystemMonitor.networkTotalSpeed) : "N/A"
+                    subtitle: SystemMonitor && SystemMonitor.networkAvailable ? 
+                        "↓ " + formatNetworkSpeed(SystemMonitor.networkDownloadSpeed) + " ↑ " + formatNetworkSpeed(SystemMonitor.networkUploadSpeed) + 
+                        " • " + SystemMonitor.networkInterface : 
+                        "No network monitoring"
+                    history: SystemMonitor ? SystemMonitor.networkHistory.map(speed => Math.min(speed / 1024 / 1024 / 50, 1.0)) : []  // Normalize to 0-1 range (50 MB/s max)
+                    graphColor: "#f59e0b"  // Orange
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
             }
         }
-
-        // Stacked StatCircles with History and Info Pills
-        ColumnLayout {
+        
+        // System Info Section (35% height) - Redesigned
+        Rectangle {
+            id: systemInfoSection
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 0
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.horizontalCenter: parent.horizontalCenter
-            // Add a spacer to move widgets down
-            Item { Layout.preferredHeight: parent.height * 0.08 }
+            Layout.preferredHeight: parent.height * 0.35
+            radius: 12
+            color: Qt.rgba(0.1, 0.1, 0.15, 0.8)
+                border.color: Qt.rgba(1, 1, 1, 0.1)
+                border.width: 1
             
-            // GPU Stats
-            ColumnLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: 0
-                StatCircle {
-                    label: qsTr("GPU")
-                    value: gpuAvailable ? (gpuTemp / 100) : 0
-                    valueText: gpuAvailable && gpuTemp > 0 ? gpuTemp + "°C" : "—"
-                    subLabel: gpuAvailable && gpuUtil > 0 ? gpuUtil + "% Usage" : "—"
-                    primaryColor: Qt.rgba(1, 1, 1, 0.35)
-                    secondaryColor: Qt.rgba(1, 1, 1, 0.12)
-                    size: Math.min(root.width, root.height / 6)
-                    history: gpuHistory
-                    historyLength: historyLength
-                    Layout.alignment: Qt.AlignHCenter
+            // System Info title with status indicator
+                RowLayout {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 16
+                anchors.topMargin: 16
+                spacing: 12
+                
+                    StyledText {
+                    text: "System Information"
+                    font.pixelSize: Appearance.font.pixelSize.large
+                        font.weight: Font.Bold
+                        color: "white"
                 }
-                InfoPill {
-                    text: gpuAvailable ? 
-                        gpuModel + " • " + gpuCoreClock + "MHz / " + gpuMemClock + "MHz • " + 
-                        (gpuMemUsed / 1024).toFixed(1) + "/" + (gpuMemTotal / 1024).toFixed(1) + " GiB" : 
-                        "GPU Unavailable"
+                
+                // Status indicator
+                Rectangle {
+                    width: 8
+                    height: 8
+                    radius: 4
+                    color: SystemMonitor && SystemMonitor.cpuAvailable ? "#10b981" : "#ef4444"
                 }
+                
+                StyledText {
+                    text: SystemMonitor && SystemMonitor.cpuAvailable ? "Live" : "Offline"
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    color: SystemMonitor && SystemMonitor.cpuAvailable ? "#10b981" : "#ef4444"
+                }
+                
+                Item { Layout.fillWidth: true }
             }
-            // CPU Stats
+            
+            // System Information - Grid layout for better organization
+            GridLayout {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: 20
+                anchors.topMargin: 48
+                columns: 2
+                rowSpacing: 16
+                columnSpacing: 20
+                
+                // System Section
+            Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredHeight: 120
+                    radius: 8
+                    color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
+                    border.color: Qt.rgba(1, 1, 1, 0.05)
+                border.width: 1
+                    
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 16
+                        spacing: 10
+                        
+                        // Section header
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            MaterialSymbol {
+                                text: "computer"
+                                iconSize: 16
+                                color: "#3b82f6"
+                            }
+                            
+                            StyledText {
+                                text: "System"
+                                font.pixelSize: Appearance.font.pixelSize.medium
+                                font.weight: Font.Bold
+                                color: "white"
+                            }
+                            
+                            Item { Layout.fillWidth: true }
+                        }
+                        
+                        // System info items
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "OS:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.osName + " " + SystemMonitor.osVersion : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "Kernel:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.kernelVersion : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "Hostname:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.hostname : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "Arch:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.architecture : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
+                }
+                
+                // Hardware Section
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredHeight: 120
+                    radius: 8
+                    color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
+                    border.color: Qt.rgba(1, 1, 1, 0.05)
+                    border.width: 1
+                    
+                    ColumnLayout {
+                    anchors.fill: parent
+                        anchors.margins: 16
+                        spacing: 10
+                        
+                        // Section header
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            MaterialSymbol {
+                                text: "memory"
+                                iconSize: 16
+                                color: "#10b981"
+                            }
+                            
+                            StyledText {
+                                text: "Hardware"
+                                font.pixelSize: Appearance.font.pixelSize.medium
+                                font.weight: Font.Bold
+                                color: "white"
+                            }
+                            
+                            Item { Layout.fillWidth: true }
+                        }
+                        
+                        // Hardware info items
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "CPU:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.cpuModel : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "Cores:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.cpuCores + "C, " + SystemMonitor.cpuThreads + "T" : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "Memory:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.totalMemory + " total" : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "Available:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.availableMemory + " free" : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
+                }
+                
+                // Runtime Section
+                Rectangle {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+                    Layout.preferredHeight: 80
+                    radius: 8
+                    color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
+                    border.color: Qt.rgba(1, 1, 1, 0.05)
+                    border.width: 1
+                    
             ColumnLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: 0
-                StatCircle {
-                    label: qsTr("CPU")
-                    value: cpuAvailable ? (cpuTemp / 100) : 0
-                    valueText: cpuAvailable && cpuTemp > 0 ? cpuTemp.toFixed(0) + "°C" : "—"
-                    subLabel: cpuAvailable && cpuUsage > 0 ? Math.round(cpuUsage * 100) + "% Usage" : "—"
-                    primaryColor: Qt.rgba(1, 1, 1, 0.35)
-                    secondaryColor: Qt.rgba(1, 1, 1, 0.12)
-                    size: Math.min(root.width, root.height / 6)
-                    history: cpuHistory
-                    historyLength: historyLength
-                    Layout.alignment: Qt.AlignHCenter
+                        anchors.fill: parent
+                        anchors.margins: 16
+                        spacing: 10
+                        
+                        // Section header
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            MaterialSymbol {
+                                text: "schedule"
+                                iconSize: 16
+                                color: "#f59e0b"
+                            }
+                            
+                            StyledText {
+                                text: "Runtime"
+                                font.pixelSize: Appearance.font.pixelSize.medium
+                                font.weight: Font.Bold
+                                color: "white"
+                            }
+                            
+                            Item { Layout.fillWidth: true }
+                        }
+                        
+                        // Runtime info items
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "Uptime:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.uptime : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "Boot:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.bootTime : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
                 }
-                InfoPill {
-                    text: cpuAvailable ? 
-                        cpuModel + " • " + (cpuClock / 1000).toFixed(1) + " GHz" : 
-                        "CPU Unavailable"
+                
+                // Network Section
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredHeight: 80
+                    radius: 8
+                    color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
+                    border.color: Qt.rgba(1, 1, 1, 0.05)
+                    border.width: 1
+                    
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 16
+                        spacing: 10
+                        
+                        // Section header
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            MaterialSymbol {
+                                text: "wifi"
+                                iconSize: 16
+                                color: "#8b5cf6"
+                            }
+                            
+                            StyledText {
+                                text: "Network"
+                                font.pixelSize: Appearance.font.pixelSize.medium
+                                font.weight: Font.Bold
+                                color: "white"
+                            }
+                            
+                            Item { Layout.fillWidth: true }
+                        }
+                        
+                        // Network info items
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "Interface:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.networkInterface : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            
+                            StyledText {
+                                text: "IP:"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                Layout.preferredWidth: 80
+                            }
+                            
+                            StyledText {
+                                text: SystemMonitor ? SystemMonitor.ipAddress : "Unknown"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
                 }
-            }
-            // Memory Stats
-            ColumnLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: 0
-                StatCircle {
-                    label: qsTr("Memory")
-                    value: ResourceUsage.memoryUsedPercentage
-                    valueText: (ResourceUsage.memoryUsed / 1024).toFixed(1) + " GiB"
-                    subLabel: ResourceUsage.memoryTotal ? Math.round(ResourceUsage.memoryTotal / 1024) + " GiB Total" : "—"
-                    primaryColor: Qt.rgba(1, 1, 1, 0.35)
-                    secondaryColor: Qt.rgba(1, 1, 1, 0.12)
-                    size: Math.min(root.width, root.height / 6)
-                    history: memoryHistory
-                    historyLength: historyLength
-                    Layout.alignment: Qt.AlignHCenter
-                }
-                InfoPill {
-                    text: ResourceUsage.memoryTotal ? 
-                        "Used: " + (ResourceUsage.memoryUsed / 1024).toFixed(1) + " GiB / " + 
-                        (ResourceUsage.memoryTotal / 1024).toFixed(1) + " GiB (" + 
-                        Math.round(ResourceUsage.memoryUsedPercentage * 100) + "%)" : 
-                        "Memory Unavailable"
-                }
-            }
-        }
-    }
-    
-    // Power Profile Setter Process
-    Process {
-        id: setPowerProfile
-        onExited: {
-            if (exitCode === 0) {
-                powerProfileProc.running = true
             }
         }
     }
