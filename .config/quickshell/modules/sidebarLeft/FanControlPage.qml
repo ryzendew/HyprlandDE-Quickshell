@@ -482,6 +482,23 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
+                
+                // Swap/ZRAM Widget
+                DashboardWidget {
+                    title: SystemMonitor && SystemMonitor.swapAvailable ? 
+                        (SystemMonitor.swapType === "zram" ? "ZRAM" : "Swap") : "Swap"
+                    value: SystemMonitor ? SystemMonitor.swapUsage : 0
+                    valueText: SystemMonitor && SystemMonitor.swapAvailable ? 
+                        (SystemMonitor.swapUsed / 1024 / 1024 / 1024).toFixed(1) + " GB" : "0.0 GB"
+                    subtitle: SystemMonitor && SystemMonitor.swapAvailable ? 
+                        "Used of " + (SystemMonitor.swapTotal / 1024 / 1024 / 1024).toFixed(1) + " GB • " + 
+                        Math.round(SystemMonitor.swapUsage * 100) + "%" : "No swap available"
+                    history: SystemMonitor ? SystemMonitor.swapHistory : []
+                    graphColor: "#ec4899"  // Pink
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: SystemMonitor && SystemMonitor.swapAvailable
+                }
             }
         }
         
@@ -769,113 +786,7 @@ Rectangle {
                     }
                 }
                 
-                // Runtime Section
-                Rectangle {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-                    Layout.preferredHeight: 60
-                    radius: 8
-                    color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
-                    border.color: Qt.rgba(1, 1, 1, 0.05)
-                    border.width: 1
-                    
-            ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 16
-                        spacing: 10
-                        
-                        // Section header
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-                            
-                            MaterialSymbol {
-                                text: "schedule"
-                                iconSize: 16
-                                color: "#f59e0b"
-                            }
-                            
-                            StyledText {
-                                text: "Runtime"
-                                font.pixelSize: Appearance.font.pixelSize.medium
-                                font.weight: Font.Bold
-                                color: "white"
-                            }
-                            
-                            Item { Layout.fillWidth: true }
-                        }
-                        
-                        // Runtime info items
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-                            
-                            StyledText {
-                                text: "Uptime:"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: Qt.rgba(1, 1, 1, 0.7)
-                                Layout.preferredWidth: 80
-                            }
-                            
-                            StyledText {
-                                text: SystemMonitor ? SystemMonitor.uptime : "Unknown"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: "white"
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-                        }
-                        
 
-                    }
-                }
-                
-                // Network Section
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.preferredHeight: 60
-                    radius: 8
-                    color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
-                    border.color: Qt.rgba(1, 1, 1, 0.05)
-                    border.width: 1
-                    
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 16
-                        spacing: 10
-                        
-                        // Section header with network name
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-                            
-                            MaterialSymbol {
-                                text: "wifi"
-                                iconSize: 16
-                                color: "#8b5cf6"
-                            }
-                            
-                            StyledText {
-                                text: "Network"
-                                font.pixelSize: Appearance.font.pixelSize.medium
-                                font.weight: Font.Bold
-                                color: "white"
-                            }
-                            
-                            StyledText {
-                                text: SystemMonitor ? SystemMonitor.networkInterface : "Unknown"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: Qt.rgba(1, 1, 1, 0.7)
-                                elide: Text.ElideRight
-                            }
-                            
-                            Item { Layout.fillWidth: true }
-                        }
-                        
-
-                    }
-                }
             }
         }
     }

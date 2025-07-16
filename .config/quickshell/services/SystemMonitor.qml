@@ -49,6 +49,14 @@ Singleton {
     property double memoryAvailable: 0.0
     property double memoryUsage: 0.0  // 0.0 to 1.0
     
+    // Swap Properties
+    property bool swapAvailable: false
+    property double swapTotal: 0.0
+    property double swapUsed: 0.0
+    property double swapFree: 0.0
+    property double swapUsage: 0.0  // 0.0 to 1.0
+    property string swapType: "Unknown"  // "swap", "zram", or "none"
+    
     // Disk Properties
     property bool diskAvailable: false
     property string diskMountPoint: "/"
@@ -88,6 +96,7 @@ Singleton {
     property var gpuHistory: []
     property var amdGpuHistory: []
     property var memoryHistory: []
+    property var swapHistory: []
     property var diskHistory: []
     property var networkHistory: []
     property int historyLength: 60
@@ -215,8 +224,54 @@ Singleton {
                 totalMemory = formatBytes(memoryTotal)
                 availableMemory = formatBytes(memoryAvailable)
             }
+            
+            // Update swap information
+            updateSwapUsage()
         } catch (e) {
             // Memory usage update error
+        }
+    }
+    
+    // Swap usage monitoring
+    function updateSwapUsage() {
+        try {
+            const swapTotalKB = Number(meminfoFile.text().match(/SwapTotal:\s+(\d+)/)?.[1] ?? 0)
+            const swapFreeKB = Number(meminfoFile.text().match(/SwapFree:\s+(\d+)/)?.[1] ?? 0)
+            
+            if (swapTotalKB > 0) {
+                swapTotal = swapTotalKB * 1024  // Convert KB to bytes
+                swapFree = swapFreeKB * 1024
+                swapUsed = swapTotal - swapFree
+                swapUsage = swapUsed / swapTotal
+                swapAvailable = true
+                
+                // Detect swap type
+                detectSwapType()
+            } else {
+                swapAvailable = false
+                swapType = "none"
+            }
+        } catch (e) {
+            // Swap usage update error
+        }
+    }
+    
+    // Detect swap type (swap file/partition vs zram)
+    function detectSwapType() {
+        try {
+            const process = Qt.createQmlObject('import QtQuick; Process { command: ["bash", "-c", "swapon --show | grep -q zram && echo zram || echo swap"] }', root)
+            process.running = true
+            
+            process.onFinished.connect(function() {
+                const output = process.readAllStandardOutput().trim()
+                if (output === "zram") {
+                    swapType = "zram"
+                } else {
+                    swapType = "swap"
+                }
+            })
+        } catch (e) {
+            swapType = "swap"
         }
     }
     
@@ -891,6 +946,7 @@ Singleton {
         gpuHistory = gpuHistory.concat([gpuUsage]).slice(-historyLength)
         amdGpuHistory = amdGpuHistory.concat([amdGpuUsage]).slice(-historyLength)
         memoryHistory = memoryHistory.concat([memoryUsage]).slice(-historyLength)
+        swapHistory = swapHistory.concat([swapUsage]).slice(-historyLength)
         diskHistory = diskHistory.concat([diskUsage]).slice(-historyLength)
         networkHistory = networkHistory.concat([networkTotalSpeed]).slice(-historyLength)
     }
