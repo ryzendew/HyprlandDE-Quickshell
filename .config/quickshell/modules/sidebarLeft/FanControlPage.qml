@@ -18,9 +18,29 @@ Rectangle {
     border.width: 1
     
     Component.onCompleted: {
-        console.log("FanControlPage: SystemMonitor available:", typeof SystemMonitor !== 'undefined')
+        console.log("[FanControlPage] Component completed")
+        console.log("[FanControlPage] SystemMonitor available:", typeof SystemMonitor !== 'undefined')
         if (SystemMonitor) {
-            console.log("FanControlPage: SystemMonitor properties:", SystemMonitor.cpuModel, SystemMonitor.cpuUsage)
+            console.log("[FanControlPage] Initial CPU model:", SystemMonitor.cpuModel)
+            console.log("[FanControlPage] Initial CPU available:", SystemMonitor.cpuAvailable)
+            // Force update CPU details on page load
+            SystemMonitor.forceUpdateCpuDetails()
+        }
+    }
+    
+    // Timer to check CPU model detection
+    Timer {
+        interval: 2000
+        running: true
+        repeat: true
+        onTriggered: {
+            if (SystemMonitor) {
+                console.log("[FanControlPage] Timer triggered - CPU model:", SystemMonitor.cpuModel, "Available:", SystemMonitor.cpuAvailable)
+                if (SystemMonitor.cpuModel === "CPU") {
+                    console.log("[FanControlPage] Forcing CPU update...")
+                    SystemMonitor.forceUpdateCpuDetails()
+                }
+            }
         }
     }
     
@@ -50,7 +70,7 @@ Rectangle {
             id: dashboardSection
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: parent.height * 0.65
+            Layout.preferredHeight: parent.height ? parent.height * 0.65 : 400
             radius: 12
             color: Qt.rgba(0.1, 0.1, 0.15, 0.8)
             border.color: Qt.rgba(1, 1, 1, 0.1)
@@ -68,44 +88,78 @@ Rectangle {
                 anchors.margins: 16
             }
             
-            // Refresh button
-            Rectangle {
-                id: refreshButton
-                width: 32
-                height: 32
-                radius: 6
-                color: Qt.rgba(0.15, 0.15, 0.2, 0.8)
-                border.color: Qt.rgba(1, 1, 1, 0.1)
-                border.width: 1
+            // Settings and Refresh buttons
+            RowLayout {
                 anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.margins: 16
+                spacing: 8
                 
+                // Settings button
+            Rectangle {
+                    id: settingsButton
+                    width: 32
+                    height: 32
+                    radius: 6
+                    color: Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                    border.color: Qt.rgba(1, 1, 1, 0.1)
+                border.width: 1
+                    
                     MaterialSymbol {
-                    anchors.centerIn: parent
-                    text: "refresh"
-                    iconSize: 16
-                    color: "white"
+                        anchors.centerIn: parent
+                        text: "settings"
+                        iconSize: 16
+                        color: "white"
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            settingsPopup.open()
+                        }
+                        onEntered: parent.color = Qt.rgba(0.2, 0.2, 0.25, 0.8)
+                        onExited: parent.color = Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                    }
                 }
                 
+                // Refresh button
+                Rectangle {
+                    id: refreshButton
+                    width: 32
+                    height: 32
+                    radius: 6
+                    color: Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                    border.color: Qt.rgba(1, 1, 1, 0.1)
+                    border.width: 1
+                    
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "refresh"
+                        iconSize: 16
+                        color: "white"
+                    }
+                    
                 MouseArea {
                     anchors.fill: parent
-                    hoverEnabled: true
+                        hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        // Force refresh of all data
-                        if (SystemMonitor) {
-                            SystemMonitor.updateCpuUsage()
-                            SystemMonitor.updateMemoryUsage()
-                            SystemMonitor.updateDiskUsage()
-                            SystemMonitor.updateNetworkUsage()
-                            SystemMonitor.updateGpuData()
-                            SystemMonitor.updateCpuDetails()
-                            SystemMonitor.updateSystemInfo()
+                            // Force refresh of all data
+                            if (SystemMonitor) {
+                                SystemMonitor.updateCpuUsage()
+                                SystemMonitor.updateMemoryUsage()
+                                SystemMonitor.updateSelectedDiskUsage()
+                                SystemMonitor.updateNetworkUsage()
+                                SystemMonitor.updateGpuData()
+                                SystemMonitor.forceUpdateCpuDetails()
+                                SystemMonitor.updateSystemInfo()
+                            }
                         }
+                        onEntered: parent.color = Qt.rgba(0.2, 0.2, 0.25, 0.8)
+                        onExited: parent.color = Qt.rgba(0.15, 0.15, 0.2, 0.8)
                     }
-                    onEntered: parent.color = Qt.rgba(0.2, 0.2, 0.25, 0.8)
-                    onExited: parent.color = Qt.rgba(0.15, 0.15, 0.2, 0.8)
                 }
             }
             
@@ -177,12 +231,152 @@ Rectangle {
                         (SystemMonitor.diskUsed / 1024 / 1024 / 1024).toFixed(1) + " GB used of " + 
                         (SystemMonitor.diskTotal / 1024 / 1024 / 1024).toFixed(1) + " GB • " + 
                         (SystemMonitor.diskFree / 1024 / 1024 / 1024).toFixed(1) + " GB free • " + 
-                        SystemMonitor.diskDevice + " on " + SystemMonitor.diskMountPoint : 
+                        SystemMonitor.diskDevice : 
                         "No disk data"
                     history: SystemMonitor ? SystemMonitor.diskHistory : []
                     graphColor: "#ef4444"  // Red
-                Layout.fillWidth: true
+                    Layout.fillWidth: true
                     Layout.fillHeight: true
+                    
+                    // Settings cog for disk selection
+                    headerRight: Component {
+                        MaterialSymbol {
+                            text: "settings"
+                            iconSize: 16
+                            color: Qt.rgba(1, 1, 1, 0.7)
+                            
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                                    console.log("Settings cog clicked!")
+                                    console.log("Available disks:", SystemMonitor ? SystemMonitor.availableDisks.length : 0)
+                                    diskSelectionPopup.open()
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Disk Selection Popup
+                Popup {
+                    id: diskSelectionPopup
+                    width: 300
+                    height: 400
+                    modal: true
+                    focus: true
+                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                    
+                    background: Rectangle {
+                        radius: 12
+                        color: Qt.rgba(0.1, 0.1, 0.15, 0.95)
+                        border.color: Qt.rgba(1, 1, 1, 0.1)
+                        border.width: 1
+                    }
+                    
+                    contentItem: ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 16
+                        spacing: 12
+                        
+                        StyledText {
+                            text: "Select Disk Drive"
+                            font.pixelSize: Appearance.font.pixelSize.medium
+                            font.weight: Font.Bold
+                            color: "white"
+                            Layout.fillWidth: true
+                        }
+                        
+                        StyledText {
+                            text: "Available disks: " + (SystemMonitor ? SystemMonitor.availableDisks.length : 0)
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            color: Qt.rgba(1, 1, 1, 0.7)
+                            Layout.fillWidth: true
+                        }
+                        
+                        ListView {
+                            id: diskListView
+                Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.preferredHeight: 200
+                            clip: true
+                            spacing: 4
+                            
+                            model: SystemMonitor ? SystemMonitor.availableDisks : []
+                            
+                            delegate: Rectangle {
+                                width: diskListView.width
+                                height: 40
+                                radius: 6
+                                color: SystemMonitor && SystemMonitor.selectedDisk === modelData.name ? 
+                                    Qt.rgba(0.2, 0.2, 0.3, 0.8) : Qt.rgba(0.15, 0.15, 0.2, 0.6)
+                                border.color: SystemMonitor && SystemMonitor.selectedDisk === modelData.name ? 
+                                    Qt.rgba(0.3, 0.3, 0.5, 0.8) : "transparent"
+                border.width: 1
+                                
+                RowLayout {
+                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 8
+                                    
+                    MaterialSymbol {
+                                        text: "storage"
+                                        iconSize: 16
+                                        color: "#ef4444"
+                                    }
+                                    
+                                    StyledText {
+                                        text: modelData.displayName
+                                        font.pixelSize: Appearance.font.pixelSize.small
+                                        color: "white"
+                                        Layout.fillWidth: true
+                                    }
+                                    
+                    StyledText {
+                                        text: modelData.mountpoint || "Not mounted"
+                                        font.pixelSize: Appearance.font.pixelSize.small
+                                        color: Qt.rgba(1, 1, 1, 0.6)
+                                    }
+                                }
+                                
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: {
+                                        console.log("Selected disk:", modelData.name)
+                                        if (SystemMonitor) {
+                                            SystemMonitor.selectedDisk = modelData.name
+                                            SystemMonitor.updateSelectedDiskUsage()
+                                        }
+                                        diskSelectionPopup.close()
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Test button
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 30
+                            radius: 6
+                            color: Qt.rgba(0.2, 0.2, 0.3, 0.8)
+                            
+                            StyledText {
+                                anchors.centerIn: parent
+                                text: "Test: Force Disk Detection"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "white"
+                            }
+                            
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                                    console.log("Test button clicked!")
+                                    if (SystemMonitor) {
+                                        SystemMonitor.detectAvailableDisks()
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 // Network Widget
@@ -208,7 +402,7 @@ Rectangle {
             id: systemInfoSection
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: parent.height * 0.35
+            Layout.preferredHeight: parent.height ? parent.height * 0.35 : 200
             radius: 12
             color: Qt.rgba(0.1, 0.1, 0.15, 0.8)
                 border.color: Qt.rgba(1, 1, 1, 0.1)
@@ -447,7 +641,8 @@ Rectangle {
                             }
                             
                             StyledText {
-                                text: SystemMonitor ? SystemMonitor.cpuCores + "C, " + SystemMonitor.cpuThreads + "T" : "Unknown"
+                                text: SystemMonitor && SystemMonitor.cpuCores && SystemMonitor.cpuThreads ? 
+                                    SystemMonitor.cpuCores + "C, " + SystemMonitor.cpuThreads + "T" : "Unknown"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: "white"
                                 elide: Text.ElideRight
@@ -467,7 +662,8 @@ Rectangle {
                             }
                             
                             StyledText {
-                                text: SystemMonitor ? SystemMonitor.totalMemory + " total" : "Unknown"
+                                text: SystemMonitor && SystemMonitor.memoryTotal && SystemMonitor.memoryTotal > 0 ? 
+                                    (SystemMonitor.memoryTotal / 1024 / 1024 / 1024).toFixed(1) + " GB total" : "Unknown"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: "white"
                                 elide: Text.ElideRight
@@ -487,7 +683,8 @@ Rectangle {
                             }
                             
                             StyledText {
-                                text: SystemMonitor ? SystemMonitor.availableMemory + " free" : "Unknown"
+                                text: SystemMonitor && SystemMonitor.memoryAvailable > 0 ? 
+                                    (SystemMonitor.memoryAvailable / 1024 / 1024 / 1024).toFixed(1) + " GB free" : "Unknown"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: "white"
                                 elide: Text.ElideRight
@@ -655,6 +852,190 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+    
+    // Settings Popup
+    Popup {
+        id: settingsPopup
+        width: 300
+        height: 200
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        
+        background: Rectangle {
+            radius: 12
+            color: Qt.rgba(0.1, 0.1, 0.15, 0.95)
+            border.color: Qt.rgba(1, 1, 1, 0.1)
+            border.width: 1
+        }
+        
+        contentItem: ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 16
+            spacing: 16
+            
+            // Title
+            StyledText {
+                text: "Dashboard Settings"
+                font.pixelSize: Appearance.font.pixelSize.large
+                font.weight: Font.Bold
+                color: "white"
+                Layout.alignment: Qt.AlignHCenter
+            }
+            
+            // Disk Selection
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                
+                StyledText {
+                    text: "Monitor Disk:"
+                    font.pixelSize: Appearance.font.pixelSize.medium
+                    color: "white"
+                }
+                
+                ComboBox {
+                    id: diskSelector
+                    Layout.fillWidth: true
+                    model: ListModel {
+                        id: diskModel
+                    }
+                    
+                    textRole: "display"
+                    valueRole: "mountPoint"
+                    
+                    background: Rectangle {
+                        radius: 6
+                        color: Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                        border.color: Qt.rgba(1, 1, 1, 0.1)
+                        border.width: 1
+                    }
+                    
+                    contentItem: StyledText {
+                        text: diskSelector.displayText
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: "white"
+                        verticalAlignment: Text.AlignVCenter
+                        leftPadding: 8
+                    }
+                    
+                    onActivated: {
+                        if (currentValue) {
+                            // Update the disk monitoring target
+                            SystemMonitor.setDiskTarget(currentValue)
+                        }
+                    }
+                }
+            }
+            
+            // Buttons
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                
+                Item { Layout.fillWidth: true }
+                
+                Button {
+                    text: "Cancel"
+                    onClicked: settingsPopup.close()
+                    
+                    background: Rectangle {
+                        radius: 6
+                        color: Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                        border.color: Qt.rgba(1, 1, 1, 0.1)
+                        border.width: 1
+                    }
+                    
+                    contentItem: StyledText {
+                        text: parent.text
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: "white"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    
+                    onPressed: parent.color = Qt.rgba(0.2, 0.2, 0.25, 0.8)
+                    onReleased: parent.color = Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                }
+                
+                Button {
+                    text: "Apply"
+                    onClicked: {
+                        settingsPopup.close()
+                    }
+                    
+                    background: Rectangle {
+                        radius: 6
+                        color: Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                        border.color: Qt.rgba(1, 1, 1, 0.1)
+                        border.width: 1
+                    }
+                    
+                    contentItem: StyledText {
+                        text: parent.text
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: "white"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    
+                    onPressed: parent.color = Qt.rgba(0.2, 0.2, 0.25, 0.8)
+                    onReleased: parent.color = Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                }
+            }
+        }
+        
+        onOpened: {
+            // Populate disk list when popup opens
+            populateDiskList()
+        }
+    }
+    
+    // Function to populate disk list
+    function populateDiskList() {
+        diskModel.clear()
+        
+        // Add common mount points
+        diskModel.append({display: "Root Filesystem (/)", mountPoint: "/"})
+        diskModel.append({display: "Home Directory (/home)", mountPoint: "/home"})
+        diskModel.append({display: "User Data (/home/matt)", mountPoint: "/home/matt"})
+        
+        // Try to get additional mount points from /proc/mounts
+        try {
+            const process = Qt.createQmlObject('import QtQuick; Process { command: ["cat", "/proc/mounts"] }', root)
+            process.onExited = function(exitCode, exitStatus) {
+            if (exitCode === 0) {
+                    const output = process.readAllStandardOutput()
+                    const lines = output.split('\n')
+                    
+                    for (const line of lines) {
+                        const parts = line.split(/\s+/)
+                        if (parts.length >= 2) {
+                            const device = parts[0]
+                            const mountPoint = parts[1]
+                            
+                            // Skip system filesystems and duplicates
+                            if (mountPoint.startsWith('/') && 
+                                !mountPoint.includes('/proc') && 
+                                !mountPoint.includes('/sys') && 
+                                !mountPoint.includes('/dev') &&
+                                mountPoint !== '/' &&
+                                mountPoint !== '/home') {
+                                
+                                diskModel.append({
+                                    display: `${mountPoint} (${device})`, 
+                                    mountPoint: mountPoint
+                                })
+                            }
+                        }
+                    }
+                }
+            }
+            process.start()
+        } catch (e) {
+            // Failed to get mount points
         }
     }
 } 

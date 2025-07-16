@@ -6,10 +6,7 @@ import Quickshell
 import Quickshell.Io
 
 /**
- * Enhanced system monitoring service using FileView with reload method.
- * - Direct statfs syscalls for disk usage
- * - Improved CPU usage calculation with 50ms sleep method
- * - Enhanced sysfs-based monitoring
+ * Simple system monitoring service using FileView with reload method.
  */
 Singleton {
     id: root
@@ -40,7 +37,7 @@ Singleton {
     property double memoryAvailable: 0.0
     property double memoryUsage: 0.0  // 0.0 to 1.0
     
-    // Disk Properties (using statfs)
+    // Disk Properties
     property bool diskAvailable: false
     property string diskMountPoint: "/"
     property string diskDevice: ""
@@ -48,6 +45,10 @@ Singleton {
     property double diskUsed: 0.0
     property double diskFree: 0.0
     property double diskUsage: 0.0  // 0.0 to 1.0
+    
+    // Available disk drives for selection
+    property var availableDisks: []
+    property string selectedDisk: "/"
     
     // Network Properties
     property bool networkAvailable: false
@@ -58,7 +59,7 @@ Singleton {
     property double networkDownloadTotal: 0.0  // Total bytes downloaded
     property double networkUploadTotal: 0.0    // Total bytes uploaded
     
-    // System Info Properties (comprehensive system information)
+    // System Info Properties
     property string osName: "Unknown"
     property string osVersion: "Unknown"
     property string kernelVersion: "Unknown"
@@ -96,33 +97,13 @@ Singleton {
         }
     }
     
-    // GPU update timer (less frequent)
-    Timer {
-        interval: 5000  // 5 seconds for GPU
-        running: true
-        repeat: true
-        onTriggered: {
-            updateGpuData()
-        }
-    }
-    
     // CPU details timer (once on startup)
     Timer {
-        interval: 1000
+        interval: 3000  // Increased delay to ensure Quickshell is fully loaded
         running: true
         repeat: false
         onTriggered: {
-            updateCpuDetails()
-        }
-    }
-    
-    // CPU details update timer (every 30 seconds)
-    Timer {
-        interval: 30000  // 30 seconds
-        running: true
-        repeat: true
-        onTriggered: {
-            updateCpuDetails()
+            detectCpuModel()
         }
     }
     
@@ -136,128 +117,190 @@ Singleton {
         }
     }
     
-    // Enhanced CPU Usage calculation with 50ms sleep method
+    // Disk detection timer (every 30 seconds)
+    Timer {
+        interval: 30000  // 30 seconds
+        running: true
+        repeat: true
+        onTriggered: {
+            detectAvailableDisks()
+        }
+    }
+    
+    // Initial disk detection timer (run once after startup)
+    Timer {
+        interval: 2000  // 2 seconds after startup
+        running: true
+        repeat: false
+        onTriggered: {
+            detectAvailableDisks()
+        }
+    }
+    
+    // Enhanced CPU Usage calculation
     function updateCpuUsage() {
-        // Reload the stat file
-        cpuStatFile.reload()
-        
-        const text = cpuStatFile.text()
-        if (!text) return
-        
-        const cpuLine = text.match(/^cpu\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/)
-        if (cpuLine) {
-            const stats = cpuLine.slice(1).map(Number)
-            const total = stats.reduce((a, b) => a + b, 0)
-            const idle = stats[3]
+        try {
+            cpuStatFile.reload()
             
-            if (previousCpuStats) {
-                const totalDiff = total - previousCpuStats.total
-                const idleDiff = idle - previousCpuStats.idle
-                if (totalDiff > 0) {
-                    cpuUsage = Math.max(0, Math.min(1, 1 - idleDiff / totalDiff))
+            const text = cpuStatFile.text()
+            if (!text) return
+            
+            const cpuLine = text.match(/^cpu\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/)
+            if (cpuLine) {
+                const stats = cpuLine.slice(1).map(Number)
+                const total = stats.reduce((a, b) => a + b, 0)
+                const idle = stats[3]
+                
+                if (previousCpuStats) {
+                    const totalDiff = total - previousCpuStats.total
+                    const idleDiff = idle - previousCpuStats.idle
+                    if (totalDiff > 0) {
+                        cpuUsage = Math.max(0, Math.min(1, 1 - idleDiff / totalDiff))
+                        cpuAvailable = true
+                    }
+                } else {
                     cpuAvailable = true
-                    console.log("[SystemMonitor] CPU Usage:", (cpuUsage * 100).toFixed(1) + "%")
                 }
-            } else {
-                // First run - initialize stats and mark CPU as available
-                cpuAvailable = true
-                console.log("[SystemMonitor] CPU stats initialized")
+                
+                previousCpuStats = { total, idle }
             }
-            
-            previousCpuStats = { total, idle }
+        } catch (e) {
+            // CPU usage update error
         }
     }
     
     // Memory usage from /proc/meminfo
     function updateMemoryUsage() {
-        meminfoFile.reload()
-        const text = meminfoFile.text()
-        if (!text) return
-        
-        const memTotal = Number(text.match(/MemTotal:\s+(\d+)/)?.[1] ?? 0)
-        const memAvailable = Number(text.match(/MemAvailable:\s+(\d+)/)?.[1] ?? 0)
-        
-        if (memTotal > 0) {
-            memoryTotal = memTotal * 1024  // Convert KB to bytes
-            memoryAvailable = memAvailable * 1024
-            memoryUsed = memoryTotal - memoryAvailable
-            memoryUsage = memoryUsed / memoryTotal
-            console.log("[SystemMonitor] Memory Usage:", (memoryUsage * 100).toFixed(1) + "%")
-        }
-    }
-    
-    // Disk usage using direct statfs syscall
-    function updateDiskUsage() {
-        diskUsageFile.reload()
-        const text = diskUsageFile.text()
-        if (!text) return
-        
         try {
-            const lines = text.trim().split('\n')
-            if (lines.length >= 5) {
-                const mountPoint = lines[0]
-                const device = lines[1]
-                const total = parseFloat(lines[2])
-                const used = parseFloat(lines[3])
-                const free = parseFloat(lines[4])
-                const usage = parseFloat(lines[5])
-                
-                if (!isNaN(total) && !isNaN(used) && !isNaN(free) && !isNaN(usage)) {
-                    diskMountPoint = mountPoint
-                    diskDevice = device
-                    diskTotal = total
-                    diskUsed = used
-                    diskFree = free
-                    diskUsage = usage
-                    diskAvailable = true
-                    console.log("[SystemMonitor] Disk Usage:", mountPoint, "on", device, (usage * 100).toFixed(1) + "%")
-                }
+            meminfoFile.reload()
+            const text = meminfoFile.text()
+            if (!text) return
+            
+            const memTotal = Number(text.match(/MemTotal:\s+(\d+)/)?.[1] ?? 0)
+            const memAvailable = Number(text.match(/MemAvailable:\s+(\d+)/)?.[1] ?? 0)
+            
+            if (memTotal > 0) {
+                memoryTotal = memTotal * 1024  // Convert KB to bytes
+                memoryAvailable = memAvailable * 1024
+                memoryUsed = memoryTotal - memoryAvailable
+                memoryUsage = memoryUsed / memoryTotal
             }
         } catch (e) {
-            console.log("[SystemMonitor] Disk usage calculation error:", e)
+            // Memory usage update error
         }
     }
     
-    // Network usage from /proc/net/dev with improved interface detection
-    function updateNetworkUsage() {
-        networkDevFile.reload()
-        const text = networkDevFile.text()
-        if (!text) return
-        
-        // Find the primary network interface (prioritize default route)
-        const lines = text.trim().split('\n')
-        let primaryIface = null
-        let bytesReceived = 0
-        let bytesTransmitted = 0
-        
-        // First, try to get the default route interface using the route file
+    // Detect available disk drives
+    function detectAvailableDisks() {
         try {
-            const routeText = networkRouteFile.text()
-            if (routeText) {
-                const defaultIface = routeText.trim()
-                console.log("[SystemMonitor] Default route interface:", defaultIface)
-                
-                // Find this interface in /proc/net/dev
-                for (const line of lines) {
-                    if (line.includes(defaultIface + ':')) {
-                        const parts = line.trim().split(/\s+/)
-                        if (parts.length >= 10) {
-                            primaryIface = parts[0].replace(':', '')
-                            bytesReceived = parseInt(parts[1]) || 0
-                            bytesTransmitted = parseInt(parts[9]) || 0
-                            console.log("[SystemMonitor] Found default interface:", primaryIface, "bytes:", bytesReceived, bytesTransmitted)
-                            break
+            const command = "lsblk -d -n -o NAME,SIZE,TYPE,MOUNTPOINT | grep -E '^(nvme|sd|hd|vd)' | awk '{print $1 \"|\" $2 \"|\" $3 \"|\" $4}'"
+            
+            const process = Qt.createQmlObject('import QtQuick; Process { command: ["bash", "-c", "' + command + '"] }', root)
+            process.running = true
+            
+            process.onFinished.connect(function() {
+                try {
+                    const output = process.readAllStandardOutput()
+                    const lines = output.trim().split('\n')
+                    const disks = []
+                    
+                    for (const line of lines) {
+                        if (line.trim() === '') continue
+                        
+                        const parts = line.split('|')
+                        if (parts.length >= 4) {
+                            const name = parts[0]
+                            const size = parts[1]
+                            const type = parts[2]
+                            const mountpoint = parts[3]
+                            
+                            // Only include disk devices (not partitions)
+                            if (type === 'disk') {
+                                disks.push({
+                                    name: name,
+                                    size: size,
+                                    type: type,
+                                    mountpoint: mountpoint || '',
+                                    displayName: `${name} (${size})`
+                                })
+                            }
                         }
                     }
+                    
+                    availableDisks = disks
+                    
+                    // Set default selection to first disk if none selected
+                    if (disks.length > 0 && (!selectedDisk || selectedDisk === "/")) {
+                        selectedDisk = disks[0].name
+                    }
+                } catch (e) {
+                    // Disk detection parsing error
                 }
-            }
+            })
         } catch (e) {
-            console.log("[SystemMonitor] Route detection error:", e)
+            // Disk detection error
         }
+    }
+    
+    // Update disk usage for selected drive
+    function updateSelectedDiskUsage() {
+        if (!selectedDisk) return
         
-        // Fallback to interface priority if default route not found
-        if (!primaryIface) {
-            // Prioritize your specific interface first, then others
+        try {
+            const command = `python3 -c "import os, statvfs; st = os.statvfs('/dev/${selectedDisk}'); total = st.f_blocks * st.f_frsize; free = st.f_bavail * st.f_frsize; used = total - free; usage = used/total if total > 0 else 0; print(f'/dev/${selectedDisk}\\n{total}\\n{used}\\n{free}\\n{usage}')" 2>/dev/null || echo "/dev/${selectedDisk}\\n0\\n0\\n0\\n0"`
+            
+            const process = Qt.createQmlObject('import QtQuick; Process { command: ["bash", "-c", "' + command + '"] }', root)
+            process.running = true
+            
+            process.onFinished.connect(function() {
+                try {
+                    const output = process.readAllStandardOutput()
+                    const lines = output.trim().split('\n')
+                    
+                    if (lines.length >= 5) {
+                        const device = lines[0]
+                        const total = parseFloat(lines[1])
+                        const used = parseFloat(lines[2])
+                        const free = parseFloat(lines[3])
+                        const usage = parseFloat(lines[4])
+                        
+                        if (!isNaN(total) && !isNaN(used) && !isNaN(free) && !isNaN(usage)) {
+                            diskMountPoint = device
+                            diskDevice = device
+                            diskTotal = total
+                            diskUsed = used
+                            diskFree = free
+                            diskUsage = usage
+                            diskAvailable = true
+                        }
+                    }
+                } catch (e) {
+                    // Disk usage parsing error
+                }
+            })
+        } catch (e) {
+            // Disk usage error
+        }
+    }
+    
+    // Simple disk usage for root filesystem (fallback)
+    function updateDiskUsage() {
+        updateSelectedDiskUsage()
+    }
+    
+    // Network usage from /proc/net/dev
+    function updateNetworkUsage() {
+        try {
+            networkDevFile.reload()
+            const text = networkDevFile.text()
+            if (!text) return
+            
+            const lines = text.trim().split('\n')
+            let primaryIface = null
+            let bytesReceived = 0
+            let bytesTransmitted = 0
+            
+            // Find primary interface (prioritize enp8s0, then others)
             const interfacePriority = ['enp8s0', 'enp', 'eth0', 'wlan0', 'wlp', 'eno', 'wlx']
             
             for (const priority of interfacePriority) {
@@ -268,85 +311,132 @@ Singleton {
                             primaryIface = parts[0].replace(':', '')
                             bytesReceived = parseInt(parts[1]) || 0
                             bytesTransmitted = parseInt(parts[9]) || 0
-                            console.log("[SystemMonitor] Found fallback interface:", primaryIface, "bytes:", bytesReceived, bytesTransmitted)
                             break
                         }
                     }
                 }
                 if (primaryIface) break
             }
-        }
-        
-        if (primaryIface && previousNetworkStats && previousNetworkStats.iface === primaryIface) {
-            const timeDiff = root.updateInterval / 1000.0
-            const downloadDiff = bytesReceived - previousNetworkStats.bytesReceived
-            const uploadDiff = bytesTransmitted - previousNetworkStats.bytesTransmitted
             
-            networkDownloadSpeed = Math.max(0, downloadDiff / timeDiff)
-            networkUploadSpeed = Math.max(0, uploadDiff / timeDiff)
-            networkTotalSpeed = networkDownloadSpeed + networkUploadSpeed
-            networkDownloadTotal = bytesReceived
-            networkUploadTotal = bytesTransmitted
-            networkInterface = primaryIface
-            networkAvailable = true
-            console.log("[SystemMonitor] Network stats:", primaryIface, "↓", formatBytes(networkDownloadSpeed) + "/s", "↑", formatBytes(networkUploadSpeed) + "/s")
-        }
-        
-        previousNetworkStats = { 
-            iface: primaryIface, 
-            bytesReceived, 
-            bytesTransmitted 
+            if (primaryIface && previousNetworkStats && previousNetworkStats.iface === primaryIface) {
+                const timeDiff = root.updateInterval / 1000.0
+                const downloadDiff = bytesReceived - previousNetworkStats.bytesReceived
+                const uploadDiff = bytesTransmitted - previousNetworkStats.bytesTransmitted
+                
+                networkDownloadSpeed = Math.max(0, downloadDiff / timeDiff)
+                networkUploadSpeed = Math.max(0, uploadDiff / timeDiff)
+                networkTotalSpeed = networkDownloadSpeed + networkUploadSpeed
+                networkDownloadTotal = bytesReceived
+                networkUploadTotal = bytesTransmitted
+                networkInterface = primaryIface
+                networkAvailable = true
+            }
+            
+            previousNetworkStats = { 
+                iface: primaryIface, 
+                bytesReceived, 
+                bytesTransmitted 
+            }
+        } catch (e) {
+            // Network usage update error
         }
     }
     
-    // Helper function to format bytes
-    function formatBytes(bytes) {
-        if (bytes < 1024) return bytes.toFixed(1) + " B"
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
-        if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + " MB"
-        return (bytes / 1024 / 1024 / 1024).toFixed(1) + " GB"
+    // Simple CPU model detection
+    function detectCpuModel() {
+        console.log("[SystemMonitor] Starting CPU model detection...")
+        try {
+            const lscpuProcess = Qt.createQmlObject('import QtQuick; Process { command: ["lscpu"] }', root)
+            lscpuProcess.running = true
+            
+            lscpuProcess.onFinished.connect(function() {
+                console.log("[SystemMonitor] lscpu process finished, exit code:", lscpuProcess.exitCode)
+                if (lscpuProcess.exitCode === 0) {
+                    const output = lscpuProcess.readAllStandardOutput()
+                    console.log("[SystemMonitor] lscpu output length:", output.length)
+                    console.log("[SystemMonitor] lscpu output preview:", output.substring(0, 200))
+                    
+                    const lines = output.split('\n')
+                    console.log("[SystemMonitor] Parsed lines count:", lines.length)
+                    
+                    for (const line of lines) {
+                        if (line.includes('Model name:')) {
+                            console.log("[SystemMonitor] Found Model name line:", line)
+                            const modelName = line.split('Model name:')[1].trim()
+                            console.log("[SystemMonitor] Extracted model name:", modelName)
+                            if (modelName && modelName !== 'Unknown') {
+                                cpuModel = modelName
+                                cpuAvailable = true
+                                console.log("[SystemMonitor] Set CPU model to:", cpuModel)
+                                break
+                            }
+                        }
+                        
+                        if (line.includes('CPU MHz:')) {
+                            const mhz = parseFloat(line.split('CPU MHz:')[1].trim())
+                            if (!isNaN(mhz) && mhz > 0) {
+                                cpuClock = mhz / 1000.0  // Convert MHz to GHz
+                                console.log("[SystemMonitor] Set CPU clock to:", cpuClock, "GHz")
+                            }
+                        }
+                        
+                        if (line.includes('Core(s) per socket:')) {
+                            const cores = parseInt(line.split('Core(s) per socket:')[1].trim())
+                            if (!isNaN(cores) && cores > 0) {
+                                cpuCores = cores
+                                console.log("[SystemMonitor] Set CPU cores to:", cpuCores)
+                            }
+                        }
+                        
+                        if (line.includes('Thread(s) per core:')) {
+                            const threadsPerCore = parseInt(line.split('Thread(s) per core:')[1].trim())
+                            if (!isNaN(threadsPerCore) && threadsPerCore > 0) {
+                                cpuThreads = cpuCores * threadsPerCore
+                                console.log("[SystemMonitor] Set CPU threads to:", cpuThreads)
+                            }
+                        }
+                    }
+                    console.log("[SystemMonitor] CPU detection completed. Model:", cpuModel, "Available:", cpuAvailable)
+                } else {
+                    console.log("[SystemMonitor] lscpu process failed with exit code:", lscpuProcess.exitCode)
+                }
+            })
+        } catch (e) {
+            console.log("[SystemMonitor] CPU detection error:", e)
+        }
     }
     
-    // Comprehensive system info update function
+    // System info update
     function updateSystemInfo() {
         try {
             // OS and Version
-            if (osReleaseFile.exists) {
-                osReleaseFile.reload()
-                const text = osReleaseFile.text()
-                const nameMatch = text.match(/^NAME="([^"]+)"/m)
-                const versionMatch = text.match(/^VERSION="([^"]+)"/m)
+            osReleaseFile.reload()
+            const osText = osReleaseFile.text()
+            if (osText) {
+                const nameMatch = osText.match(/^NAME="([^"]+)"/m)
+                const versionMatch = osText.match(/^VERSION="([^"]+)"/m)
                 if (nameMatch) osName = nameMatch[1]
                 if (versionMatch) osVersion = versionMatch[1]
             }
             
             // Kernel Version
-            if (versionFile.exists) {
-                versionFile.reload()
-                const text = versionFile.text()
-                const kernelMatch = text.match(/Linux version ([^\s]+)/)
+            versionFile.reload()
+            const versionText = versionFile.text()
+            if (versionText) {
+                const kernelMatch = versionText.match(/Linux version ([^\s]+)/)
                 if (kernelMatch) kernelVersion = kernelMatch[1]
             }
             
-            // Architecture
-            if (cpuinfoFile.exists) {
-                const text = cpuinfoFile.text()
-                const archMatch = text.match(/flags\s+:\s+.*\b(x86_64|amd64|i386|arm64|aarch64)\b/)
-                if (archMatch) architecture = archMatch[1]
-            }
-            
             // Hostname
-            if (hostnameFile.exists) {
-                hostnameFile.reload()
-                const text = hostnameFile.text()
-                if (text) hostname = text.trim()
-            }
+            hostnameFile.reload()
+            const hostnameText = hostnameFile.text()
+            if (hostnameText) hostname = hostnameText.trim()
             
             // Uptime
-            if (uptimeFile.exists) {
-                uptimeFile.reload()
-                const text = uptimeFile.text()
-                const uptimeMatch = text.match(/^(\d+\.\d+)/)
+            uptimeFile.reload()
+            const uptimeText = uptimeFile.text()
+            if (uptimeText) {
+                const uptimeMatch = uptimeText.match(/^(\d+\.\d+)/)
                 if (uptimeMatch) {
                     const seconds = parseFloat(uptimeMatch[1])
                     const days = Math.floor(seconds / 86400)
@@ -363,183 +453,22 @@ Singleton {
                 }
             }
             
-            // Boot Time
-            if (uptimeFile.exists) {
-                const text = uptimeFile.text()
-                const uptimeMatch = text.match(/^(\d+\.\d+)/)
-                if (uptimeMatch) {
-                    const seconds = parseFloat(uptimeMatch[1])
-                    const bootTimeMs = Date.now() - (seconds * 1000)
-                    const bootDate = new Date(bootTimeMs)
-                    bootTime = bootDate.toLocaleString()
-                }
-            }
-            
             // Memory Info (formatted)
             if (memoryTotal > 0) {
                 totalMemory = formatBytes(memoryTotal)
                 availableMemory = formatBytes(memoryAvailable)
             }
-            
-            // IP Address
-            if (networkInterface && networkInterface !== "Unknown") {
-                ipAddress = networkInterface + " (" + getIpAddress(networkInterface) + ")"
-            }
-            
-            console.log("[SystemMonitor] System Info updated:", osName, osVersion, kernelVersion, hostname)
         } catch (e) {
-            console.log("[SystemMonitor] System info update error:", e)
+            // System info update error
         }
     }
     
-    // Helper function to get IP address for interface
-    function getIpAddress(iface) {
-        try {
-            if (ipAddrFile.exists) {
-                ipAddrFile.reload()
-                const text = ipAddrFile.text()
-                const lines = text.split('\n')
-                let inInterface = false
-                
-                for (const line of lines) {
-                    if (line.includes(iface + ':')) {
-                        inInterface = true
-                        continue
-                    }
-                    if (inInterface && line.includes('inet ')) {
-                        const ipMatch = line.match(/inet\s+([0-9.]+)/)
-                        if (ipMatch) return ipMatch[1]
-                        break
-                    }
-                    if (inInterface && line.match(/^\d+:/)) {
-                        break
-                    }
-                }
-            }
-        } catch (e) {
-            console.log("[SystemMonitor] IP address detection error:", e)
-        }
-        return "0.0.0.0"
-    }
-    
-    // GPU data detection
-    function updateGpuData() {
-        // Try to detect GPU using simple methods
-        try {
-            // Check for NVIDIA GPU
-            if (nvidiaGpuFile.exists) {
-                nvidiaGpuFile.reload()
-                const text = nvidiaGpuFile.text()
-                if (text) {
-                    const lines = text.trim().split('\n')
-                    if (lines.length >= 2) {
-                        gpuModel = "NVIDIA GPU"
-                        gpuUsage = parseFloat(lines[0]) / 100.0 || 0
-                        gpuTemperature = parseFloat(lines[1]) || 0
-                        gpuAvailable = true
-                        console.log("[SystemMonitor] NVIDIA GPU detected:", gpuUsage, gpuTemperature)
-                        return
-                    }
-                }
-            }
-            
-            // Check for AMD GPU
-            if (amdGpuFile.exists) {
-                amdGpuFile.reload()
-                const text = amdGpuFile.text()
-                if (text) {
-                    gpuModel = "AMD GPU"
-                    gpuUsage = parseFloat(text) / 100.0 || 0
-                    gpuAvailable = true
-                    console.log("[SystemMonitor] AMD GPU detected:", gpuUsage)
-                    return
-                }
-            }
-            
-            // Check for Intel GPU
-            if (intelGpuFile.exists) {
-                intelGpuFile.reload()
-                const text = intelGpuFile.text()
-                if (text) {
-                    gpuModel = "Intel GPU"
-                    gpuTemperature = parseFloat(text) / 1000.0 || 0
-                    gpuUsage = 0.0  // Intel GPUs often don't report usage
-                    gpuAvailable = true
-                    console.log("[SystemMonitor] Intel GPU detected:", gpuTemperature)
-                    return
-                }
-            }
-            
-            gpuAvailable = false
-            console.log("[SystemMonitor] No GPU detected")
-        } catch (e) {
-            console.log("[SystemMonitor] GPU detection error:", e)
-            gpuAvailable = false
-        }
-    }
-    
-    // CPU details (model, temperature, clock, cores) - Enhanced with zigstat approach
-    function updateCpuDetails() {
-        try {
-            // CPU Model - Enhanced detection
-            if (cpuinfoFile.exists) {
-                cpuinfoFile.reload()
-                const text = cpuinfoFile.text()
-                const modelMatch = text.match(/model name\s+:\s+(.+)/)
-                if (modelMatch) {
-                    cpuModel = modelMatch[1].trim()
-                    cpuAvailable = true
-                    console.log("[SystemMonitor] CPU Model:", cpuModel)
-                }
-            }
-            
-            // CPU Cores and Threads - More accurate detection
-            if (cpuinfoFile.exists) {
-                const text = cpuinfoFile.text()
-                const processorCount = (text.match(/processor/g) || []).length
-                const physicalIdCount = (text.match(/physical id/g) || []).length
-                const coreIdCount = (text.match(/core id/g) || []).length
-                
-                if (processorCount > 0) {
-                    cpuThreads = processorCount
-                    // More accurate core count detection
-                    if (physicalIdCount > 0 && coreIdCount > 0) {
-                        cpuCores = physicalIdCount * coreIdCount
-                    } else {
-                        cpuCores = Math.ceil(processorCount / 2)  // Fallback estimate
-                    }
-                    console.log("[SystemMonitor] CPU Cores/Threads:", cpuCores, cpuThreads)
-                }
-            }
-            
-            // CPU Temperature - Enhanced with zigstat-style caching
-            if (cpuTempFile.exists) {
-                cpuTempFile.reload()
-                const text = cpuTempFile.text()
-                if (text) {
-                    const temp = parseFloat(text) / 1000.0
-                    if (!isNaN(temp) && temp > 0) {
-                        cpuTemperature = temp
-                        console.log("[SystemMonitor] CPU Temperature:", cpuTemperature)
-                    }
-                }
-            }
-            
-            // CPU Clock - Enhanced detection
-            if (cpuFreqFile.exists) {
-                cpuFreqFile.reload()
-                const text = cpuFreqFile.text()
-                if (text) {
-                    const mhz = parseFloat(text)
-                    if (!isNaN(mhz) && mhz > 0) {
-                        cpuClock = mhz / 1000.0  // Convert MHz to GHz
-                        console.log("[SystemMonitor] CPU Clock:", cpuClock)
-                    }
-                }
-            }
-        } catch (e) {
-            console.log("[SystemMonitor] CPU details error:", e)
-        }
+    // Helper function to format bytes
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes.toFixed(1) + " B"
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
+        if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + " MB"
+        return (bytes / 1024 / 1024 / 1024).toFixed(1) + " GB"
     }
     
     // Update history arrays
@@ -551,13 +480,19 @@ Singleton {
         networkHistory = networkHistory.concat([networkTotalSpeed]).slice(-historyLength)
     }
     
+    // Manual trigger for CPU details update
+    function forceUpdateCpuDetails() {
+        console.log("[SystemMonitor] forceUpdateCpuDetails called")
+        detectCpuModel()
+    }
+    
     // File watchers for system files
     FileView {
         id: cpuStatFile
         path: "/proc/stat"
         watchChanges: true
         onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load /proc/stat:", error)
+            // Failed to load /proc/stat
         }
     }
     
@@ -566,7 +501,7 @@ Singleton {
         path: "/proc/meminfo"
         watchChanges: true
         onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load /proc/meminfo:", error)
+            // Failed to load /proc/meminfo
         }
     }
     
@@ -575,99 +510,25 @@ Singleton {
         path: "/proc/net/dev"
         watchChanges: true
         onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load /proc/net/dev:", error)
+            // Failed to load /proc/net/dev
         }
     }
     
-    FileView {
-        id: networkRouteFile
-        path: "/tmp/quickshell_default_route"
-        watchChanges: true
-        onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load network route file:", error)
-        }
-    }
-    
-    FileView {
-        id: cpuinfoFile
-        path: "/proc/cpuinfo"
-        watchChanges: false
-        onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load /proc/cpuinfo:", error)
-        }
-    }
-    
-    FileView {
-        id: cpuTempFile
-        path: "/sys/class/thermal/thermal_zone0/temp"
-        watchChanges: true
-        onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load CPU temperature:", error)
-        }
-    }
-    
-    FileView {
-        id: cpuFreqFile
-        path: "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
-        watchChanges: true
-        onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load CPU frequency:", error)
-        }
-    }
-    
-    FileView {
-        id: nvidiaGpuFile
-        path: "/proc/driver/nvidia/gpus/0/information"
-        watchChanges: true
-        onLoadFailed: (error) => {
-            // NVIDIA GPU not available, this is normal
-        }
-    }
-    
-    FileView {
-        id: amdGpuFile
-        path: "/sys/class/drm/card0/device/gpu_busy_percent"
-        watchChanges: true
-        onLoadFailed: (error) => {
-            // AMD GPU not available, this is normal
-        }
-    }
-    
-    FileView {
-        id: intelGpuFile
-        path: "/sys/class/drm/card0/device/hwmon/hwmon0/temp1_input"
-        watchChanges: true
-        onLoadFailed: (error) => {
-            // Intel GPU not available, this is normal
-        }
-    }
-    
-    // Disk usage file (will be created by a simple script)
-    FileView {
-        id: diskUsageFile
-        path: "/tmp/quickshell_disk_usage"
-        watchChanges: true
-        onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load disk usage:", error)
-        }
-    }
-    
-    // System info files
     FileView {
         id: osReleaseFile
         path: "/etc/os-release"
         watchChanges: false
         onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load OS release:", error)
+            // Failed to load OS release
         }
     }
     
     FileView {
         id: versionFile
         path: "/proc/version"
-        watchChanges: false
+        watchChanges: true
         onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load kernel version:", error)
+            // Failed to load kernel version
         }
     }
     
@@ -676,7 +537,7 @@ Singleton {
         path: "/proc/sys/kernel/hostname"
         watchChanges: false
         onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load hostname:", error)
+            // Failed to load hostname
         }
     }
     
@@ -685,127 +546,18 @@ Singleton {
         path: "/proc/uptime"
         watchChanges: true
         onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load uptime:", error)
-        }
-    }
-    
-    FileView {
-        id: ipAddrFile
-        path: "/proc/net/route"
-        watchChanges: true
-        onLoadFailed: (error) => {
-            console.log("[SystemMonitor] Failed to load network routes:", error)
+            // Failed to load uptime
         }
     }
     
     // Initialize on component creation
     Component.onCompleted: {
-        console.log("[SystemMonitor] Enhanced service initialized with FileView method")
-        
-        // Create disk usage script
-        const diskScript = `#!/bin/bash
-python3 -c "
-import os, statvfs
-# Get current working directory's filesystem
-cwd = os.getcwd()
-st = os.statvfs(cwd)
-total = st.f_blocks * st.f_frsize
-free = st.f_bavail * st.f_frsize
-used = total - free
-usage = used/total if total > 0 else 0
-
-# Get mount point and device
-mount_point = cwd
-device = 'unknown'
-
-# Try to get device info from /proc/mounts
-try:
-    with open('/proc/mounts', 'r') as f:
-        for line in f:
-            parts = line.split()
-            if len(parts) >= 2:
-                dev, mp = parts[0], parts[1]
-                if cwd.startswith(mp) and len(mp) > len(mount_point):
-                    mount_point = mp
-                    device = dev
-except:
-    pass
-
-print(f'{mount_point}\\n{device}\\n{total}\\n{used}\\n{free}\\n{usage}')
-" > /tmp/quickshell_disk_usage 2>/dev/null || echo "/\\nunknown\\n0\\n0\\n0\\n0" > /tmp/quickshell_disk_usage`
-        
-        // Create network route script
-        const routeScript = `#!/bin/bash
-ip route | grep default | awk '{print $5}' > /tmp/quickshell_default_route 2>/dev/null || echo "enp8s0" > /tmp/quickshell_default_route`
-        
-        // Run disk usage update timer
-        diskUpdateTimer.start()
-        
-        // Run network route update timer
-        networkRouteTimer.start()
-        
+        // Start initial monitoring
         updateCpuUsage()
         updateMemoryUsage()
-        updateDiskUsage()
+        updateSelectedDiskUsage()
         updateNetworkUsage()
-        updateGpuData()
-        updateCpuDetails()
         updateSystemInfo()
-    }
-    
-    // Disk usage update timer
-    Timer {
-        id: diskUpdateTimer
-        interval: 5000  // Update disk usage every 5 seconds
-        running: false
-        repeat: true
-        onTriggered: {
-            // Update disk usage file
-            const diskScript = `python3 -c "
-import os, statvfs
-# Get current working directory's filesystem
-cwd = os.getcwd()
-st = os.statvfs(cwd)
-total = st.f_blocks * st.f_frsize
-free = st.f_bavail * st.f_frsize
-used = total - free
-usage = used/total if total > 0 else 0
-
-# Get mount point and device
-mount_point = cwd
-device = 'unknown'
-
-# Try to get device info from /proc/mounts
-try:
-    with open('/proc/mounts', 'r') as f:
-        for line in f:
-            parts = line.split()
-            if len(parts) >= 2:
-                dev, mp = parts[0], parts[1]
-                if cwd.startswith(mp) and len(mp) > len(mount_point):
-                    mount_point = mp
-                    device = dev
-except:
-    pass
-
-print(f'{mount_point}\\n{device}\\n{total}\\n{used}\\n{free}\\n{usage}')
-" > /tmp/quickshell_disk_usage 2>/dev/null || echo "/\\nunknown\\n0\\n0\\n0\\n0" > /tmp/quickshell_disk_usage`
-            const process = Qt.createQmlObject('import QtQuick; Process { command: ["bash", "-c", "' + diskScript + '"] }', root)
-            process.running = true
-        }
-    }
-    
-    // Network route update timer
-    Timer {
-        id: networkRouteTimer
-        interval: 10000  // Update network route every 10 seconds
-        running: false
-        repeat: true
-        onTriggered: {
-            // Update network route file
-            const routeScript = `ip route | grep default | awk '{print $5}' > /tmp/quickshell_default_route 2>/dev/null || echo "enp8s0" > /tmp/quickshell_default_route`
-            const process = Qt.createQmlObject('import QtQuick; Process { command: ["bash", "-c", "' + routeScript + '"] }', root)
-            process.running = true
-        }
+        detectAvailableDisks()
     }
 } 

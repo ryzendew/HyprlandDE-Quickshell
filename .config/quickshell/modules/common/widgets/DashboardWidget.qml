@@ -18,6 +18,7 @@ Rectangle {
     property color graphColor: "#6366f1"  // Indigo
     property bool showGraph: true
     property bool showSubtitle: true
+    property Component headerRight: null  // Optional right header content
     
     // Layout
     implicitWidth: 280
@@ -32,13 +33,28 @@ Rectangle {
         anchors.margins: 16
         spacing: 12
         
-        // Title
-        StyledText {
-            text: root.title
-            font.pixelSize: Appearance.font.pixelSize.large
-            font.weight: Font.Bold
-            color: "white"
+        // Title row with optional right content
+        RowLayout {
             Layout.fillWidth: true
+            spacing: 8
+            
+            StyledText {
+                text: root.title
+                font.pixelSize: Appearance.font.pixelSize.large
+                font.weight: Font.Bold
+                color: "white"
+                Layout.fillWidth: true
+            }
+            
+            Item {
+                Layout.preferredWidth: root.headerRight ? 20 : 0
+                Layout.preferredHeight: root.headerRight ? 20 : 0
+                
+                Loader {
+                    anchors.centerIn: parent
+                    sourceComponent: root.headerRight
+                }
+            }
         }
         
         // Graph

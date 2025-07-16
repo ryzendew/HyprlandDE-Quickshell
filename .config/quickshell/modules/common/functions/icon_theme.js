@@ -493,6 +493,9 @@ function applyIconSubstitutions(iconName, homeDir) {
         "steam-native": function() {
             return homeDir + "/.local/share/icons/scalable/apps/steam.svg";
         },
+        "steam_tray_mono": function() {
+            return homeDir + "/.local/share/icons/scalable/apps/steam.svg";
+        },
         "lutris": function() {
             return homeDir + "/.local/share/icons/scalable/apps/lutris.svg";
         },
