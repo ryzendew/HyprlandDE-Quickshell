@@ -32,7 +32,7 @@ Singleton {
     property string ipAddress: "Unknown"
     
     // Update interval
-    property int updateInterval: 10000 // 10 seconds
+    property int updateInterval: 100 // 10 seconds
     
     // Main update timer
     Timer {

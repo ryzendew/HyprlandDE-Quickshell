@@ -120,4 +120,4 @@ Item { // Main container item for the StatCircle component
             Layout.fillWidth: true // Make text take full width of layout
         }
     }
-}  
+} 

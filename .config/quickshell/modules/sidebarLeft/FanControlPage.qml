@@ -57,6 +57,40 @@ Rectangle {
         }
     }
     
+    // Helper function to format CPU name
+    function formatCpuName(cpuModel) {
+        if (!cpuModel || cpuModel === "CPU") return "CPU"
+        
+        // Remove "AMD" and "Intel(R)" prefixes
+        let name = cpuModel.replace(/^AMD\s+/, "").replace(/^Intel\(R\)\s+/, "")
+        
+        // Remove "CPU @ X.XXGHz" suffix
+        name = name.replace(/\s+CPU\s+@\s+\d+\.\d+GHz.*$/, "")
+        
+        // Remove "Processor" suffix
+        name = name.replace(/\s+Processor$/, "")
+        
+        // For AMD Ryzen, format as "Ryzen R9 9900X"
+        if (name.includes("Ryzen")) {
+            name = name.replace(/^Core\(TM\)\s+/, "")
+            // Extract Ryzen model (e.g., "Ryzen 9 9900X")
+            const ryzenMatch = name.match(/Ryzen\s+(\d+)\s+(\d+X?)/)
+            if (ryzenMatch) {
+                return `Ryzen R${ryzenMatch[1]} ${ryzenMatch[2]}`
+            }
+        }
+        
+        // For Intel, format as "Core i7-10700K"
+        if (name.includes("Core")) {
+            const coreMatch = name.match(/Core\s+(i\d+)-(\d+)/)
+            if (coreMatch) {
+                return `Core ${coreMatch[1]}-${coreMatch[2]}`
+            }
+        }
+        
+        return name
+    }
+    
 
     
     // Main layout - split into two sections vertically
@@ -145,14 +179,13 @@ Rectangle {
                     anchors.fill: parent
                         hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
+                                            onClicked: {
                             // Force refresh of all data
                             if (SystemMonitor) {
                                 SystemMonitor.updateCpuUsage()
                                 SystemMonitor.updateMemoryUsage()
-                                SystemMonitor.updateSelectedDiskUsage()
+                                SystemMonitor.updateDiskUsage()
                                 SystemMonitor.updateNetworkUsage()
-                                SystemMonitor.updateGpuData()
                                 SystemMonitor.forceUpdateCpuDetails()
                                 SystemMonitor.updateSystemInfo()
                             }
@@ -186,7 +219,7 @@ Rectangle {
                         (SystemMonitor.gpuMemoryTotal > 0 ? " • " + (SystemMonitor.gpuMemoryUsage / 1024 / 1024 / 1024).toFixed(1) + " GB VRAM" : "") : 
                         "No GPU detected"
                     history: SystemMonitor ? SystemMonitor.gpuHistory : []
-                    graphColor: "#8b5cf6"  // Purple
+                    graphColor: "#8a5cf634"  // Purple
                 Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
@@ -206,12 +239,13 @@ Rectangle {
                 
                 // CPU Widget
                 DashboardWidget {
-                    title: "CPU"
+                    title: (SystemMonitor && SystemMonitor.cpuAvailable && SystemMonitor.cpuModel !== "CPU") ? 
+                        "CPU • " + formatCpuName(SystemMonitor.cpuModel) : "CPU"
                     value: SystemMonitor ? SystemMonitor.cpuUsage : 0
                     valueText: (SystemMonitor && SystemMonitor.cpuAvailable) ? 
                         Math.round(SystemMonitor.cpuUsage * 100) + "%" : "N/A"
                     subtitle: (SystemMonitor && SystemMonitor.cpuAvailable) ? 
-                        SystemMonitor.cpuModel + " • " + SystemMonitor.cpuClock.toFixed(1) + " GHz • " + 
+                        SystemMonitor.cpuClock.toFixed(1) + " GHz • " + 
                         Math.round(SystemMonitor.cpuTemperature) + "°C • " + 
                         SystemMonitor.cpuCores + " cores" : 
                         "No CPU data"
@@ -498,14 +532,14 @@ Rectangle {
                                 text: "OS:"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: Qt.rgba(1, 1, 1, 0.7)
-                                Layout.preferredWidth: 80
+                                Layout.preferredWidth: 40
                             }
                             
                             StyledText {
                                 text: SystemMonitor ? SystemMonitor.osName + " " + SystemMonitor.osVersion : "Unknown"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: "white"
-                                elide: Text.ElideRight
+                                wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
                         }
@@ -518,15 +552,16 @@ Rectangle {
                                 text: "Kernel:"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: Qt.rgba(1, 1, 1, 0.7)
-                                Layout.preferredWidth: 80
+                                Layout.preferredWidth: 50
                             }
                             
                             StyledText {
                                 text: SystemMonitor ? SystemMonitor.kernelVersion : "Unknown"
-                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.pixelSize: Appearance.font.pixelSize.small - 1
                                 color: "white"
-                                elide: Text.ElideRight
+                                wrapMode: Text.WrapAnywhere
                                 Layout.fillWidth: true
+                                Layout.maximumHeight: 40
                             }
                         }
                         
@@ -550,25 +585,7 @@ Rectangle {
                             }
                         }
                         
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-                            
-                            StyledText {
-                                text: "Arch:"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: Qt.rgba(1, 1, 1, 0.7)
-                                Layout.preferredWidth: 80
-                            }
-                            
-                            StyledText {
-                                text: SystemMonitor ? SystemMonitor.architecture : "Unknown"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: "white"
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-                        }
+
                     }
                 }
                 
@@ -621,11 +638,12 @@ Rectangle {
                             }
                             
                             StyledText {
-                                text: SystemMonitor ? SystemMonitor.cpuModel : "Unknown"
+                                text: SystemMonitor ? formatCpuName(SystemMonitor.cpuModel) : "Unknown"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: "white"
-                                elide: Text.ElideRight
+                                wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
+                                Layout.maximumHeight: 40
                             }
                         }
                         
@@ -642,13 +660,16 @@ Rectangle {
                             
                             StyledText {
                                 text: SystemMonitor && SystemMonitor.cpuCores && SystemMonitor.cpuThreads ? 
-                                    SystemMonitor.cpuCores + "C, " + SystemMonitor.cpuThreads + "T" : "Unknown"
+                                    SystemMonitor.cpuCores + " cores, " + SystemMonitor.cpuThreads + " threads" : "Unknown"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: "white"
-                                elide: Text.ElideRight
+                                wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
+                                Layout.maximumHeight: 40
                             }
                         }
+                        
+
                         
                         RowLayout {
                             Layout.fillWidth: true
@@ -698,7 +719,7 @@ Rectangle {
                 Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-                    Layout.preferredHeight: 80
+                    Layout.preferredHeight: 60
                     radius: 8
                     color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
                     border.color: Qt.rgba(1, 1, 1, 0.05)
@@ -751,25 +772,7 @@ Rectangle {
                             }
                         }
                         
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-                            
-                            StyledText {
-                                text: "Boot:"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: Qt.rgba(1, 1, 1, 0.7)
-                                Layout.preferredWidth: 80
-                            }
-                            
-                            StyledText {
-                                text: SystemMonitor ? SystemMonitor.bootTime : "Unknown"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: "white"
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-                        }
+
                     }
                 }
                 
@@ -777,7 +780,7 @@ Rectangle {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.preferredHeight: 80
+                    Layout.preferredHeight: 60
                     radius: 8
                     color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
                     border.color: Qt.rgba(1, 1, 1, 0.05)
@@ -830,25 +833,7 @@ Rectangle {
                             }
                         }
                         
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-                            
-                            StyledText {
-                                text: "IP:"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: Qt.rgba(1, 1, 1, 0.7)
-                                Layout.preferredWidth: 80
-                            }
-                            
-                            StyledText {
-                                text: SystemMonitor ? SystemMonitor.ipAddress : "Unknown"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: "white"
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-                        }
+
                     }
                 }
             }

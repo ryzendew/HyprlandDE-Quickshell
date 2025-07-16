@@ -6,13 +6,13 @@ import Quickshell
 import Quickshell.Io
 
 /**
- * Simple system monitoring service using FileView with reload method.
+ * Optimized system monitoring service with reduced overhead.
  */
 Singleton {
     id: root
     
-    // Update interval (2 seconds)
-    property int updateInterval: 2000
+    // Update interval (1 second for faster response)
+    property int updateInterval: 1000
     
     // CPU Properties
     property bool cpuAvailable: false
@@ -83,57 +83,54 @@ Singleton {
     property var previousCpuStats: null
     property var previousNetworkStats: null
     
-    // Main update timer
+    // State tracking
+    property bool cpuModelDetected: false
+    property bool systemInfoLoaded: false
+    property int updateCounter: 0
+    
+    // Signal for CPU model updates
+    signal cpuModelUpdated()
+    
+    // Main update timer - consolidated
     Timer {
         interval: root.updateInterval
         running: true
         repeat: true
         onTriggered: {
+            updateCounter++
+            
+            // Core metrics every second
             updateCpuUsage()
             updateMemoryUsage()
-            updateDiskUsage()
             updateNetworkUsage()
             updateHistory()
-        }
-    }
-    
-    // CPU details timer (once on startup)
-    Timer {
-        interval: 3000  // Increased delay to ensure Quickshell is fully loaded
-        running: true
-        repeat: false
-        onTriggered: {
-            detectCpuModel()
-        }
-    }
-    
-    // System info update timer (every 60 seconds)
-    Timer {
-        interval: 60000  // 60 seconds
-        running: true
-        repeat: true
-        onTriggered: {
-            updateSystemInfo()
-        }
-    }
-    
-    // Disk detection timer (every 30 seconds)
-    Timer {
-        interval: 30000  // 30 seconds
-        running: true
-        repeat: true
-        onTriggered: {
-            detectAvailableDisks()
-        }
-    }
-    
-    // Initial disk detection timer (run once after startup)
-    Timer {
-        interval: 2000  // 2 seconds after startup
-        running: true
-        repeat: false
-        onTriggered: {
-            detectAvailableDisks()
+            
+            // CPU frequency every 3 seconds
+            if (updateCounter % 3 === 0) {
+                updateCpuFrequency()
+            }
+            
+            // Disk usage every 5 seconds
+            if (updateCounter % 5 === 0) {
+                updateDiskUsage()
+            }
+            
+            // System info every 30 seconds (or once on startup)
+            if (updateCounter % 30 === 0 || !systemInfoLoaded) {
+                updateSystemInfo()
+                systemInfoLoaded = true
+            }
+            
+            // CPU model detection once on startup
+            if (!cpuModelDetected && updateCounter >= 3) {
+                detectCpuModel()
+                cpuModelDetected = true
+            }
+            
+            // Disk detection every 60 seconds
+            if (updateCounter % 60 === 0) {
+                detectAvailableDisks()
+            }
         }
     }
     
@@ -184,6 +181,10 @@ Singleton {
                 memoryAvailable = memAvailable * 1024
                 memoryUsed = memoryTotal - memoryAvailable
                 memoryUsage = memoryUsed / memoryTotal
+                
+                // Update formatted memory strings
+                totalMemory = formatBytes(memoryTotal)
+                availableMemory = formatBytes(memoryAvailable)
             }
         } catch (e) {
             // Memory usage update error
@@ -243,7 +244,7 @@ Singleton {
     }
     
     // Update disk usage for selected drive
-    function updateSelectedDiskUsage() {
+    function updateDiskUsage() {
         if (!selectedDisk) return
         
         try {
@@ -281,11 +282,6 @@ Singleton {
         } catch (e) {
             // Disk usage error
         }
-    }
-    
-    // Simple disk usage for root filesystem (fallback)
-    function updateDiskUsage() {
-        updateSelectedDiskUsage()
     }
     
     // Network usage from /proc/net/dev
@@ -342,68 +338,178 @@ Singleton {
         }
     }
     
-    // Simple CPU model detection
+        // CPU model and core/thread detection
     function detectCpuModel() {
         console.log("[SystemMonitor] Starting CPU model detection...")
-        try {
-            const lscpuProcess = Qt.createQmlObject('import QtQuick; Process { command: ["lscpu"] }', root)
-            lscpuProcess.running = true
-            
-            lscpuProcess.onFinished.connect(function() {
-                console.log("[SystemMonitor] lscpu process finished, exit code:", lscpuProcess.exitCode)
-                if (lscpuProcess.exitCode === 0) {
-                    const output = lscpuProcess.readAllStandardOutput()
-                    console.log("[SystemMonitor] lscpu output length:", output.length)
-                    console.log("[SystemMonitor] lscpu output preview:", output.substring(0, 200))
+        cpuDetectionProcess.running = true
+    }
+    
+    function detectCpuCores() {
+        console.log("[SystemMonitor] Starting CPU core/thread detection...")
+        cpuCoreDetectionProcess.running = true
+    }
+    
+    // CPU model detection process
+    Process {
+        id: cpuDetectionProcess
+        running: false
+        command: ["bash", "-c", "cat /proc/cpuinfo | grep -m 1 'model name' | cut -d ':' -f2 | sed 's/^ *//'"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const modelName = data.trim()
+                console.log("[SystemMonitor] CPU output:", modelName)
+                
+                if (modelName && modelName !== 'Unknown' && modelName.length > 0) {
+                    cpuModel = modelName
+                    cpuAvailable = true
+                    console.log("[SystemMonitor] Set CPU model to:", cpuModel)
+                    cpuModelUpdated()  // Emit signal to notify UI
                     
-                    const lines = output.split('\n')
-                    console.log("[SystemMonitor] Parsed lines count:", lines.length)
-                    
-                    for (const line of lines) {
-                        if (line.includes('Model name:')) {
-                            console.log("[SystemMonitor] Found Model name line:", line)
-                            const modelName = line.split('Model name:')[1].trim()
-                            console.log("[SystemMonitor] Extracted model name:", modelName)
-                            if (modelName && modelName !== 'Unknown') {
-                                cpuModel = modelName
-                                cpuAvailable = true
-                                console.log("[SystemMonitor] Set CPU model to:", cpuModel)
-                                break
-                            }
-                        }
-                        
-                        if (line.includes('CPU MHz:')) {
-                            const mhz = parseFloat(line.split('CPU MHz:')[1].trim())
-                            if (!isNaN(mhz) && mhz > 0) {
-                                cpuClock = mhz / 1000.0  // Convert MHz to GHz
-                                console.log("[SystemMonitor] Set CPU clock to:", cpuClock, "GHz")
-                            }
-                        }
-                        
-                        if (line.includes('Core(s) per socket:')) {
-                            const cores = parseInt(line.split('Core(s) per socket:')[1].trim())
-                            if (!isNaN(cores) && cores > 0) {
-                                cpuCores = cores
-                                console.log("[SystemMonitor] Set CPU cores to:", cpuCores)
-                            }
-                        }
-                        
-                        if (line.includes('Thread(s) per core:')) {
-                            const threadsPerCore = parseInt(line.split('Thread(s) per core:')[1].trim())
-                            if (!isNaN(threadsPerCore) && threadsPerCore > 0) {
-                                cpuThreads = cpuCores * threadsPerCore
-                                console.log("[SystemMonitor] Set CPU threads to:", cpuThreads)
-                            }
+                    // Trigger core detection after model is found
+                    detectCpuCores()
+                } else {
+                    console.log("[SystemMonitor] Invalid CPU model name:", modelName)
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            console.log("[SystemMonitor] CPU process finished, exit code:", exitCode)
+            if (exitCode !== 0) {
+                console.log("[SystemMonitor] CPU process failed with exit code:", exitCode)
+            }
+        }
+    }
+    
+    // CPU core/thread detection process
+    Process {
+        id: cpuCoreDetectionProcess
+        running: false
+        command: ["lscpu"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const lines = data.trim().split('\n')
+                for (const line of lines) {
+                    if (line.includes('Core(s) per socket:')) {
+                        const cores = parseInt(line.split('Core(s) per socket:')[1].trim())
+                        if (!isNaN(cores) && cores > 0) {
+                            cpuCores = cores
+                            console.log("[SystemMonitor] Set CPU cores to:", cpuCores)
                         }
                     }
-                    console.log("[SystemMonitor] CPU detection completed. Model:", cpuModel, "Available:", cpuAvailable)
-                } else {
-                    console.log("[SystemMonitor] lscpu process failed with exit code:", lscpuProcess.exitCode)
+                    
+                    if (line.includes('Thread(s) per core:')) {
+                        const threadsPerCore = parseInt(line.split('Thread(s) per core:')[1].trim())
+                        if (!isNaN(threadsPerCore) && threadsPerCore > 0) {
+                            cpuThreads = cpuCores * threadsPerCore
+                            console.log("[SystemMonitor] Set CPU threads to:", cpuThreads)
+                        }
+                    }
+                    
+                    if (line.includes('CPU MHz:')) {
+                        const mhz = parseFloat(line.split('CPU MHz:')[1].trim())
+                        if (!isNaN(mhz) && mhz > 0) {
+                            cpuClock = mhz / 1000.0  // Convert MHz to GHz
+                            console.log("[SystemMonitor] Set CPU clock to:", cpuClock, "GHz")
+                        }
+                    }
                 }
-            })
-        } catch (e) {
-            console.log("[SystemMonitor] CPU detection error:", e)
+            }
         }
+        
+        onExited: (exitCode) => {
+            console.log("[SystemMonitor] CPU core detection finished, exit code:", exitCode)
+            if (exitCode !== 0) {
+                console.log("[SystemMonitor] CPU core detection failed with exit code:", exitCode)
+            }
+            // After lscpu, try to get better CPU frequency info
+            detectCpuMaxFrequency()
+        }
+    }
+    
+    // CPU frequency detection process
+    Process {
+        id: cpuFrequencyProcess
+        running: false
+        command: ["bash", "-c", "cat /proc/cpuinfo | grep -E 'cpu MHz|model name' | head -2"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const lines = data.trim().split('\n')
+                for (const line of lines) {
+                    if (line.includes('cpu MHz')) {
+                        const mhz = parseFloat(line.split('cpu MHz')[1].replace(':', '').trim())
+                        if (!isNaN(mhz) && mhz > 0) {
+                            cpuClock = mhz / 1000.0  // Convert MHz to GHz
+                            console.log("[SystemMonitor] Set CPU clock from /proc/cpuinfo to:", cpuClock, "GHz")
+                        }
+                    }
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            console.log("[SystemMonitor] CPU frequency detection finished, exit code:", exitCode)
+            if (exitCode !== 0) {
+                console.log("[SystemMonitor] CPU frequency detection failed with exit code:", exitCode)
+            }
+        }
+    }
+    
+    function detectCpuFrequency() {
+        console.log("[SystemMonitor] Starting CPU frequency detection...")
+        cpuFrequencyProcess.running = true
+    }
+    
+    // Update CPU frequency (for periodic updates)
+    function updateCpuFrequency() {
+        try {
+            cpuFreqFile.reload()
+            const freqText = cpuFreqFile.text()
+            if (freqText) {
+                const freq = parseFloat(freqText.trim())
+                if (!isNaN(freq) && freq > 0) {
+                    cpuClock = freq / 1000000.0  // Convert kHz to GHz
+                    console.log("[SystemMonitor] Updated CPU frequency to:", cpuClock, "GHz")
+                }
+            }
+        } catch (e) {
+            console.log("[SystemMonitor] CPU frequency update error:", e)
+        }
+    }
+    
+    // CPU max frequency detection process
+    Process {
+        id: cpuMaxFreqProcess
+        running: false
+        command: ["bash", "-c", "cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq 2>/dev/null || echo '0'"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const maxFreq = parseFloat(data.trim())
+                if (!isNaN(maxFreq) && maxFreq > 0) {
+                    cpuClock = maxFreq / 1000000.0  // Convert kHz to GHz
+                    console.log("[SystemMonitor] Set CPU max frequency to:", cpuClock, "GHz")
+                } else {
+                    console.log("[SystemMonitor] Could not read max frequency from sysfs")
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            console.log("[SystemMonitor] CPU max frequency detection finished, exit code:", exitCode)
+            // If max frequency failed or is too low, try current frequency
+            if (exitCode !== 0 || cpuClock < 1.0) {
+                detectCpuFrequency()
+            }
+        }
+    }
+    
+    function detectCpuMaxFrequency() {
+        console.log("[SystemMonitor] Starting CPU max frequency detection...")
+        cpuMaxFreqProcess.running = true
     }
     
     // System info update
@@ -451,12 +557,6 @@ Singleton {
                         uptime = minutes + "m"
                     }
                 }
-            }
-            
-            // Memory Info (formatted)
-            if (memoryTotal > 0) {
-                totalMemory = formatBytes(memoryTotal)
-                availableMemory = formatBytes(memoryAvailable)
             }
         } catch (e) {
             // System info update error
@@ -550,12 +650,20 @@ Singleton {
         }
     }
     
+    FileView {
+        id: cpuFreqFile
+        path: "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
+        watchChanges: true
+        onLoadFailed: (error) => {
+            // Failed to load CPU frequency
+        }
+    }
+    
     // Initialize on component creation
     Component.onCompleted: {
         // Start initial monitoring
         updateCpuUsage()
         updateMemoryUsage()
-        updateSelectedDiskUsage()
         updateNetworkUsage()
         updateSystemInfo()
         detectAvailableDisks()
