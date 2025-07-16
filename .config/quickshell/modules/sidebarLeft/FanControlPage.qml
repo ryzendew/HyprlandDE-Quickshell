@@ -91,6 +91,69 @@ Rectangle {
         return name
     }
     
+    // Helper function to format GPU name
+    function formatGpuName(gpuModel) {
+        if (!gpuModel || gpuModel === "GPU") return "GPU"
+        
+        // For NVIDIA GeForce RTX series
+        if (gpuModel.includes("GeForce RTX")) {
+            const rtxMatch = gpuModel.match(/GeForce RTX (\d+)/)
+            if (rtxMatch) {
+                return `RTX ${rtxMatch[1]}`
+            }
+        }
+        
+        // For NVIDIA GeForce GTX series
+        if (gpuModel.includes("GeForce GTX")) {
+            const gtxMatch = gpuModel.match(/GeForce GTX (\d+)/)
+            if (gtxMatch) {
+                return `GTX ${gtxMatch[1]}`
+            }
+        }
+        
+        // For NVIDIA GeForce GT series
+        if (gpuModel.includes("GeForce GT")) {
+            const gtMatch = gpuModel.match(/GeForce GT (\d+)/)
+            if (gtMatch) {
+                return `GT ${gtMatch[1]}`
+            }
+        }
+        
+        // For AMD Radeon RX series
+        if (gpuModel.includes("Radeon RX")) {
+            const rxMatch = gpuModel.match(/Radeon RX (\d+)/)
+            if (rxMatch) {
+                return `RX ${rxMatch[1]}`
+            }
+        }
+        
+        // For AMD Radeon HD series
+        if (gpuModel.includes("Radeon HD")) {
+            const hdMatch = gpuModel.match(/Radeon HD (\d+)/)
+            if (hdMatch) {
+                return `HD ${hdMatch[1]}`
+            }
+        }
+        
+        // For Intel integrated graphics
+        if (gpuModel.includes("Intel")) {
+            if (gpuModel.includes("UHD Graphics")) {
+                const uhdMatch = gpuModel.match(/UHD Graphics (\d+)/)
+                if (uhdMatch) {
+                    return `UHD ${uhdMatch[1]}`
+                }
+            }
+            if (gpuModel.includes("HD Graphics")) {
+                const hdMatch = gpuModel.match(/HD Graphics (\d+)/)
+                if (hdMatch) {
+                    return `HD ${hdMatch[1]}`
+                }
+            }
+        }
+        
+        return gpuModel
+    }
+    
 
     
     // Main layout - split into two sections vertically
@@ -179,7 +242,7 @@ Rectangle {
                     anchors.fill: parent
                         hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
+                    onClicked: {
                             // Force refresh of all data
                             if (SystemMonitor) {
                                 SystemMonitor.updateCpuUsage()
@@ -188,6 +251,8 @@ Rectangle {
                                 SystemMonitor.updateNetworkUsage()
                                 SystemMonitor.forceUpdateCpuDetails()
                                 SystemMonitor.updateSystemInfo()
+                                SystemMonitor.updateGpuData()
+                                SystemMonitor.forceDetectAmdGpu()
                             }
                         }
                         onEntered: parent.color = Qt.rgba(0.2, 0.2, 0.25, 0.8)
@@ -208,20 +273,44 @@ Rectangle {
                 rowSpacing: 12
                 columnSpacing: 12
                 
-                // GPU Widget
+                // NVIDIA GPU Widget
                 DashboardWidget {
-                    title: "GPU"
+                    title: (SystemMonitor && SystemMonitor.gpuAvailable && SystemMonitor.gpuModel !== "GPU") ? 
+                        "NVIDIA • " + formatGpuName(SystemMonitor.gpuModel) : "NVIDIA"
                     value: SystemMonitor ? SystemMonitor.gpuUsage : 0
                     valueText: (SystemMonitor && SystemMonitor.gpuAvailable) ? 
                         Math.round(SystemMonitor.gpuUsage * 100) + "%" : "N/A"
                     subtitle: (SystemMonitor && SystemMonitor.gpuAvailable) ? 
-                        SystemMonitor.gpuModel + " • " + Math.round(SystemMonitor.gpuTemperature) + "°C" + 
-                        (SystemMonitor.gpuMemoryTotal > 0 ? " • " + (SystemMonitor.gpuMemoryUsage / 1024 / 1024 / 1024).toFixed(1) + " GB VRAM" : "") : 
-                        "No GPU detected"
+                        Math.round(SystemMonitor.gpuTemperature) + "°C • " + 
+                        Math.round(SystemMonitor.gpuClock) + " MHz • " + 
+                        Math.round(SystemMonitor.gpuPower) + "W • " +
+                        (SystemMonitor.gpuMemoryTotal > 0 ? (SystemMonitor.gpuMemoryUsage / 1024 / 1024 / 1024).toFixed(1) + " GB VRAM" : "") : 
+                        "No NVIDIA GPU"
                     history: SystemMonitor ? SystemMonitor.gpuHistory : []
                     graphColor: "#8a5cf634"  // Purple
-                Layout.fillWidth: true
+                    Layout.fillWidth: true
                     Layout.fillHeight: true
+                    visible: SystemMonitor && SystemMonitor.gpuAvailable
+                }
+                
+                // AMD GPU Widget
+                DashboardWidget {
+                    title: (SystemMonitor && SystemMonitor.amdGpuAvailable && SystemMonitor.amdGpuModel !== "AMD GPU") ? 
+                        "AMD • " + formatGpuName(SystemMonitor.amdGpuModel) : "AMD"
+                    value: SystemMonitor ? SystemMonitor.amdGpuUsage : 0
+                    valueText: (SystemMonitor && SystemMonitor.amdGpuAvailable) ? 
+                        Math.round(SystemMonitor.amdGpuUsage * 100) + "%" : "N/A"
+                    subtitle: (SystemMonitor && SystemMonitor.amdGpuAvailable) ? 
+                        Math.round(SystemMonitor.amdGpuTemperature) + "°C • " + 
+                        Math.round(SystemMonitor.amdGpuClock) + " MHz • " + 
+                        Math.round(SystemMonitor.amdGpuPower) + "W • " +
+                        (SystemMonitor.amdGpuMemoryTotal > 0 ? (SystemMonitor.amdGpuMemoryUsage / 1024 / 1024 / 1024).toFixed(1) + " GB VRAM" : "") : 
+                        "No AMD GPU"
+                    history: SystemMonitor ? SystemMonitor.amdGpuHistory : []
+                    graphColor: "#ef4444"  // Red
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: SystemMonitor && SystemMonitor.amdGpuAvailable
                 }
                 
                 // Memory Widget
@@ -255,41 +344,7 @@ Rectangle {
                     Layout.fillHeight: true
                 }
                 
-                // Disk Widget
-                DashboardWidget {
-                    title: "Disk"
-                    value: SystemMonitor ? SystemMonitor.diskUsage : 0
-                    valueText: (SystemMonitor && SystemMonitor.diskAvailable) ? 
-                        Math.round(SystemMonitor.diskUsage * 100) + "%" : "N/A"
-                    subtitle: (SystemMonitor && SystemMonitor.diskAvailable) ? 
-                        (SystemMonitor.diskUsed / 1024 / 1024 / 1024).toFixed(1) + " GB used of " + 
-                        (SystemMonitor.diskTotal / 1024 / 1024 / 1024).toFixed(1) + " GB • " + 
-                        (SystemMonitor.diskFree / 1024 / 1024 / 1024).toFixed(1) + " GB free • " + 
-                        SystemMonitor.diskDevice : 
-                        "No disk data"
-                    history: SystemMonitor ? SystemMonitor.diskHistory : []
-                    graphColor: "#ef4444"  // Red
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    
-                    // Settings cog for disk selection
-                    headerRight: Component {
-                        MaterialSymbol {
-                            text: "settings"
-                            iconSize: 16
-                            color: Qt.rgba(1, 1, 1, 0.7)
-                            
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                                    console.log("Settings cog clicked!")
-                                    console.log("Available disks:", SystemMonitor ? SystemMonitor.availableDisks.length : 0)
-                                    diskSelectionPopup.open()
-                                }
-                            }
-                        }
-                    }
-                }
+
                 
                 // Disk Selection Popup
                 Popup {
@@ -372,9 +427,9 @@ Rectangle {
                                     }
                                 }
                                 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: {
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
                                         console.log("Selected disk:", modelData.name)
                                         if (SystemMonitor) {
                                             SystemMonitor.selectedDisk = modelData.name
@@ -387,13 +442,13 @@ Rectangle {
                         }
                         
                         // Test button
-                        Rectangle {
-                            Layout.fillWidth: true
+            Rectangle {
+                Layout.fillWidth: true
                             Layout.preferredHeight: 30
                             radius: 6
                             color: Qt.rgba(0.2, 0.2, 0.3, 0.8)
                             
-                            StyledText {
+                    StyledText {
                                 anchors.centerIn: parent
                                 text: "Test: Force Disk Detection"
                                 font.pixelSize: Appearance.font.pixelSize.small
@@ -420,8 +475,7 @@ Rectangle {
                     valueText: SystemMonitor && SystemMonitor.networkAvailable ? 
                         formatNetworkSpeed(SystemMonitor.networkTotalSpeed) : "N/A"
                     subtitle: SystemMonitor && SystemMonitor.networkAvailable ? 
-                        "↓ " + formatNetworkSpeed(SystemMonitor.networkDownloadSpeed) + " ↑ " + formatNetworkSpeed(SystemMonitor.networkUploadSpeed) + 
-                        " • " + SystemMonitor.networkInterface : 
+                        "↓ " + formatNetworkSpeed(SystemMonitor.networkDownloadSpeed) + " ↑ " + formatNetworkSpeed(SystemMonitor.networkUploadSpeed) : 
                         "No network monitoring"
                     history: SystemMonitor ? SystemMonitor.networkHistory.map(speed => Math.min(speed / 1024 / 1024 / 50, 1.0)) : []  // Normalize to 0-1 range (50 MB/s max)
                     graphColor: "#f59e0b"  // Orange
@@ -791,7 +845,7 @@ Rectangle {
                         anchors.margins: 16
                         spacing: 10
                         
-                        // Section header
+                        // Section header with network name
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 8
@@ -809,28 +863,14 @@ Rectangle {
                                 color: "white"
                             }
                             
-                            Item { Layout.fillWidth: true }
-                        }
-                        
-                        // Network info items
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-                            
-                            StyledText {
-                                text: "Interface:"
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: Qt.rgba(1, 1, 1, 0.7)
-                                Layout.preferredWidth: 80
-                            }
-                            
                             StyledText {
                                 text: SystemMonitor ? SystemMonitor.networkInterface : "Unknown"
                                 font.pixelSize: Appearance.font.pixelSize.small
-                                color: "white"
+                                color: Qt.rgba(1, 1, 1, 0.7)
                                 elide: Text.ElideRight
-                                Layout.fillWidth: true
                             }
+                            
+                            Item { Layout.fillWidth: true }
                         }
                         
 

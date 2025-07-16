@@ -469,6 +469,11 @@ Scope {
                                                 Layout.preferredHeight: 48
                                                 source: modelData.iconUrl || "image://icon/" + (modelData.icon || "application-x-executable")
                                                 fillMode: Image.PreserveAspectFit
+                                                onStatusChanged: {
+                                                    if (status === Image.Error) {
+                                                        source = "image://icon/application-x-executable"
+                                                    }
+                                                }
                                             }
                                             
                                             Text {
@@ -533,6 +538,11 @@ Scope {
                                                     Layout.alignment: Qt.AlignVCenter
                                                     source: modelData.iconUrl || "image://icon/" + (modelData.icon || "application-x-executable")
                                                     fillMode: Image.PreserveAspectFit
+                                                    onStatusChanged: {
+                                                        if (status === Image.Error) {
+                                                            source = "image://icon/application-x-executable"
+                                                        }
+                                                    }
                                                 }
                                                 
                                                 ColumnLayout {

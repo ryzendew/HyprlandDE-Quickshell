@@ -30,6 +30,18 @@ Singleton {
     property double gpuTemperature: 0.0
     property double gpuMemoryUsage: 0.0
     property double gpuMemoryTotal: 0.0
+    property double gpuClock: 0.0
+    property double gpuPower: 0.0
+    
+    // Separate GPU properties for AMD
+    property bool amdGpuAvailable: false
+    property string amdGpuModel: "AMD GPU"
+    property double amdGpuUsage: 0.0
+    property double amdGpuTemperature: 0.0
+    property double amdGpuMemoryUsage: 0.0
+    property double amdGpuMemoryTotal: 0.0
+    property double amdGpuClock: 0.0
+    property double amdGpuPower: 0.0
     
     // Memory Properties
     property double memoryTotal: 0.0
@@ -74,6 +86,7 @@ Singleton {
     // History arrays for graphs (60 data points)
     property var cpuHistory: []
     property var gpuHistory: []
+    property var amdGpuHistory: []
     property var memoryHistory: []
     property var diskHistory: []
     property var networkHistory: []
@@ -105,9 +118,20 @@ Singleton {
             updateNetworkUsage()
             updateHistory()
             
-            // CPU frequency every 3 seconds
+            // CPU frequency and temperature every 3 seconds
             if (updateCounter % 3 === 0) {
                 updateCpuFrequency()
+                updateCpuTemperature()
+            }
+            
+            // GPU monitoring every 3 seconds
+            if (updateCounter % 3 === 0) {
+                if (gpuAvailable) {
+                    updateNvidiaGpuData()
+                }
+                if (amdGpuAvailable) {
+                    updateAmdGpuData()
+                }
             }
             
             // Disk usage every 5 seconds
@@ -125,6 +149,11 @@ Singleton {
             if (!cpuModelDetected && updateCounter >= 3) {
                 detectCpuModel()
                 cpuModelDetected = true
+            }
+            
+            // GPU detection once on startup
+            if ((!gpuAvailable || !amdGpuAvailable) && updateCounter >= 5) {
+                detectGpu()
             }
             
             // Disk detection every 60 seconds
@@ -340,12 +369,10 @@ Singleton {
     
         // CPU model and core/thread detection
     function detectCpuModel() {
-        console.log("[SystemMonitor] Starting CPU model detection...")
         cpuDetectionProcess.running = true
     }
     
     function detectCpuCores() {
-        console.log("[SystemMonitor] Starting CPU core/thread detection...")
         cpuCoreDetectionProcess.running = true
     }
     
@@ -358,27 +385,20 @@ Singleton {
         stdout: SplitParser {
             onRead: data => {
                 const modelName = data.trim()
-                console.log("[SystemMonitor] CPU output:", modelName)
                 
                 if (modelName && modelName !== 'Unknown' && modelName.length > 0) {
                     cpuModel = modelName
                     cpuAvailable = true
-                    console.log("[SystemMonitor] Set CPU model to:", cpuModel)
                     cpuModelUpdated()  // Emit signal to notify UI
                     
                     // Trigger core detection after model is found
                     detectCpuCores()
-                } else {
-                    console.log("[SystemMonitor] Invalid CPU model name:", modelName)
                 }
             }
         }
         
         onExited: (exitCode) => {
-            console.log("[SystemMonitor] CPU process finished, exit code:", exitCode)
-            if (exitCode !== 0) {
-                console.log("[SystemMonitor] CPU process failed with exit code:", exitCode)
-            }
+            // CPU process finished
         }
     }
     
@@ -396,7 +416,6 @@ Singleton {
                         const cores = parseInt(line.split('Core(s) per socket:')[1].trim())
                         if (!isNaN(cores) && cores > 0) {
                             cpuCores = cores
-                            console.log("[SystemMonitor] Set CPU cores to:", cpuCores)
                         }
                     }
                     
@@ -404,7 +423,6 @@ Singleton {
                         const threadsPerCore = parseInt(line.split('Thread(s) per core:')[1].trim())
                         if (!isNaN(threadsPerCore) && threadsPerCore > 0) {
                             cpuThreads = cpuCores * threadsPerCore
-                            console.log("[SystemMonitor] Set CPU threads to:", cpuThreads)
                         }
                     }
                     
@@ -412,7 +430,6 @@ Singleton {
                         const mhz = parseFloat(line.split('CPU MHz:')[1].trim())
                         if (!isNaN(mhz) && mhz > 0) {
                             cpuClock = mhz / 1000.0  // Convert MHz to GHz
-                            console.log("[SystemMonitor] Set CPU clock to:", cpuClock, "GHz")
                         }
                     }
                 }
@@ -420,10 +437,6 @@ Singleton {
         }
         
         onExited: (exitCode) => {
-            console.log("[SystemMonitor] CPU core detection finished, exit code:", exitCode)
-            if (exitCode !== 0) {
-                console.log("[SystemMonitor] CPU core detection failed with exit code:", exitCode)
-            }
             // After lscpu, try to get better CPU frequency info
             detectCpuMaxFrequency()
         }
@@ -443,7 +456,6 @@ Singleton {
                         const mhz = parseFloat(line.split('cpu MHz')[1].replace(':', '').trim())
                         if (!isNaN(mhz) && mhz > 0) {
                             cpuClock = mhz / 1000.0  // Convert MHz to GHz
-                            console.log("[SystemMonitor] Set CPU clock from /proc/cpuinfo to:", cpuClock, "GHz")
                         }
                     }
                 }
@@ -451,15 +463,11 @@ Singleton {
         }
         
         onExited: (exitCode) => {
-            console.log("[SystemMonitor] CPU frequency detection finished, exit code:", exitCode)
-            if (exitCode !== 0) {
-                console.log("[SystemMonitor] CPU frequency detection failed with exit code:", exitCode)
-            }
+            // CPU frequency detection finished
         }
     }
     
     function detectCpuFrequency() {
-        console.log("[SystemMonitor] Starting CPU frequency detection...")
         cpuFrequencyProcess.running = true
     }
     
@@ -472,12 +480,16 @@ Singleton {
                 const freq = parseFloat(freqText.trim())
                 if (!isNaN(freq) && freq > 0) {
                     cpuClock = freq / 1000000.0  // Convert kHz to GHz
-                    console.log("[SystemMonitor] Updated CPU frequency to:", cpuClock, "GHz")
                 }
             }
         } catch (e) {
-            console.log("[SystemMonitor] CPU frequency update error:", e)
+            // CPU frequency update error
         }
+    }
+    
+    // Update CPU temperature using command
+    function updateCpuTemperature() {
+        cpuTempProcess.running = true
     }
     
     // CPU max frequency detection process
@@ -491,15 +503,11 @@ Singleton {
                 const maxFreq = parseFloat(data.trim())
                 if (!isNaN(maxFreq) && maxFreq > 0) {
                     cpuClock = maxFreq / 1000000.0  // Convert kHz to GHz
-                    console.log("[SystemMonitor] Set CPU max frequency to:", cpuClock, "GHz")
-                } else {
-                    console.log("[SystemMonitor] Could not read max frequency from sysfs")
                 }
             }
         }
         
         onExited: (exitCode) => {
-            console.log("[SystemMonitor] CPU max frequency detection finished, exit code:", exitCode)
             // If max frequency failed or is too low, try current frequency
             if (exitCode !== 0 || cpuClock < 1.0) {
                 detectCpuFrequency()
@@ -508,8 +516,314 @@ Singleton {
     }
     
     function detectCpuMaxFrequency() {
-        console.log("[SystemMonitor] Starting CPU max frequency detection...")
         cpuMaxFreqProcess.running = true
+    }
+    
+    // CPU temperature monitoring process using lm-sensors
+    Process {
+        id: cpuTempProcess
+        running: false
+        command: ["bash", "-c", "sensors 2>/dev/null | grep -E 'Tctl|Core|Package|CPU' | head -1 | grep -o '[0-9]\\+\\.[0-9]\\+' | head -1 || echo \"0\""]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const temp = parseFloat(data.trim())
+                if (!isNaN(temp) && temp > 0) {
+                    cpuTemperature = temp  // sensors already returns degrees Celsius
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            // CPU temperature monitoring finished
+        }
+    }
+    
+    // GPU detection process
+    Process {
+        id: gpuDetectionProcess
+        running: false
+        command: ["bash", "-c", "lspci | grep -i 'vga\\|3d\\|display'"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const lines = data.trim().split('\n')
+                for (const line of lines) {
+                    if (line.includes('NVIDIA')) {
+                        gpuAvailable = true
+                        // Get detailed NVIDIA GPU info
+                        detectNvidiaGpu()
+                    } else if (line.includes('AMD') || line.includes('Advanced Micro Devices')) {
+                        amdGpuAvailable = true
+                        // Get detailed AMD GPU info
+                        detectAmdGpu()
+                    }
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            // GPU detection finished
+        }
+    }
+    
+    // NVIDIA GPU detection using NVML
+    Process {
+        id: nvidiaGpuDetectionProcess
+        running: false
+        command: ["bash", "-c", "python3 -c \"import pynvml; pynvml.nvmlInit(); handle = pynvml.nvmlDeviceGetHandleByIndex(0); name = pynvml.nvmlDeviceGetName(handle); print(name.decode('utf-8')); pynvml.nvmlShutdown()\" 2>/dev/null || nvidia-smi --query-gpu=name --format=csv,noheader,nounits"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const gpuName = data.trim()
+                if (gpuName && gpuName.length > 0) {
+                    gpuModel = gpuName
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            if (exitCode === 0) {
+                updateNvidiaGpuData()
+            }
+        }
+    }
+    
+    // AMD GPU detection
+    Process {
+        id: amdGpuDetectionProcess
+        running: false
+        command: ["bash", "-c", "lspci | grep -i 'vga.*amd\\|amd.*vga' | head -1"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const gpuInfo = data.trim()
+                if (gpuInfo && gpuInfo.length > 0) {
+                    amdGpuModel = gpuInfo
+                    console.log("[SystemMonitor] Detected AMD GPU:", amdGpuModel)
+                    amdGpuAvailable = true
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            console.log("[SystemMonitor] AMD GPU detection finished, exit code:", exitCode)
+            if (exitCode === 0 && amdGpuAvailable) {
+                console.log("[SystemMonitor] AMD GPU detected successfully, starting monitoring...")
+                updateAmdGpuData()
+            } else {
+                console.log("[SystemMonitor] AMD GPU detection failed or not available")
+            }
+        }
+    }
+    
+    // NVIDIA GPU monitoring process using NVML
+    Process {
+        id: nvidiaGpuMonitorProcess
+        running: false
+        command: ["bash", "-c", "python3 -c \"import pynvml; pynvml.nvmlInit(); handle = pynvml.nvmlDeviceGetHandleByIndex(0); util = pynvml.nvmlDeviceGetUtilizationRates(handle); mem = pynvml.nvmlDeviceGetMemoryInfo(handle); temp = pynvml.nvmlDeviceGetTemperature(handle, 0); clock = pynvml.nvmlDeviceGetClockInfo(handle, 0); power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000.0; print(f'{util.gpu},{mem.used},{mem.total},{temp},{clock},{power}'); pynvml.nvmlShutdown()\" 2>/dev/null || nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,clocks.current.graphics,power.draw --format=csv,noheader,nounits"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const values = data.trim().split(',')
+                if (values.length >= 6) {
+                    // GPU utilization (0-100)
+                    const usage = parseFloat(values[0]) || 0
+                    gpuUsage = usage / 100.0  // Convert to 0.0-1.0
+                    
+                    // Memory usage (bytes)
+                    const memUsed = parseFloat(values[1]) || 0
+                    const memTotal = parseFloat(values[2]) || 0
+                    gpuMemoryUsage = memUsed  // Already in bytes
+                    gpuMemoryTotal = memTotal  // Already in bytes
+                    
+                    // Temperature (°C)
+                    gpuTemperature = parseFloat(values[3]) || 0
+                    
+                    // Clock speed (MHz)
+                    gpuClock = parseFloat(values[4]) || 0
+                    
+                    // Power draw (W)
+                    gpuPower = parseFloat(values[5]) || 0
+                    
+                    // NVIDIA GPU data updated
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            // NVIDIA GPU monitoring finished
+        }
+    }
+    
+    // AMD GPU monitoring processes - split into separate commands for efficiency
+    
+    // AMD GPU product name detection (runs once)
+    Process {
+        id: amdGpuNameProcess
+        running: false
+        command: ["bash", "-c", "rocm-smi --showproductname 2>/dev/null || echo ''"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const lines = data.trim().split('\n')
+                for (const line of lines) {
+                    if (line.includes('Card Series:')) {
+                        const match = line.match(/Card Series:\s*(.+)/)
+                        if (match) {
+                            const gpuName = match[1].trim()
+                            if (gpuName && !amdGpuModel.includes("AMD")) {
+                                amdGpuModel = gpuName
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            // AMD GPU name detection finished
+        }
+    }
+    
+    // AMD GPU usage monitoring
+    Process {
+        id: amdGpuUsageProcess
+        running: false
+        command: ["bash", "-c", "rocm-smi --showuse 2>/dev/null || echo '0'"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const lines = data.trim().split('\n')
+                for (const line of lines) {
+                    if (line.includes('GPU use (%)')) {
+                        const match = line.match(/GPU use \(%\):\s*(\d+)/)
+                        if (match) {
+                            const usage = parseFloat(match[1]) || 0
+                            amdGpuUsage = usage / 100.0
+                        }
+                    }
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            // AMD GPU usage monitoring finished
+        }
+    }
+    
+    // AMD GPU temperature monitoring
+    Process {
+        id: amdGpuTempProcess
+        running: false
+        command: ["bash", "-c", "rocm-smi --showtemp 2>/dev/null || echo '0'"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const lines = data.trim().split('\n')
+                for (const line of lines) {
+                    if (line.includes('Temperature (Sensor edge)')) {
+                        const match = line.match(/Temperature \(Sensor edge\) \(C\):\s*(\d+\.?\d*)/)
+                        if (match) {
+                            amdGpuTemperature = parseFloat(match[1]) || 0
+                        }
+                    }
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            // AMD GPU temperature monitoring finished
+        }
+    }
+    
+    // AMD GPU memory monitoring
+    Process {
+        id: amdGpuMemProcess
+        running: false
+        command: ["bash", "-c", "rocm-smi --showmemuse 2>/dev/null || echo '0'"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const lines = data.trim().split('\n')
+                for (const line of lines) {
+                    if (line.includes('GPU Memory Allocated (VRAM%)')) {
+                        const match = line.match(/GPU Memory Allocated \(VRAM%\):\s*(\d+)/)
+                        if (match) {
+                            const memUsed = parseFloat(match[1]) || 0
+                            // Estimate total VRAM based on card series
+                            let memTotal = 8  // Default fallback
+                            if (amdGpuModel.includes("9070")) {
+                                memTotal = 12  // 12GB for RX 9070 series
+                            } else if (amdGpuModel.includes("7900")) {
+                                memTotal = 20  // 20GB for RX 7900 series
+                            } else if (amdGpuModel.includes("7800")) {
+                                memTotal = 16  // 16GB for RX 7800 series
+                            } else if (amdGpuModel.includes("7700")) {
+                                memTotal = 12  // 12GB for RX 7700 series
+                            }
+                            
+                            amdGpuMemoryUsage = (memUsed / 100.0) * (memTotal * 1024 * 1024 * 1024)  // Convert percentage to bytes
+                            amdGpuMemoryTotal = memTotal * 1024 * 1024 * 1024  // Convert GB to bytes
+                        }
+                    }
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            // AMD GPU memory monitoring finished
+        }
+    }
+    
+    // AMD GPU power monitoring
+    Process {
+        id: amdGpuPowerProcess
+        running: false
+        command: ["bash", "-c", "rocm-smi --showpower 2>/dev/null || echo '0'"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const lines = data.trim().split('\n')
+                for (const line of lines) {
+                    if (line.includes('Average Graphics Package Power')) {
+                        const match = line.match(/Average Graphics Package Power \(W\):\s*(\d+\.?\d*)/)
+                        if (match) {
+                            amdGpuPower = parseFloat(match[1]) || 0
+                        }
+                    }
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            // AMD GPU power monitoring finished
+        }
+    }
+    
+    // AMD GPU clock monitoring
+    Process {
+        id: amdGpuClockProcess
+        running: false
+        command: ["bash", "-c", "rocm-smi --showclocks 2>/dev/null || echo '0'"]
+        
+        stdout: SplitParser {
+            onRead: data => {
+                const lines = data.trim().split('\n')
+                for (const line of lines) {
+                    if (line.includes('sclk clock level')) {
+                        const match = line.match(/sclk clock level:\s*\d+:\s*\((\d+)Mhz\)/)
+                        if (match) {
+                            amdGpuClock = parseFloat(match[1]) || 0
+                        }
+                    }
+                }
+            }
+        }
+        
+        onExited: (exitCode) => {
+            // AMD GPU clock monitoring finished
+        }
     }
     
     // System info update
@@ -575,6 +889,7 @@ Singleton {
     function updateHistory() {
         cpuHistory = cpuHistory.concat([cpuUsage]).slice(-historyLength)
         gpuHistory = gpuHistory.concat([gpuUsage]).slice(-historyLength)
+        amdGpuHistory = amdGpuHistory.concat([amdGpuUsage]).slice(-historyLength)
         memoryHistory = memoryHistory.concat([memoryUsage]).slice(-historyLength)
         diskHistory = diskHistory.concat([diskUsage]).slice(-historyLength)
         networkHistory = networkHistory.concat([networkTotalSpeed]).slice(-historyLength)
@@ -582,8 +897,51 @@ Singleton {
     
     // Manual trigger for CPU details update
     function forceUpdateCpuDetails() {
-        console.log("[SystemMonitor] forceUpdateCpuDetails called")
         detectCpuModel()
+    }
+    
+    // GPU detection and monitoring
+    function detectGpu() {
+        gpuDetectionProcess.running = true
+    }
+    
+    function detectNvidiaGpu() {
+        nvidiaGpuDetectionProcess.running = true
+    }
+    
+    function detectAmdGpu() {
+        amdGpuDetectionProcess.running = true
+        // Also get the GPU name
+        amdGpuNameProcess.running = true
+    }
+    
+    function updateGpuData() {
+        if (gpuAvailable) {
+            updateNvidiaGpuData()
+        }
+        if (amdGpuAvailable) {
+            updateAmdGpuData()
+        }
+    }
+    
+    function updateNvidiaGpuData() {
+        nvidiaGpuMonitorProcess.running = true
+    }
+    
+    function updateAmdGpuData() {
+        // Run all AMD GPU monitoring processes
+        amdGpuUsageProcess.running = true
+        amdGpuTempProcess.running = true
+        amdGpuMemProcess.running = true
+        amdGpuPowerProcess.running = true
+        amdGpuClockProcess.running = true
+    }
+    
+    // Debug function to manually trigger AMD GPU detection
+    function forceDetectAmdGpu() {
+        amdGpuAvailable = false
+        amdGpuModel = "AMD GPU"
+        detectAmdGpu()
     }
     
     // File watchers for system files
@@ -658,6 +1016,8 @@ Singleton {
             // Failed to load CPU frequency
         }
     }
+    
+
     
     // Initialize on component creation
     Component.onCompleted: {

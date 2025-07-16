@@ -140,6 +140,11 @@ Rectangle {
             source: resolvedSource
             smooth: true
             mipmap: true
+            onStatusChanged: {
+                if (status === Image.Error) {
+                    source = "image://icon/application-x-executable"
+                }
+            }
         }
 
         // --- Multi-window Dots ---
