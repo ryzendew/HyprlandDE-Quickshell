@@ -79,6 +79,7 @@ Singleton {
     property QtObject dock: QtObject {
         property real height: 60
         property real hoverRegionHeight: 3
+        property real margin: 20 // Distance from bottom of screen
         property bool pinnedOnStartup: false
         property bool hoverToReveal: false // When false, only reveals on empty workspace
         property bool enable: true

@@ -47,7 +47,7 @@ Item {
                     solstice[year + "-12-21"] = "winterSolstice";
                     solsticeMap = solstice;
                 } else {
-                    console.log("Astronomy API error:", xhr.status, xhr.responseText);
+                    // Astronomy API error
                 }
             }
         }

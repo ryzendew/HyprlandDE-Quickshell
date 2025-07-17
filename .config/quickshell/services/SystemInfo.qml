@@ -211,7 +211,6 @@ Singleton {
     
     // Initialize on component creation
     Component.onCompleted: {
-        console.log("[SystemInfo] Service initialized")
         updateSystemInfo()
     }
 }

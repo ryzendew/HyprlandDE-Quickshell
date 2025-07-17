@@ -52,7 +52,7 @@ Singleton {
                 iconsUpdated()
             }
         } catch (e) {
-            console.log("Error scanning icons:", e)
+            // Error scanning icons
         }
     }
     

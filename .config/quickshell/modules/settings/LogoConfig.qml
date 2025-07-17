@@ -460,7 +460,6 @@ ColumnLayout {
         Layout.fillHeight: true
         
         onLogoSelected: (logoName) => {
-            console.log("Logo selected:", logoName)
             // Save the selected logo to configuration
             ConfigLoader.setConfigValue("appearance.logo", logoName)
         }

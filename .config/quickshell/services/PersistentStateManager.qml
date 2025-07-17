@@ -25,7 +25,6 @@ Singleton {
         let obj = PersistentStates;
         for (let i = 0; i < keys.length; ++i) {
             if (obj[keys[i]] === undefined) {
-                console.error(`[PersistentStateManager] Key "${keys[i]}" not found in PersistentStates`);
                 return null;
             }
             obj = obj[keys[i]];
@@ -69,7 +68,6 @@ Singleton {
             ObjectUtils.applyToQtObject(PersistentStates, json);
             root.allowWriteback = true
         } catch (e) {
-            console.error("[PersistentStateManager] Error reading file:", e);
             return;
         }
     }

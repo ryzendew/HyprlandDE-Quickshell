@@ -183,6 +183,15 @@ Flickable {
                                 onValueChanged: { ConfigLoader.setConfigValue("dock.hoverRegionHeight", value); }
                             }
 
+                            ConfigSpinBox {
+                                text: "Bottom Margin"
+                                value: ConfigOptions.dock.margin
+                                from: 0
+                                to: 100
+                                stepSize: 1
+                                onValueChanged: { ConfigLoader.setConfigValue("dock.margin", value); }
+                            }
+
                             ColumnLayout {
                                 spacing: 8
                                 StyledText {

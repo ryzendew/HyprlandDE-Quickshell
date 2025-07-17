@@ -18,11 +18,7 @@ Rectangle {
     border.width: 1
     
     Component.onCompleted: {
-        console.log("[FanControlPage] Component completed")
-        console.log("[FanControlPage] SystemMonitor available:", typeof SystemMonitor !== 'undefined')
         if (SystemMonitor) {
-            console.log("[FanControlPage] Initial CPU model:", SystemMonitor.cpuModel)
-            console.log("[FanControlPage] Initial CPU available:", SystemMonitor.cpuAvailable)
             // Force update CPU details on page load
             SystemMonitor.forceUpdateCpuDetails()
         }
@@ -35,9 +31,7 @@ Rectangle {
         repeat: true
         onTriggered: {
             if (SystemMonitor) {
-                console.log("[FanControlPage] Timer triggered - CPU model:", SystemMonitor.cpuModel, "Available:", SystemMonitor.cpuAvailable)
                 if (SystemMonitor.cpuModel === "CPU") {
-                    console.log("[FanControlPage] Forcing CPU update...")
                     SystemMonitor.forceUpdateCpuDetails()
                 }
             }
@@ -116,25 +110,25 @@ Rectangle {
             const gtMatch = gpuModel.match(/GeForce GT (\d+)/)
             if (gtMatch) {
                 return `GT ${gtMatch[1]}`
-            }
-        }
+                        }
+                    }
         
         // For AMD Radeon RX series
         if (gpuModel.includes("Radeon RX")) {
             const rxMatch = gpuModel.match(/Radeon RX (\d+)/)
             if (rxMatch) {
                 return `RX ${rxMatch[1]}`
-            }
         }
-        
+    }
+    
         // For AMD Radeon HD series
         if (gpuModel.includes("Radeon HD")) {
             const hdMatch = gpuModel.match(/Radeon HD (\d+)/)
             if (hdMatch) {
                 return `HD ${hdMatch[1]}`
-            }
         }
-        
+    }
+    
         // For Intel integrated graphics
         if (gpuModel.includes("Intel")) {
             if (gpuModel.includes("UHD Graphics")) {
@@ -184,7 +178,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.margins: 16
             }
-            
+
             // Settings and Refresh buttons
             RowLayout {
                 anchors.top: parent.top
@@ -430,17 +424,16 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                                        console.log("Selected disk:", modelData.name)
                                         if (SystemMonitor) {
                                             SystemMonitor.selectedDisk = modelData.name
                                             SystemMonitor.updateSelectedDiskUsage()
                                         }
                                         diskSelectionPopup.close()
                                     }
-                                }
-                            }
-                        }
-                        
+                    }
+                }
+            }
+
                         // Test button
             Rectangle {
                 Layout.fillWidth: true
@@ -453,12 +446,11 @@ Rectangle {
                                 text: "Test: Force Disk Detection"
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: "white"
-                            }
+                    }
                             
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                                    console.log("Test button clicked!")
                                     if (SystemMonitor) {
                                         SystemMonitor.detectAvailableDisks()
                                     }
@@ -501,7 +493,7 @@ Rectangle {
                 }
             }
         }
-        
+
         // System Info Section (35% height) - Redesigned
         Rectangle {
             id: systemInfoSection
@@ -543,7 +535,7 @@ Rectangle {
                     color: SystemMonitor && SystemMonitor.cpuAvailable ? "#10b981" : "#ef4444"
                 }
                 
-                Item { Layout.fillWidth: true }
+            Item { Layout.fillWidth: true }
             }
             
             // System Information - Grid layout for better organization
@@ -654,7 +646,7 @@ Rectangle {
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }
-                        }
+                }
                         
 
                     }
@@ -759,7 +751,7 @@ Rectangle {
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: "white"
                                 elide: Text.ElideRight
-                                Layout.fillWidth: true
+            Layout.fillWidth: true
                             }
                         }
                         
@@ -861,8 +853,8 @@ Rectangle {
                         if (currentValue) {
                             // Update the disk monitoring target
                             SystemMonitor.setDiskTarget(currentValue)
-                        }
-                    }
+                }
+            }
                 }
             }
             
@@ -915,7 +907,7 @@ Rectangle {
                         color: "white"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                    }
+                }
                     
                     onPressed: parent.color = Qt.rgba(0.2, 0.2, 0.25, 0.8)
                     onReleased: parent.color = Qt.rgba(0.15, 0.15, 0.2, 0.8)

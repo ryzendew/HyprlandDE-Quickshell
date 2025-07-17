@@ -655,19 +655,14 @@ Singleton {
                 const gpuInfo = data.trim()
                 if (gpuInfo && gpuInfo.length > 0) {
                     amdGpuModel = gpuInfo
-                    console.log("[SystemMonitor] Detected AMD GPU:", amdGpuModel)
                     amdGpuAvailable = true
                 }
             }
         }
         
         onExited: (exitCode) => {
-            console.log("[SystemMonitor] AMD GPU detection finished, exit code:", exitCode)
             if (exitCode === 0 && amdGpuAvailable) {
-                console.log("[SystemMonitor] AMD GPU detected successfully, starting monitoring...")
                 updateAmdGpuData()
-            } else {
-                console.log("[SystemMonitor] AMD GPU detection failed or not available")
             }
         }
     }
@@ -723,12 +718,17 @@ Singleton {
             onRead: data => {
                 const lines = data.trim().split('\n')
                 for (const line of lines) {
-                    if (line.includes('Card Series:')) {
-                        const match = line.match(/Card Series:\s*(.+)/)
+                    if (line.includes('Subsystem ID:')) {
+                        const match = line.match(/Subsystem ID:\s*(.+)/)
                         if (match) {
-                            const gpuName = match[1].trim()
-                            if (gpuName && !amdGpuModel.includes("AMD")) {
-                                amdGpuModel = gpuName
+                            const subsystemInfo = match[1].trim()
+                            // Extract the specific model from the subsystem info
+                            const modelMatch = subsystemInfo.match(/Radeon RX (\d+[A-Z]*\s*[A-Z]*)/)
+                            if (modelMatch) {
+                                const gpuName = "Radeon RX " + modelMatch[1].trim()
+                                if (gpuName && !amdGpuModel.includes("AMD")) {
+                                    amdGpuModel = gpuName
+                                }
                             }
                         }
                     }
@@ -737,7 +737,6 @@ Singleton {
         }
         
         onExited: (exitCode) => {
-            // AMD GPU name detection finished
         }
     }
     

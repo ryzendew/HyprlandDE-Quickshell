@@ -340,7 +340,6 @@ Item {
                                 
                                 onClicked: {
                                     // Future: Add day selection functionality
-                                    console.log("Selected day:", dayData.day)
                                 }
                             }
                             

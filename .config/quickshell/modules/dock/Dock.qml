@@ -43,6 +43,9 @@ Scope {
     property int animationDuration: Appearance.animation.elementMoveFast.duration
     property int approachRegionHeight: ConfigOptions.dock.hoverRegionHeight // Height of the approach region in pixels
     
+    onApproachRegionHeightChanged: {
+    }
+    
     // Property to track if mouse is over any dock item
     property bool mouseOverDockItem: false
     
@@ -152,6 +155,10 @@ Scope {
         function onHoverRegionHeightChanged() {
             // Hover region height will update automatically due to property bindings
         }
+        
+        function onMarginChanged() {
+            // Dock margin will update automatically due to property bindings
+        }
     }
     
     // Watch for changes in icon theme - removed non-existent signal
@@ -247,7 +254,6 @@ Scope {
     
     // Add a new app to pinned apps - ROBUST VERSION
     function addPinnedApp(appClass) {
-        console.log("[PIN DEBUG] addPinnedApp called with:", appClass);
         
         // Use the same comprehensive mapping as removePinnedApp
         var comprehensiveMapping = {
@@ -356,7 +362,6 @@ Scope {
         for (var key in comprehensiveMapping) {
             if (key.toLowerCase() === normalizedInput) {
                 toPin = comprehensiveMapping[key];
-                console.log("[PIN DEBUG] Found exact match:", key, "->", toPin);
                 break;
             }
         }
@@ -366,7 +371,6 @@ Scope {
             for (var key in comprehensiveMapping) {
                 if (key.toLowerCase().includes(normalizedInput) || normalizedInput.includes(key.toLowerCase())) {
                     toPin = comprehensiveMapping[key];
-                    console.log("[PIN DEBUG] Found partial match:", key, "->", toPin);
                     break;
                 }
             }
@@ -375,7 +379,6 @@ Scope {
         // If still no match, use the original input
         if (!toPin) {
             toPin = appClass;
-            console.log("[PIN DEBUG] No mapping found, using original:", toPin);
         }
         
         // Check if app is already pinned (case-insensitive)
@@ -383,7 +386,6 @@ Scope {
         for (var i = 0; i < pinnedApps.length; i++) {
             if (pinnedApps[i].toLowerCase() === toPin.toLowerCase()) {
                 alreadyPinned = true;
-                console.log("[PIN DEBUG] App already pinned:", pinnedApps[i]);
                 break;
             }
         }
@@ -394,7 +396,6 @@ Scope {
             for (var i = 0; i < pinnedApps.length; i++) {
                 if (pinnedApps[i].toLowerCase() === withDesktop.toLowerCase()) {
                     alreadyPinned = true;
-                    console.log("[PIN DEBUG] App already pinned with .desktop extension:", pinnedApps[i]);
                     break;
                 }
             }
@@ -405,18 +406,15 @@ Scope {
             var newPinnedApps = pinnedApps.slice();
             newPinnedApps.push(toPin);
             pinnedApps = newPinnedApps;
-            console.log("[PIN DEBUG] Successfully added:", toPin);
             savePinnedApps();
             return true; // Success
         } else {
-            console.log("[PIN DEBUG] App already pinned, skipping:", toPin);
             return false; // Already pinned
         }
     }
     
     // Remove an app from pinned apps - ROBUST VERSION
     function removePinnedApp(appClass) {
-        console.log("[UNPIN DEBUG] removePinnedApp called with:", appClass);
         
         // Comprehensive mapping for all app variations
         var comprehensiveMapping = {
@@ -525,7 +523,7 @@ Scope {
         for (var key in comprehensiveMapping) {
             if (key.toLowerCase() === normalizedInput) {
                 toRemove = comprehensiveMapping[key];
-                console.log("[UNPIN DEBUG] Found exact match:", key, "->", toRemove);
+                // console.log("[UNPIN DEBUG] Found exact match:", key, "->", toRemove);
                 break;
             }
         }
@@ -535,7 +533,7 @@ Scope {
             for (var key in comprehensiveMapping) {
                 if (key.toLowerCase().includes(normalizedInput) || normalizedInput.includes(key.toLowerCase())) {
                     toRemove = comprehensiveMapping[key];
-                    console.log("[UNPIN DEBUG] Found partial match:", key, "->", toRemove);
+                    // console.log("[UNPIN DEBUG] Found partial match:", key, "->", toRemove);
                     break;
                 }
             }
@@ -544,7 +542,7 @@ Scope {
         // If still no match, use the original input
         if (!toRemove) {
             toRemove = appClass;
-            console.log("[UNPIN DEBUG] No mapping found, using original:", toRemove);
+            // console.log("[UNPIN DEBUG] No mapping found, using original:", toRemove);
         }
         
         // Find the app in pinned apps (case-insensitive)
@@ -552,7 +550,7 @@ Scope {
         for (var i = 0; i < pinnedApps.length; i++) {
             if (pinnedApps[i].toLowerCase() === toRemove.toLowerCase()) {
                 index = i;
-                console.log("[UNPIN DEBUG] Found in pinned apps at index:", index, "value:", pinnedApps[i]);
+                // console.log("[UNPIN DEBUG] Found in pinned apps at index:", index, "value:", pinnedApps[i]);
                 break;
             }
         }
@@ -563,7 +561,7 @@ Scope {
             for (var i = 0; i < pinnedApps.length; i++) {
                 if (pinnedApps[i].toLowerCase() === withDesktop.toLowerCase()) {
                     index = i;
-                    console.log("[UNPIN DEBUG] Found with .desktop extension at index:", index, "value:", pinnedApps[i]);
+                    // console.log("[UNPIN DEBUG] Found with .desktop extension at index:", index, "value:", pinnedApps[i]);
                     break;
                 }
             }
@@ -574,19 +572,19 @@ Scope {
             var newPinnedApps = pinnedApps.slice();
             var removedApp = newPinnedApps.splice(index, 1)[0];
             pinnedApps = newPinnedApps;
-            console.log("[UNPIN DEBUG] Successfully removed:", removedApp);
+            // console.log("[UNPIN DEBUG] Successfully removed:", removedApp);
             savePinnedApps();
             return true; // Success
         } else {
-            console.log("[UNPIN DEBUG] App not found in pinned apps:", toRemove);
-            console.log("[UNPIN DEBUG] Current pinned apps:", JSON.stringify(pinnedApps));
+            // console.log("[UNPIN DEBUG] App not found in pinned apps:", toRemove);
+            // console.log("[UNPIN DEBUG] Current pinned apps:", JSON.stringify(pinnedApps));
             return false; // Not found
         }
     }
     
     // Utility function to check if an app is pinned
     function isAppPinned(appClass) {
-        console.log("[PIN CHECK DEBUG] isAppPinned called with:", appClass);
+        // console.log("[PIN CHECK DEBUG] isAppPinned called with:", appClass);
         
         // Use the same comprehensive mapping
         var comprehensiveMapping = {
@@ -695,7 +693,7 @@ Scope {
         for (var key in comprehensiveMapping) {
             if (key.toLowerCase() === normalizedInput) {
                 normalizedApp = comprehensiveMapping[key];
-                console.log("[PIN CHECK DEBUG] Found exact match:", key, "->", normalizedApp);
+                // console.log("[PIN CHECK DEBUG] Found exact match:", key, "->", normalizedApp);
                 break;
             }
         }
@@ -705,7 +703,7 @@ Scope {
             for (var key in comprehensiveMapping) {
                 if (key.toLowerCase().includes(normalizedInput) || normalizedInput.includes(key.toLowerCase())) {
                     normalizedApp = comprehensiveMapping[key];
-                    console.log("[PIN CHECK DEBUG] Found partial match:", key, "->", normalizedApp);
+                    // console.log("[PIN CHECK DEBUG] Found partial match:", key, "->", normalizedApp);
                     break;
                 }
             }
@@ -714,13 +712,13 @@ Scope {
         // If still no match, use the original input
         if (!normalizedApp) {
             normalizedApp = appClass;
-            console.log("[PIN CHECK DEBUG] No mapping found, using original:", normalizedApp);
+            // console.log("[PIN CHECK DEBUG] No mapping found, using original:", normalizedApp);
         }
         
         // Check if app is pinned (case-insensitive)
         for (var i = 0; i < pinnedApps.length; i++) {
             if (pinnedApps[i].toLowerCase() === normalizedApp.toLowerCase()) {
-                console.log("[PIN CHECK DEBUG] App is pinned:", pinnedApps[i]);
+                // console.log("[PIN CHECK DEBUG] App is pinned:", pinnedApps[i]);
                 return true;
             }
         }
@@ -730,19 +728,19 @@ Scope {
             var withDesktop = normalizedApp + '.desktop';
             for (var i = 0; i < pinnedApps.length; i++) {
                 if (pinnedApps[i].toLowerCase() === withDesktop.toLowerCase()) {
-                    console.log("[PIN CHECK DEBUG] App is pinned with .desktop extension:", pinnedApps[i]);
+                    // console.log("[PIN CHECK DEBUG] App is pinned with .desktop extension:", pinnedApps[i]);
                     return true;
                 }
             }
         }
         
-        console.log("[PIN CHECK DEBUG] App is not pinned:", normalizedApp);
+        // console.log("[PIN CHECK DEBUG] App is not pinned:", normalizedApp);
         return false;
     }
     
     // Utility function to get canonical app name
     function getCanonicalAppName(appClass) {
-        console.log("[CANONICAL DEBUG] getCanonicalAppName called with:", appClass);
+        // console.log("[CANONICAL DEBUG] getCanonicalAppName called with:", appClass);
         
         // Use the same comprehensive mapping
         var comprehensiveMapping = {
@@ -851,7 +849,7 @@ Scope {
         for (var key in comprehensiveMapping) {
             if (key.toLowerCase() === normalizedInput) {
                 canonicalName = comprehensiveMapping[key];
-                console.log("[CANONICAL DEBUG] Found exact match:", key, "->", canonicalName);
+                // console.log("[CANONICAL DEBUG] Found exact match:", key, "->", canonicalName);
                 break;
             }
         }
@@ -861,7 +859,7 @@ Scope {
             for (var key in comprehensiveMapping) {
                 if (key.toLowerCase().includes(normalizedInput) || normalizedInput.includes(key.toLowerCase())) {
                     canonicalName = comprehensiveMapping[key];
-                    console.log("[CANONICAL DEBUG] Found partial match:", key, "->", canonicalName);
+                    // console.log("[CANONICAL DEBUG] Found partial match:", key, "->", canonicalName);
                     break;
                 }
             }
@@ -870,10 +868,10 @@ Scope {
         // If still no match, use the original input
         if (!canonicalName) {
             canonicalName = appClass;
-            console.log("[CANONICAL DEBUG] No mapping found, using original:", canonicalName);
+            // console.log("[CANONICAL DEBUG] No mapping found, using original:", canonicalName);
         }
         
-        console.log("[CANONICAL DEBUG] Returning canonical name:", canonicalName);
+        // console.log("[CANONICAL DEBUG] Returning canonical name:", canonicalName);
         return canonicalName;
     }
     
@@ -897,40 +895,6 @@ Scope {
             
             if (appIdentifier === "AffinityDesigner" || appIdentifier === "AffinityDesigner.desktop") {
                 let cmd = `exec env WINEPREFIX=/home/matt/.AffinityLinux /home/matt/.AffinityLinux/ElementalWarriorWine/bin/wine "/home/matt/.AffinityLinux/drive_c/Program Files/Affinity/Designer 2/Designer.exe"`;
-                Hyprland.dispatch(`exec echo "$(date): Dispatching: ${cmd}" >> /tmp/dock_debug.log`);
-                Hyprland.dispatch(cmd);
-                return;
-            }
-            
-            // Try to find Affinity desktop files in DesktopEntries
-            let affinityEntries = [];
-            for (let k in DesktopEntries.applications) {
-                let e = DesktopEntries.applications[k];
-                if (e && (k.toLowerCase().includes('affinity') || (e.name && e.name.toLowerCase().includes('affinity')))) {
-                    affinityEntries.push(k);
-                }
-            }
-            Hyprland.dispatch(`exec echo "$(date): Found Affinity entries: ${affinityEntries.join(', ')}" >> /tmp/dock_debug.log`);
-            
-            // Try to execute the first matching Affinity entry
-            for (let entryKey of affinityEntries) {
-                let entry = DesktopEntries.applications[entryKey];
-            if (entry && entry.execute) {
-                    Hyprland.dispatch(`exec echo "$(date): SUCCESS: Using DesktopEntries.execute() for: ${entryKey}" >> /tmp/dock_debug.log`);
-                    try {
-                entry.execute();
-                        Hyprland.dispatch(`exec echo "$(date): Execute() called successfully" >> /tmp/dock_debug.log`);
-                return;
-                    } catch (e) {
-                        Hyprland.dispatch(`exec echo "$(date): ERROR in execute(): ${e}" >> /tmp/dock_debug.log`);
-                    }
-                }
-            }
-            
-            // If no desktop entry found, try gio launch with common Affinity names
-            let affinityNames = ['AffinityPhoto', 'AffinityDesigner', 'AffinityPublisher'];
-            for (let name of affinityNames) {
-                let cmd = `exec gio launch ${name}`;
                 Hyprland.dispatch(`exec echo "$(date): Dispatching: ${cmd}" >> /tmp/dock_debug.log`);
                 Hyprland.dispatch(cmd);
                 return;
@@ -967,78 +931,62 @@ Scope {
             }
         }
 
-        // STEP 4: Try common app-specific fallbacks
-        Hyprland.dispatch(`exec echo "$(date): === STEP 4: App-specific fallbacks ===" >> /tmp/dock_debug.log`);
+        // STEP 4: Use gtk-launch for desktop files (more reliable than gio)
+        Hyprland.dispatch(`exec echo "$(date): === STEP 4: gtk-launch strategy ===" >> /tmp/dock_debug.log`);
         
-        // Common app name mappings for fallback
-        let appFallbacks = {
-            'obs': ['com.obsproject.Studio', 'com.obsproject.Studio.desktop', 'obs-studio'],
-            'lutris': ['net.lutris.lutris', 'net.lutris.lutris.desktop'],
-            'steam': ['steam-native', 'steam-native.desktop', 'com.valvesoftware.Steam'],
-            'nautilus': ['org.gnome.Nautilus', 'org.gnome.Nautilus.desktop', 'files'],
-            'microsoft-edge-dev': ['microsoft-edge', 'microsoft-edge.desktop'],
-            'vesktop': ['discord', 'discord.desktop'],
-            'heroic': ['heroicgameslauncher', 'heroicgameslauncher.desktop'],
-            'ptyxis': ['org.gnome.ptyxis', 'org.gnome.ptyxis.desktop'],
-            'cider': ['Cider', 'Cider.desktop']
+        if (appIdentifier.endsWith('.desktop')) {
+            // For .desktop files, use gtk-launch (more reliable than gio)
+            let gtkCmd = `exec gtk-launch ${appIdentifier}`;
+            Hyprland.dispatch(`exec echo "$(date): Using gtk-launch: ${gtkCmd}" >> /tmp/dock_debug.log`);
+            Hyprland.dispatch(gtkCmd);
+            return;
+        }
+
+        // STEP 5: Try common app-specific direct commands
+        Hyprland.dispatch(`exec echo "$(date): === STEP 5: Direct command execution ===" >> /tmp/dock_debug.log`);
+        
+        // Common app name mappings for direct execution
+        let appCommands = {
+            'obs': 'obs',
+            'microsoft-edge-dev': 'microsoft-edge-dev',
+            'lutris': 'lutris',
+            'steam-native': 'steam-native',
+            'nautilus': 'nautilus',
+            'org.gnome.Nautilus': 'nautilus',
+            'org.gnome.Nautilus.desktop': 'nautilus',
+            'vesktop': 'vesktop',
+            'heroic': 'heroic',
+            'ptyxis': 'ptyxis',
+            'org.gnome.ptyxis': 'ptyxis',
+            'cider': 'cider',
+            'cursor': 'cursor',
+            'cursor-cursor': 'cursor'
         };
         
-        // Try fallback names for the current app
-        if (appFallbacks[appIdentifier]) {
-            for (let fallback of appFallbacks[appIdentifier]) {
-                let fallbackCmd = `exec gio launch ${fallback}`;
-                Hyprland.dispatch(`exec echo "$(date): Trying app-specific fallback: ${fallbackCmd}" >> /tmp/dock_debug.log`);
-                Hyprland.dispatch(fallbackCmd);
-            }
-        }
-
-        // STEP 5: Try different launcher strategies based on app type
-        Hyprland.dispatch(`exec echo "$(date): === STEP 5: Launcher strategies ===" >> /tmp/dock_debug.log`);
-        
-        // For .desktop files, try gio first, then gtk-launch
-        if (appIdentifier.endsWith('.desktop')) {
-            // Try gio launch first
-            let gioCmd = `exec gio launch ${appIdentifier}`;
-            Hyprland.dispatch(`exec echo "$(date): Trying gio launch: ${gioCmd}" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(gioCmd);
-            
-            // Try gtk-launch as fallback
-            let gtkCmd = `exec gtk-launch ${appIdentifier}`;
-            Hyprland.dispatch(`exec echo "$(date): Trying gtk-launch fallback: ${gtkCmd}" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(gtkCmd);
-            
-            // Try with full path as additional fallback
-            let desktopPath = `~/.local/share/applications/${appIdentifier}`;
-            let pathCmd = `exec gio launch "${desktopPath}"`;
-            Hyprland.dispatch(`exec echo "$(date): Trying full path fallback: ${pathCmd}" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(pathCmd);
-        } else {
-            // For non-desktop files, try gio first, then direct command
-            let gioCmd = `exec gio launch ${appIdentifier}`;
-            Hyprland.dispatch(`exec echo "$(date): Trying gio launch: ${gioCmd}" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(gioCmd);
-            
-            // Try direct command execution as fallback
-            let directCmd = `exec ${appIdentifier}`;
-            Hyprland.dispatch(`exec echo "$(date): Trying direct command fallback: ${directCmd}" >> /tmp/dock_debug.log`);
+        // Try direct command execution for known apps
+        if (appCommands[appIdentifier]) {
+            let directCmd = `exec ${appCommands[appIdentifier]}`;
+            Hyprland.dispatch(`exec echo "$(date): Using direct command: ${directCmd}" >> /tmp/dock_debug.log`);
             Hyprland.dispatch(directCmd);
-            
-            // Try with .desktop extension as additional fallback
-            let desktopCmd = `exec gio launch ${appIdentifier}.desktop`;
-            Hyprland.dispatch(`exec echo "$(date): Trying .desktop extension fallback: ${desktopCmd}" >> /tmp/dock_debug.log`);
-            Hyprland.dispatch(desktopCmd);
+            return;
         }
 
-        // STEP 6: Try comprehensive system fallbacks
-        Hyprland.dispatch(`exec echo "$(date): === STEP 6: System fallbacks ===" >> /tmp/dock_debug.log`);
-        
-        // Try to find the app in system PATH and launch it
-        let whichCmd = `exec which ${appIdentifier} && exec ${appIdentifier}`;
-        Hyprland.dispatch(`exec echo "$(date): Trying system PATH fallback: ${whichCmd}" >> /tmp/dock_debug.log`);
-        Hyprland.dispatch(whichCmd);
+        // STEP 6: Try gtk-launch with .desktop extension
+        if (!appIdentifier.endsWith('.desktop')) {
+            let desktopId = appIdentifier + '.desktop';
+            let gtkCmd = `exec gtk-launch ${desktopId}`;
+            Hyprland.dispatch(`exec echo "$(date): Trying gtk-launch with .desktop: ${gtkCmd}" >> /tmp/dock_debug.log`);
+            Hyprland.dispatch(gtkCmd);
+            return;
+        }
 
-        // FINAL: Log failure
-        Hyprland.dispatch(`exec echo "$(date): FAILED TO LAUNCH: ${appIdentifier}" >> /tmp/dock_debug.log`);
+        // STEP 7: Final fallback - try direct execution
+        let directCmd = `exec ${appIdentifier}`;
+        Hyprland.dispatch(`exec echo "$(date): Final fallback - direct execution: ${directCmd}" >> /tmp/dock_debug.log`);
+        Hyprland.dispatch(directCmd);
+
+        // Log completion
+        Hyprland.dispatch(`exec echo "$(date): Launch attempt completed for: ${appIdentifier}" >> /tmp/dock_debug.log`);
     }
     
     // Universal function to find a window for a given app
@@ -1069,15 +1017,17 @@ Scope {
             'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
             'vesktop': ['vesktop', 'discord'],
             'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
-            'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus'],
-            'org.gnome.nautilus': ['nautilus', 'org.gnome.nautilus'],
+            'org.gnome.Nautilus': ['nautilus', 'org.gnome.Nautilus'],
+            'org.gnome.nautilus': ['nautilus', 'org.gnome.Nautilus'],
+            'org.gnome.Nautilus.desktop': ['nautilus', 'org.gnome.Nautilus'],
             'lutris': ['lutris', 'net.lutris.lutris'],
             'heroic': ['heroic', 'heroicgameslauncher'],
             'obs': ['obs', 'com.obsproject.studio'],
             'com.obsproject.Studio.desktop': ['obs', 'com.obsproject.studio'],
             'cursor-cursor': ['cursor', 'Cursor'],
             'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
-            'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
+            'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve'],
+            'Cider.desktop': ['cider', 'Cider', 'Cider.exe']
         };
         
         // Build list of possible window classes for this app
@@ -1135,7 +1085,7 @@ Scope {
             id: dockRoot
             margins {
                 top: 0
-                bottom: 0
+                bottom: ConfigOptions.dock.margin
                 left: 0
                 right: 0
             }
@@ -1250,7 +1200,9 @@ Scope {
                         'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
                         'vesktop': ['vesktop', 'discord'],
                         'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
-                        'org.gnome.nautilus': ['nautilus', 'org.gnome.nautilus'],
+                        'org.gnome.Nautilus': ['nautilus', 'org.gnome.Nautilus'],
+                        'org.gnome.nautilus': ['nautilus', 'org.gnome.Nautilus'],
+                        'org.gnome.Nautilus.desktop': ['nautilus', 'org.gnome.Nautilus'],
                         'lutris': ['lutris', 'net.lutris.lutris'],
                         'heroic': ['heroic', 'heroicgameslauncher'],
                         'obs': ['obs', 'com.obsproject.studio'],
@@ -1302,9 +1254,8 @@ Scope {
                 height: parent.height
                 anchors.topMargin: {
                     var margin = dockRoot.reveal ? 0 : 
-                        dock.autoHide ? (dockRoot.implicitHeight - dock.approachRegionHeight) :
+                        dock.autoHide ? -dock.approachRegionHeight :
                         (dockRoot.implicitHeight + 1)
-// console.log("[DOCK DEBUG] topMargin calculated:", margin, "reveal:", dockRoot.reveal, "autoHide:", dock.autoHide, "implicitHeight:", dockRoot.implicitHeight, "approachRegionHeight:", dock.approachRegionHeight)
                     return margin
                 }
                     
@@ -1550,8 +1501,9 @@ Scope {
                                                 'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge', 'Microsoft-edge-dev'],
                                                 'vesktop': ['vesktop', 'discord', 'Vesktop', 'Discord'],
                                                 'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
-                                                'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
+                                                'org.gnome.Nautilus': ['nautilus', 'org.gnome.Nautilus', 'org.gnome.Nautilus', 'Nautilus'],
                                                 'org.gnome.nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
+                                                'org.gnome.Nautilus.desktop': ['nautilus', 'org.gnome.Nautilus'],
                                                 'lutris': ['lutris', 'net.lutris.lutris', 'net.lutris.Lutris', 'Lutris'],
                                                 'heroic': ['heroic', 'heroicgameslauncher', 'Heroic', 'HeroicGamesLauncher'],
                                                 'obs': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],
@@ -1598,14 +1550,9 @@ Scope {
                                     isActive: dockRoot.isWindowActive(modelData)
                                     isPinned: true
                                     onClicked: {
-                                        // Write to a file to test if click is detected
-                                        Hyprland.dispatch(`exec echo "$(date): Pinned app clicked: ${modelData}" >> /tmp/dock_debug.log`);
-                                        console.log("[DOCK CLICK DEBUG] Pinned app clicked:", modelData);
                                         // Universal approach: try to focus existing window first, then launch if not found
                                         var targetWindow = dock.findWindowForApp(modelData);
                                         if (targetWindow) {
-                                            Hyprland.dispatch(`exec echo "$(date): Found existing window, focusing: ${targetWindow.class}" >> /tmp/dock_debug.log`);
-                                            console.log("[DOCK CLICK DEBUG] Found existing window, focusing:", targetWindow.class);
                                             // Focus existing window
                                             if (targetWindow.address) {
                                                 Hyprland.dispatch(`focuswindow address:${targetWindow.address}`);
@@ -1616,16 +1563,10 @@ Scope {
                                                 Hyprland.dispatch(`focuswindow class:${targetWindow.class}`);
                                             }
                                         } else {
-                                            Hyprland.dispatch(`exec echo "$(date): No existing window found, launching new instance: ${modelData}" >> /tmp/dock_debug.log`);
-                                            console.log("[DOCK CLICK DEBUG] No existing window found, launching new instance:", modelData);
                                             // Test if function exists
-                                            Hyprland.dispatch(`exec echo "$(date): About to call launchApp function" >> /tmp/dock_debug.log`);
                                             if (typeof dock.launchApp === 'function') {
-                                                Hyprland.dispatch(`exec echo "$(date): launchApp function exists, calling it" >> /tmp/dock_debug.log`);
                                             // Launch new instance
                                             dock.launchApp(modelData);
-                                            } else {
-                                                Hyprland.dispatch(`exec echo "$(date): ERROR: launchApp function does not exist!" >> /tmp/dock_debug.log`);
                                             }
                                         }
                                     }
@@ -1657,7 +1598,7 @@ Scope {
                                         'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
                                         'vesktop': ['vesktop', 'discord'],
                                         'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
-                                        'org.gnome.nautilus': ['nautilus', 'org.gnome.nautilus'],
+                                        'org.gnome.Nautilus': ['nautilus', 'org.gnome.Nautilus'],
                                         'lutris': ['lutris', 'net.lutris.lutris'],
                                         'heroic': ['heroic', 'heroicgameslauncher'],
                                         'obs': ['obs', 'com.obsproject.studio'],
@@ -1680,8 +1621,9 @@ Scope {
                                         'steam.exe': 'steam-native',
                                         'Steam': 'steam-native',
                                         'Steam.exe': 'steam-native',
-                                        'nautilus': 'org.gnome.nautilus',
-                                        'org.gnome.nautilus': 'org.gnome.nautilus',
+                                        'nautilus': 'org.gnome.Nautilus',
+                                        'org.gnome.nautilus': 'org.gnome.Nautilus',
+                                        'org.gnome.Nautilus': 'org.gnome.Nautilus',
                                         'lutris': 'lutris',
                                         'net.lutris.lutris': 'lutris',
                                         'heroic': 'heroic',
@@ -1730,6 +1672,13 @@ Scope {
                                         normalizedPinnedSet.add("Ptyxis");
                                         normalizedPinnedSet.add("Org.gnome.ptyxis");
                                     }
+                                    // Add normalization for Nautilus
+                                    if (pinnedSet.has("org.gnome.nautilus.desktop") || pinnedSet.has("org.gnome.nautilus") || pinnedSet.has("org.gnome.Nautilus") || pinnedSet.has("nautilus")) {
+                                        normalizedPinnedSet.add("org.gnome.nautilus.desktop");
+                                        normalizedPinnedSet.add("org.gnome.nautilus");
+                                        normalizedPinnedSet.add("org.gnome.Nautilus");
+                                        normalizedPinnedSet.add("nautilus");
+                                    }
                                     
                                     // Group windows by effective app identity
                                     var groups = {};
@@ -1757,6 +1706,10 @@ Scope {
                                         // Normalize Ptyxis variants
                                         if (key === "ptyxis" || key === "org.gnome.ptyxis" || key === "Ptyxis" || key === "Org.gnome.ptyxis") {
                                             key = "ptyxis";
+                                        }
+                                        // Normalize Nautilus variants
+                                        if (key === "org.gnome.nautilus" || key === "org.gnome.nautilus.desktop" || key === "nautilus") {
+                                            key = "org.gnome.nautilus.desktop";
                                         }
                                         // Debug log for window class and grouping key
 // console.log('[DOCK DEBUG] Window class:', w.class, '| Grouping key:', key, '| Title:', w.title, '| Address:', w.address);
@@ -1823,8 +1776,9 @@ Scope {
                                             'steam.exe': 'steam-native',
                                             'Steam': 'steam-native',
                                             'Steam.exe': 'steam-native',
-                                            'nautilus': 'org.gnome.nautilus',
-                                            'org.gnome.nautilus': 'org.gnome.nautilus',
+                                            'nautilus': 'org.gnome.Nautilus',
+                                            'org.gnome.nautilus': 'org.gnome.Nautilus',
+                                            'org.gnome.Nautilus': 'org.gnome.Nautilus',
                                             'lutris': 'lutris',
                                             'net.lutris.lutris': 'lutris',
                                             'heroic': 'heroic',
@@ -2372,12 +2326,8 @@ Scope {
             property var currentClassAttempts: 0
             
             onTriggered: {
-                console.log("[CLOSE ALL DEBUG] Button clicked!");
-                console.log("[CLOSE ALL DEBUG] Full contextAppInfo:", JSON.stringify(dockContextMenu.contextAppInfo));
-                
                 if (dockContextMenu.contextAppInfo && dockContextMenu.contextAppInfo.class) {
                     var className = dockContextMenu.contextAppInfo.class;
-                    console.log("[CLOSE ALL DEBUG] Original class name:", className);
                     
                     // Build mapping for .desktop files to possible window classes
                     var mapping = {
@@ -2388,6 +2338,7 @@ Scope {
                         'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
                         'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
                         'org.gnome.nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
+                        'org.gnome.Nautilus.desktop': ['nautilus', 'org.gnome.Nautilus'],
                         'lutris': ['lutris', 'net.lutris.lutris', 'net.lutris.Lutris', 'Lutris'],
                         'heroic': ['heroic', 'heroicgameslauncher', 'Heroic', 'HeroicGamesLauncher'],
                         'obs': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],
@@ -2414,7 +2365,7 @@ Scope {
                         classes.push(baseClassName);
                     }
                     
-                    console.log("[CLOSE ALL DEBUG] Possible classes to try:", classes);
+
                     
                     // Initialize timer-based closing
                     closeAllTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 10; repeat: true; }', this);
@@ -2424,7 +2375,6 @@ Scope {
                     
                     closeAllTimer.triggered.connect(function() {
                         if (currentClassIndex >= possibleClasses.length) {
-                            console.log("[CLOSE ALL DEBUG] Finished closing all windows");
                             closeAllTimer.stop();
                             closeAllTimer.destroy();
                             return;
@@ -2433,7 +2383,6 @@ Scope {
                         var windowClass = possibleClasses[currentClassIndex];
                         
                         if (currentClassAttempts >= 10) {
-                            console.log("[CLOSE ALL DEBUG] Max attempts reached for class:", windowClass);
                             currentClassIndex++;
                             currentClassAttempts = 0;
                             return;
@@ -2441,10 +2390,8 @@ Scope {
                         
                         try {
                             Hyprland.dispatch(`closewindow class:${windowClass}`);
-                            console.log("[CLOSE ALL DEBUG] Closed window for class:", windowClass, "attempt:", currentClassAttempts + 1);
                             currentClassAttempts++;
                         } catch (error) {
-                            console.log("[CLOSE ALL DEBUG] No more windows for class:", windowClass, "after", currentClassAttempts, "attempts");
                             currentClassIndex++;
                             currentClassAttempts = 0;
                         }
@@ -2453,12 +2400,11 @@ Scope {
                     closeAllTimer.start();
                     
                 } else {
-                    console.log("[CLOSE ALL DEBUG] No valid class found");
+                    // No valid class found
                 }
                 
                 if (dockContextMenu.contextDockItem && dockContextMenu.contextDockItem.closeApp) {
                     dockContextMenu.contextDockItem.closeApp()
-                    console.log("[CLOSE ALL DEBUG] Called closeApp signal");
                 }
             }
         }
@@ -2505,6 +2451,7 @@ Scope {
                 'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
                 'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
                 'org.gnome.nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
+                'org.gnome.Nautilus.desktop': ['nautilus', 'org.gnome.Nautilus'],
                 'lutris': ['lutris', 'net.lutris.lutris', 'net.lutris.Lutris', 'Lutris'],
                 'heroic': ['heroic', 'heroicgameslauncher', 'Heroic', 'HeroicGamesLauncher'],
                 'obs': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],

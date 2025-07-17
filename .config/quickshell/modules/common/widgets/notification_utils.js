@@ -67,7 +67,6 @@ const getFriendlyNotifTimeString = (timestamp) => {
             return 'Yesterday';
         return Qt.formatDateTime(messageTime, "MMMM dd");
     } catch (e) {
-        console.error("Error formatting notification time:", e);
         return 'Just now';
     }
 };
