@@ -41,6 +41,9 @@ ShellRoot {
         Cliphist.refresh()
         FirstRunExperience.load()
         
+        // Initialize DefaultApps service
+        DefaultApps.refreshApps()
+        
         // Initialize enableDock
         // root.enableDock = ConfigOptions.dock.enable
     }

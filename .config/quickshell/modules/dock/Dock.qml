@@ -170,8 +170,10 @@ Scope {
         path: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/qt6ct/qt6ct.conf"
         
         property string lastTheme: ""
+        property bool isLoading: false
         
         onLoaded: {
+            isLoading = false
             try {
                 var content = text();
                 var lines = content.split('\n');
@@ -208,6 +210,10 @@ Scope {
                 // console.log("[DOCK DEBUG] Error reading Qt6 theme settings:", e);
             }
         }
+        
+        onLoadFailed: {
+            isLoading = false
+        }
     }
     
     // Timer to periodically check Qt6 theme changes
@@ -216,7 +222,11 @@ Scope {
         running: true
         repeat: true
         onTriggered: {
+            // Only reload if not currently loading to prevent dropped operations
+            if (!qt6SettingsView.isLoading) {
+                qt6SettingsView.isLoading = true
                 qt6SettingsView.reload();
+            }
         }
     }
     

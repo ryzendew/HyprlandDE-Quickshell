@@ -23,6 +23,7 @@ DESKTOP_DIRS = [
 ]
 
 def parse_desktop_file(path):
+    try:
     cp = configparser.ConfigParser(interpolation=None)
     cp.read(path, encoding="utf-8")
     if "Desktop Entry" not in cp:
@@ -36,11 +37,17 @@ def parse_desktop_file(path):
         "exec": entry.get("Exec", ""),
         "categories": entry.get("Categories", "")
     }
+    except (configparser.Error, UnicodeDecodeError, OSError) as e:
+        # Skip malformed desktop files
+        print(f"Warning: Skipping malformed desktop file {path}: {e}")
+        return None
 
 def detect_apps():
     found = {k: [] for k in CATEGORIES}
     seen_execs = set()
     for ddir in DESKTOP_DIRS:
+        if not os.path.exists(ddir):
+            continue
         for f in glob(os.path.join(ddir, "*.desktop")):
             app = parse_desktop_file(f)
             if not app:

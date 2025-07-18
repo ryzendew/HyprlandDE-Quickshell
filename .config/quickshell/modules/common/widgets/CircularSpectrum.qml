@@ -14,6 +14,8 @@ Item {
     width: parent ? parent.width : 120
     height: parent ? parent.height : 40
 
+
+
     // Calculate bar count based on available width
     readonly property int barCount: {
         if (width <= 0) return 28 // fallback
@@ -40,18 +42,7 @@ Item {
             x: index * (root.dynamicBarWidth + root.barSpacing)
             y: root.height - height
             radius: 0
-            color: Qt.rgba(
-                Qt.lerp(Qt.colorEqual(root.fillColor, "transparent") ? "#FFD700" : root.fillColor,
-                        Qt.colorEqual(root.fillColor2, "transparent") ? "#FFA500" : root.fillColor2,
-                        index / (root.barCount - 1)).r,
-                Qt.lerp(Qt.colorEqual(root.fillColor, "transparent") ? "#FFD700" : root.fillColor,
-                        Qt.colorEqual(root.fillColor2, "transparent") ? "#FFA500" : root.fillColor2,
-                        index / (root.barCount - 1)).g,
-                Qt.lerp(Qt.colorEqual(root.fillColor, "transparent") ? "#FFD700" : root.fillColor,
-                        Qt.colorEqual(root.fillColor2, "transparent") ? "#FFA500" : root.fillColor2,
-                        index / (root.barCount - 1)).b,
-                0.2
-            )
+            color: root.fillColor
             antialiasing: true
         }
     }

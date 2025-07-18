@@ -1,24 +1,14 @@
 {
   "web": [
     {
+      "name": "Brave Web Browser",
+      "icon": "brave-browser",
+      "exec": "/usr/bin/brave-browser-stable %U"
+    },
+    {
       "name": "Microsoft Edge (dev)",
       "icon": "microsoft-edge-dev",
       "exec": "/usr/bin/microsoft-edge-dev %U"
-    },
-    {
-      "name": "Web",
-      "icon": "org.gnome.Epiphany",
-      "exec": "epiphany %U"
-    },
-    {
-      "name": "Tor Browser",
-      "icon": "torbrowser",
-      "exec": "torbrowser-launcher %u"
-    },
-    {
-      "name": "Chromium",
-      "icon": "chromium",
-      "exec": "/usr/bin/chromium %U"
     }
   ],
   "mail": [],
@@ -31,24 +21,9 @@
   ],
   "music": [
     {
-      "name": "Qt V4L2 test Utility",
-      "icon": "qv4l2",
-      "exec": "qv4l2"
-    },
-    {
-      "name": "Qt V4L2 video capture utility",
-      "icon": "qvidcap",
-      "exec": "qvidcap"
-    },
-    {
-      "name": "mpv Media Player",
-      "icon": "mpv",
-      "exec": "mpv --player-operation-mode=pseudo-gui -- %U"
-    },
-    {
-      "name": "Volume Control",
-      "icon": "multimedia-volume-control",
-      "exec": "pavucontrol"
+      "name": "Rhythmbox",
+      "icon": "org.gnome.Rhythmbox3",
+      "exec": "rhythmbox %U"
     },
     {
       "name": "Camera",
@@ -56,29 +31,14 @@
       "exec": "snapshot"
     },
     {
+      "name": "Volume Control",
+      "icon": "multimedia-volume-control",
+      "exec": "pavucontrol"
+    },
+    {
       "name": "Videos",
       "icon": "org.gnome.Totem",
       "exec": "totem %U"
-    },
-    {
-      "name": "Audio Player",
-      "icon": "org.gnome.Decibels",
-      "exec": "org.gnome.Decibels %U"
-    },
-    {
-      "name": "Music",
-      "icon": "org.gnome.Music",
-      "exec": "gnome-music"
-    },
-    {
-      "name": "VLC media player",
-      "icon": "vlc",
-      "exec": "/usr/bin/vlc --started-from-file %U"
-    },
-    {
-      "name": "PulseAudio Volume Control",
-      "icon": "multimedia-volume-control",
-      "exec": "pavucontrol-qt"
     },
     {
       "name": "OBS Studio",
@@ -86,31 +46,26 @@
       "exec": "obs"
     },
     {
+      "name": "PulseAudio Volume Control",
+      "icon": "multimedia-volume-control",
+      "exec": "pavucontrol-qt"
+    },
+    {
       "name": "Cider",
-      "icon": "cider",
-      "exec": "cider %U"
+      "icon": "Cider",
+      "exec": "Cider %U"
+    },
+    {
+      "name": "mpv Media Player",
+      "icon": "mpv",
+      "exec": "mpv --player-operation-mode=pseudo-gui -- %U"
     }
   ],
   "video": [
     {
-      "name": "Qt V4L2 test Utility",
-      "icon": "qv4l2",
-      "exec": "qv4l2"
-    },
-    {
-      "name": "Qt V4L2 video capture utility",
-      "icon": "qvidcap",
-      "exec": "qvidcap"
-    },
-    {
-      "name": "mpv Media Player",
-      "icon": "mpv",
-      "exec": "mpv --player-operation-mode=pseudo-gui -- %U"
-    },
-    {
-      "name": "Volume Control",
-      "icon": "multimedia-volume-control",
-      "exec": "pavucontrol"
+      "name": "Rhythmbox",
+      "icon": "org.gnome.Rhythmbox3",
+      "exec": "rhythmbox %U"
     },
     {
       "name": "Camera",
@@ -118,29 +73,14 @@
       "exec": "snapshot"
     },
     {
+      "name": "Volume Control",
+      "icon": "multimedia-volume-control",
+      "exec": "pavucontrol"
+    },
+    {
       "name": "Videos",
       "icon": "org.gnome.Totem",
       "exec": "totem %U"
-    },
-    {
-      "name": "Audio Player",
-      "icon": "org.gnome.Decibels",
-      "exec": "org.gnome.Decibels %U"
-    },
-    {
-      "name": "Music",
-      "icon": "org.gnome.Music",
-      "exec": "gnome-music"
-    },
-    {
-      "name": "VLC media player",
-      "icon": "vlc",
-      "exec": "/usr/bin/vlc --started-from-file %U"
-    },
-    {
-      "name": "PulseAudio Volume Control",
-      "icon": "multimedia-volume-control",
-      "exec": "pavucontrol-qt"
     },
     {
       "name": "OBS Studio",
@@ -148,22 +88,32 @@
       "exec": "obs"
     },
     {
+      "name": "Blackmagic RAW Player",
+      "icon": "blackmagicraw-player",
+      "exec": "/opt/resolve/BlackmagicRAWPlayer/BlackmagicRAWPlayer %f"
+    },
+    {
+      "name": "Blackmagic RAW Speed Test",
+      "icon": "blackmagicraw-speedtest",
+      "exec": "/opt/resolve/BlackmagicRAWSpeedTest/BlackmagicRAWSpeedTest  %f"
+    },
+    {
+      "name": "PulseAudio Volume Control",
+      "icon": "multimedia-volume-control",
+      "exec": "pavucontrol-qt"
+    },
+    {
       "name": "Cider",
-      "icon": "cider",
-      "exec": "cider %U"
+      "icon": "Cider",
+      "exec": "Cider %U"
+    },
+    {
+      "name": "mpv Media Player",
+      "icon": "mpv",
+      "exec": "mpv --player-operation-mode=pseudo-gui -- %U"
     }
   ],
   "photos": [
-    {
-      "name": "Eye of GNOME",
-      "icon": "org.gnome.eog",
-      "exec": "eog %U"
-    },
-    {
-      "name": "Document Viewer",
-      "icon": "org.gnome.Evince",
-      "exec": "evince %U"
-    },
     {
       "name": "Image Viewer",
       "icon": "org.gnome.Loupe",
@@ -175,56 +125,41 @@
       "exec": "simple-scan"
     },
     {
-      "name": "Pinta",
-      "icon": "pinta",
-      "exec": "pinta %F"
+      "name": "Document Viewer",
+      "icon": "org.gnome.Evince",
+      "exec": "evince %U"
     },
     {
-      "name": "Krita",
-      "icon": "krita",
-      "exec": "krita %F"
+      "name": "Inkscape",
+      "icon": "org.inkscape.Inkscape",
+      "exec": "inkscape %F"
     },
     {
-      "name": "Affinity Photo",
-      "icon": "/home/matt/.local/share/icons/AffinityPhoto.svg",
-      "exec": "env WINEPREFIX=/home/matt/.AffinityLinux WINEDEBUG=-all /home/matt/.AffinityLinux/ElementalWarriorWine/bin/wine \"/home/matt/.AffinityLinux/drive_c/Program Files/Affinity/Photo 2/Photo.exe\""
+      "name": "Blender",
+      "icon": "blender",
+      "exec": "blender %f"
+    },
+    {
+      "name": "Affinity Designer",
+      "icon": "/home/matt/.local/share/icons/AffinityDesigner.png",
+      "exec": "env WINEPREFIX=/home/matt/.AffinityLinux /home/matt/.AffinityLinux/ElementalWarriorWine/bin/wine \"/home/matt/.AffinityLinux/drive_c/Program Files/Affinity/Designer 2/Designer.exe\""
     }
   ],
   "text_editor": [
-    {
-      "name": "Vim",
-      "icon": "gvim",
-      "exec": "vim %F"
-    },
-    {
-      "name": "Micro",
-      "icon": "micro",
-      "exec": "micro %F"
-    },
     {
       "name": "gedit",
       "icon": "org.gnome.gedit",
       "exec": "gedit %U"
     },
     {
-      "name": "Text Editor",
-      "icon": "org.gnome.TextEditor",
-      "exec": "gnome-text-editor %U"
-    },
-    {
-      "name": "Neovim",
-      "icon": "nvim",
-      "exec": "nvim %F"
-    },
-    {
-      "name": "Code - OSS",
-      "icon": "com.visualstudio.code.oss",
-      "exec": "code-oss %F"
+      "name": "Visual Studio Code",
+      "icon": "vscode",
+      "exec": "/usr/share/code/code %F"
     },
     {
       "name": "Cursor",
-      "icon": "cursor",
-      "exec": "/usr/bin/cursor --no-sandbox %U"
+      "icon": "/home/matt/.local/bin/Cursor/co.anysphere.cursor.png",
+      "exec": "/home/matt/.local/bin/Cursor/AppRun %F"
     }
   ],
   "file_manager": [

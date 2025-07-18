@@ -267,7 +267,9 @@ Item {
     }
 
     Rectangle { // Background
-        anchors.centerIn: parent
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.horizontalCenterOffset: -4 // Move the pill left by 4 pixels (smaller adjustment)
         width: root.implicitWidth // Match the content width
         implicitHeight: 56
         anchors.leftMargin: 0
@@ -456,22 +458,11 @@ Item {
                 elide: Text.ElideNone
                 maximumLineCount: 1
             }
-            MultiEffect {
-                Layout.fillWidth: false
-                Layout.fillHeight: false
-                anchors.fill: songTitle
-                source: songTitle
-                shadowEnabled: true
-                shadowColor: "black"
-                shadowBlur: 1.0
-                shadowVerticalOffset: 1.5
-                shadowOpacity: 0.7
-            }
 
             // Album - Artist name with time display
             RowLayout {
                 id: albumInfoRow
-                Layout.topMargin: -20
+                Layout.topMargin: 2
                 spacing: 0 // No extra spacing needed
                 StyledText {
                     id: albumArtistText
@@ -493,17 +484,6 @@ Item {
                     elide: Text.ElideNone
                     maximumLineCount: 1
                     visible: text.length > 0
-                }
-                MultiEffect {
-                    Layout.fillWidth: false
-                    Layout.fillHeight: false
-                    anchors.fill: albumArtistText
-                    source: albumArtistText
-                    shadowEnabled: true
-                    shadowColor: "black"
-                    shadowBlur: 1.0
-                    shadowVerticalOffset: 1.5
-                    shadowOpacity: 0.7
                 }
                 // Removed separate time StyledText and MultiEffect
             }

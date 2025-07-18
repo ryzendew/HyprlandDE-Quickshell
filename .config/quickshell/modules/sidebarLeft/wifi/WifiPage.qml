@@ -15,6 +15,7 @@ Rectangle {
     color: "transparent"
 
     function safeSignal(val) {
+        if (val === undefined || val === null) return 0;
         if (typeof val === "number" && !isNaN(val)) return val;
         var n = parseInt(val);
         return (!isNaN(n) && n >= 0) ? n : 0;
