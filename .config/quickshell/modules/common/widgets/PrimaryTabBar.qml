@@ -14,10 +14,10 @@ ColumnLayout {
     property color colBorder: Appearance?.m3colors.m3outlineVariant ?? "#C6C6D0"
     signal currentIndexChanged(int index)
 
-    property bool centerTabBar: parent.width > 500
+    property bool centerTabBar: parent.width > Math.max(500, parent ? parent.width * 0.4 : 500) // Responsive centering threshold
     Layout.fillWidth: !centerTabBar
     Layout.alignment: Qt.AlignHCenter
-    implicitWidth: Math.max(tabBar.implicitWidth, 600)
+    implicitWidth: Math.max(tabBar.implicitWidth, Math.max(600, parent ? parent.width * 0.8 : 600)) // Responsive width
 
     TabBar {
         id: tabBar
@@ -46,7 +46,7 @@ ColumnLayout {
                 selected: (index == root.externalTrackedTab)
                 buttonText: modelData.name
                 buttonIcon: modelData.icon
-                minimumWidth: 130
+                minimumWidth: Math.max(130, parent ? parent.width * 0.18 : 130) // Responsive minimum width
             }
         }
     }

@@ -16,6 +16,25 @@ Scope {
     id: root
     property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
 
+    // Responsive scaling properties
+    property real scaleFactor: {
+        const screenWidth = focusedScreen?.width ?? 1920
+        if (screenWidth >= 3840) return 1.4        // 4K
+        else if (screenWidth >= 2560) return 1.2   // 2K
+        else if (screenWidth >= 1920) return 1.0   // 1080p
+        else if (screenWidth >= 1366) return 0.9   // 720p
+        else return 0.8                            // Small screens
+    }
+    
+    property int baseWindowWidth: 1920
+    property int baseWindowHeight: 1080
+    property int baseSidebarWidth: 320
+    property int baseContentMargin: 40
+    property int baseHeaderHeight: 56
+    property int baseNavItemHeight: 80
+    property int baseIconSize: 22
+    property int baseFontSize: 14
+
     Loader {
         id: settingsLoader
         active: false
@@ -54,15 +73,15 @@ Scope {
                 }
             }
 
-            // Main settings window
+            // Main settings window with responsive sizing
             Rectangle {
                 id: settingsWindow
                 anchors.centerIn: parent
-                width: Math.min(parent.width - 80, 1920)
-                height: Math.min(parent.height - 80, 1080)
-                anchors.margins: 24
+                width: Math.min(parent.width - (40 * scaleFactor), baseWindowWidth * scaleFactor)
+                height: Math.min(parent.height - (40 * scaleFactor), baseWindowHeight * scaleFactor)
+                anchors.margins: 24 * scaleFactor
                 clip: false
-                radius: Appearance.rounding.verylarge
+                radius: Appearance.rounding.verylarge * scaleFactor
                 // Sidebar style: gradient, border, blur
                 gradient: Gradient {
                     GradientStop {
@@ -123,12 +142,12 @@ Scope {
                     anchors.margins: 0
                     spacing: 0
 
-                    // Sidebar navigation
+                    // Sidebar navigation with responsive width
                     Rectangle {
-                        Layout.preferredWidth: 300
+                        Layout.preferredWidth: baseSidebarWidth * scaleFactor
                         Layout.fillHeight: true
                         color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.95)
-                        radius: Appearance.rounding.verylarge
+                        radius: Appearance.rounding.verylarge * scaleFactor
                         
                         Rectangle {
                             anchors.right: parent.right
@@ -140,25 +159,25 @@ Scope {
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: 32
-                            spacing: 24
+                            anchors.margins: 32 * scaleFactor
+                            spacing: 24 * scaleFactor
 
-                            // Header
+                            // Header with responsive typography
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 8
+                                spacing: 8 * scaleFactor
 
                                 StyledText {
                                     text: "QuickShell Settings"
                                     font.family: Appearance.font.family.title
-                                    font.pixelSize: 26
+                                    font.pixelSize: 26 * scaleFactor
                                     font.weight: Font.Bold
                                     color: Appearance.colors.colOnLayer0
                                 }
 
                                 StyledText {
                                     text: "Customize your desktop experience"
-                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    font.pixelSize: (Appearance.font.pixelSize.small * scaleFactor)
                                     color: Appearance.colors.colSubtext
                                     opacity: 0.9
                                 }
@@ -170,10 +189,10 @@ Scope {
                                 color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.2)
                             }
 
-                            // Navigation items
+                            // Navigation items with responsive sizing
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 8
+                                spacing: 8 * scaleFactor
 
                                 Repeater {
                                     model: [
@@ -209,8 +228,8 @@ Scope {
 
                                     delegate: Rectangle {
                                         Layout.fillWidth: true
-                                        Layout.preferredHeight: 80
-                                        radius: Appearance.rounding.normal
+                                        Layout.preferredHeight: baseNavItemHeight * scaleFactor
+                                        radius: Appearance.rounding.normal * scaleFactor
                                         color: settingsWindow.selectedTab === modelData.index ? 
                                                Appearance.colors.colPrimaryContainer :
                                                navMouseArea.containsMouse ? 
@@ -229,13 +248,13 @@ Scope {
 
                                         RowLayout {
                                             anchors.fill: parent
-                                            anchors.margins: 20
-                                            spacing: 16
+                                            anchors.margins: 20 * scaleFactor
+                                            spacing: 16 * scaleFactor
 
                                             Rectangle {
-                                                Layout.preferredWidth: 44
-                                                Layout.preferredHeight: 44
-                                                radius: Appearance.rounding.normal
+                                                Layout.preferredWidth: 44 * scaleFactor
+                                                Layout.preferredHeight: 44 * scaleFactor
+                                                radius: Appearance.rounding.normal * scaleFactor
                                                 color: settingsWindow.selectedTab === modelData.index ?
                                                        Appearance.colors.colPrimary :
                                                        ColorUtils.transparentize(Appearance.colors.colPrimary, 0.1)
@@ -243,18 +262,18 @@ Scope {
                                                 MaterialSymbol {
                                                     anchors.centerIn: parent
                                                     text: modelData.icon
-                                                    iconSize: 22
+                                                    iconSize: baseIconSize * scaleFactor
                                                     color: "#000"
                                                 }
                                             }
 
                                             ColumnLayout {
                                                 Layout.fillWidth: true
-                                                spacing: 4
+                                                spacing: 4 * scaleFactor
 
                                                 StyledText {
                                                     text: modelData.title
-                                                    font.pixelSize: Appearance.font.pixelSize.normal
+                                                    font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                                                     font.weight: Font.Medium
                                                     color: settingsWindow.selectedTab === modelData.index ?
                                                            Appearance.colors.colPrimary :
@@ -263,7 +282,7 @@ Scope {
 
                                                 StyledText {
                                                     text: modelData.subtitle
-                                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                                    font.pixelSize: (Appearance.font.pixelSize.smaller * scaleFactor)
                                                     color: Appearance.colors.colSubtext
                                                     opacity: 0.9
                                                     wrapMode: Text.WordWrap
@@ -280,13 +299,13 @@ Scope {
                             // Footer with save and close buttons
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 12
+                                spacing: 12 * scaleFactor
 
                                 // Save button
                                 Rectangle {
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: 48
-                                    radius: Appearance.rounding.normal
+                                    Layout.preferredHeight: 48 * scaleFactor
+                                    radius: Appearance.rounding.normal * scaleFactor
                                     color: saveMouseArea.pressed ? 
                                            Appearance.colors.colPrimaryActive :
                                            saveMouseArea.containsMouse ? 
@@ -323,11 +342,11 @@ Scope {
 
                                     RowLayout {
                                         anchors.centerIn: parent
-                                        spacing: 12
+                                        spacing: 12 * scaleFactor
 
                                         MaterialSymbol {
                                             text: "save"
-                                            iconSize: 20
+                                            iconSize: 20 * scaleFactor
                                             color: "#000"
                                         }
 
@@ -335,7 +354,7 @@ Scope {
                                             text: ConfigLoader.hasPendingChanges ? 
                                                   `Save Changes (${ConfigLoader.getPendingChangesCount()})` : 
                                                   "No Changes"
-                                            font.pixelSize: Appearance.font.pixelSize.normal
+                                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                                             font.weight: Font.Medium
                                             color: "#000"
                                             
@@ -351,8 +370,8 @@ Scope {
                                 // Close button
                                 Rectangle {
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: 48
-                                radius: Appearance.rounding.normal
+                                    Layout.preferredHeight: 48 * scaleFactor
+                                radius: Appearance.rounding.normal * scaleFactor
                                 color: closeMouseArea.containsMouse ? 
                                        Appearance.colors.colLayer2Hover : 
                                        Appearance.colors.colLayer2
@@ -382,17 +401,17 @@ Scope {
 
                                 RowLayout {
                                     anchors.centerIn: parent
-                                    spacing: 12
+                                    spacing: 12 * scaleFactor
 
                                     MaterialSymbol {
                                         text: "close"
-                                        iconSize: 20
+                                        iconSize: 20 * scaleFactor
                                         color: Appearance.colors.colOnLayer0
                                     }
 
                                     StyledText {
                                         text: "Close Settings"
-                                        font.pixelSize: Appearance.font.pixelSize.normal
+                                        font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                                         font.weight: Font.Medium
                                         color: Appearance.colors.colOnLayer0
                                         }
@@ -402,7 +421,7 @@ Scope {
                         }
                     }
 
-                    // Content area
+                    // Content area with responsive margins
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -410,18 +429,18 @@ Scope {
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: 40
-                            spacing: 32
+                            anchors.margins: baseContentMargin * scaleFactor
+                            spacing: 32 * scaleFactor
 
-                            // Page header
+                            // Page header with responsive sizing
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: 20
+                                spacing: 20 * scaleFactor
 
                                 Rectangle {
-                                    Layout.preferredWidth: 56
-                                    Layout.preferredHeight: 56
-                                    radius: Appearance.rounding.normal
+                                    Layout.preferredWidth: 56 * scaleFactor
+                                    Layout.preferredHeight: 56 * scaleFactor
+                                    radius: Appearance.rounding.normal * scaleFactor
                                     color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.1)
 
                                     MaterialSymbol {
@@ -435,14 +454,14 @@ Scope {
                                                 default: return "palette";
                                             }
                                         }
-                                        iconSize: 28
+                                        iconSize: 28 * scaleFactor
                                         color: Appearance.colors.colPrimary
                                     }
                                 }
 
                                 ColumnLayout {
                                     Layout.fillWidth: true
-                                    spacing: 6
+                                    spacing: 6 * scaleFactor
 
                                     StyledText {
                                         text: {
@@ -455,7 +474,7 @@ Scope {
                                             }
                                         }
                                         font.family: Appearance.font.family.title
-                                        font.pixelSize: 32
+                                        font.pixelSize: 32 * scaleFactor
                                         font.weight: Font.Bold
                                         color: Appearance.colors.colOnLayer0
                                     }
@@ -470,14 +489,14 @@ Scope {
                                                 default: return "Customize colors, bar and dock appearance";
                                             }
                                         }
-                                        font.pixelSize: Appearance.font.pixelSize.normal
+                                        font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                                         color: Appearance.colors.colSubtext
                                         opacity: 0.9
                                     }
                                 }
                             }
 
-                            // Content area with modern scroll view
+                            // Content area with modern scroll view and responsive sizing
                             ScrollView {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
@@ -486,13 +505,13 @@ Scope {
 
                                 ScrollBar.vertical: ScrollBar {
                                     policy: ScrollBar.AsNeeded
-                                    width: 12
+                                    width: 12 * scaleFactor
                                     background: Rectangle {
                                         color: "transparent"
-                                        radius: 6
+                                        radius: 6 * scaleFactor
                                     }
                                     contentItem: Rectangle {
-                                        radius: 6
+                                        radius: 6 * scaleFactor
                                         color: parent.pressed ? 
                                                Appearance.colors.colPrimary :
                                                ColorUtils.transparentize(Appearance.colors.colSubtext, 0.4)

@@ -8,21 +8,28 @@ import "root:/modules/common/functions/color_utils.js" as ColorUtils
 
 ColumnLayout {
     id: appearanceTab
-    spacing: 24
+    spacing: 24 * (root.scaleFactor ?? 1.0)
 
-    // Horizontal tab navigation
+    // Responsive scaling properties
+    property real scaleFactor: root.scaleFactor ?? 1.0
+    property int baseTabHeight: 56
+    property int baseTabWidth: 240
+    property int baseIconSize: 16
+    property int baseSpacing: 10
+
+    // Horizontal tab navigation with responsive sizing
     Rectangle {
         Layout.fillWidth: true
-        Layout.preferredHeight: 56
-        radius: Appearance.rounding.large
+        Layout.preferredHeight: baseTabHeight * scaleFactor
+        radius: Appearance.rounding.large * scaleFactor
         color: Appearance.colors.colLayer1
         border.width: 1
         border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.12)
 
         RowLayout {
             anchors.fill: parent
-            anchors.margins: 8
-            spacing: 12
+            anchors.margins: 8 * scaleFactor
+            spacing: 12 * scaleFactor
 
             Repeater {
                 model: [
@@ -33,9 +40,9 @@ ColumnLayout {
                 ]
 
                 delegate: Rectangle {
-                    Layout.preferredWidth: 240
+                    Layout.preferredWidth: baseTabWidth * scaleFactor
                     Layout.fillHeight: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.normal * scaleFactor
                     color: appearanceTab.selectedSubTab === modelData.id ? Appearance.colors.colPrimaryContainer : "transparent"
                     border.width: appearanceTab.selectedSubTab === modelData.id ? 2 : 0
                     border.color: Appearance.colors.colPrimary
@@ -53,19 +60,19 @@ ColumnLayout {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 10
+                        anchors.margins: baseSpacing * scaleFactor
+                        spacing: baseSpacing * scaleFactor
 
                         Rectangle {
-                            Layout.preferredWidth: 28
-                            Layout.preferredHeight: 28
-                            radius: 8
+                            Layout.preferredWidth: 28 * scaleFactor
+                            Layout.preferredHeight: 28 * scaleFactor
+                            radius: 8 * scaleFactor
                             color: appearanceTab.selectedSubTab === modelData.id ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colPrimary, 0.08)
                             anchors.verticalCenter: parent.verticalCenter
                             MaterialSymbol {
                                 anchors.centerIn: parent
                                 text: modelData.icon
-                                iconSize: 16
+                                iconSize: baseIconSize * scaleFactor
                                 color: appearanceTab.selectedSubTab === modelData.id ? "#000" : Appearance.colors.colPrimary
                             }
                         }
@@ -77,14 +84,14 @@ ColumnLayout {
 
                             StyledText {
                                 text: modelData.title
-                                font.pixelSize: Appearance.font.pixelSize.normal
+                                font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                                 font.weight: Font.Medium
                                 color: appearanceTab.selectedSubTab === modelData.id ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer1
                             }
 
                             StyledText {
                                 text: modelData.subtitle
-                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                font.pixelSize: (Appearance.font.pixelSize.smaller * scaleFactor)
                                 color: Appearance.colors.colSubtext
                                 opacity: appearanceTab.selectedSubTab === modelData.id ? 0.9 : 0.6
                                 visible: true

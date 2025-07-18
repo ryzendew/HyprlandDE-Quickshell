@@ -962,7 +962,7 @@ Scope {
             'cursor': 'cursor',
             'cursor-cursor': 'cursor'
         };
-        
+            
         // Try direct command execution for known apps
         if (appCommands[appIdentifier]) {
             let directCmd = `exec ${appCommands[appIdentifier]}`;
@@ -970,7 +970,7 @@ Scope {
             Hyprland.dispatch(directCmd);
             return;
         }
-
+            
         // STEP 6: Try gtk-launch with .desktop extension
         if (!appIdentifier.endsWith('.desktop')) {
             let desktopId = appIdentifier + '.desktop';

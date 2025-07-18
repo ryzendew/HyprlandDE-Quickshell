@@ -3,6 +3,7 @@ import "root:/modules/common/widgets"
 import "root:/services"
 import "./wifi"
 import "./bluetooth"
+import "./SystemStatus.qml"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -47,9 +48,25 @@ Rectangle {
     }
 
     ColumnLayout {
-        anchors.margins: 5
+        anchors.margins: {
+            // Responsive margins based on screen size and content
+            let baseMargin = Math.max(5, parent.width * 0.008)
+            if (Screen.width >= 3840) return Math.max(8, parent.width * 0.006) // 4K
+            else if (Screen.width >= 2560) return Math.max(7, parent.width * 0.007) // 2K
+            else if (Screen.width >= 1920) return Math.max(6, parent.width * 0.008) // 1080p
+            else if (Screen.width >= 1366) return Math.max(5, parent.width * 0.009) // 720p
+            else return Math.max(4, parent.width * 0.01) // Small screens
+        }
         anchors.fill: parent
-        spacing: 0
+        spacing: {
+            // Responsive spacing based on screen size
+            let baseSpacing = Math.max(0, parent.height * 0.002)
+            if (Screen.width >= 3840) return Math.max(6, parent.height * 0.004) // 4K
+            else if (Screen.width >= 2560) return Math.max(5, parent.height * 0.005) // 2K
+            else if (Screen.width >= 1920) return Math.max(4, parent.height * 0.006) // 1080p
+            else if (Screen.width >= 1366) return Math.max(3, parent.height * 0.007) // 720p
+            else return Math.max(2, parent.height * 0.008) // Small screens
+        }
 
         PrimaryTabBar {
             id: tabBar
@@ -64,14 +81,24 @@ Rectangle {
         // Isolate each tab using a Loader
         Loader {
             id: tabLoader
-            Layout.topMargin: 5
+            Layout.topMargin: {
+                // Responsive top margin based on screen size
+                let baseMargin = Math.max(5, parent.height * 0.008)
+                if (Screen.width >= 3840) return Math.max(8, parent.height * 0.006) // 4K
+                else if (Screen.width >= 2560) return Math.max(7, parent.height * 0.007) // 2K
+                else if (Screen.width >= 1920) return Math.max(6, parent.height * 0.008) // 1080p
+                else if (Screen.width >= 1366) return Math.max(5, parent.height * 0.009) // 720p
+                else return Math.max(4, parent.height * 0.01) // Small screens
+            }
             Layout.fillWidth: true
             Layout.fillHeight: true
+            // Scale content with sidebar width
+            Layout.preferredWidth: parent.width * 0.95 // Use 95% of available width
             sourceComponent: {
                 switch(root.selectedTab) {
                     case 0: return wifiComponent;
                     case 1: return bluetoothComponent;
-                    case 2: return fanControlComponent;
+                    case 2: return systemStatusComponent;
                     default: return wifiComponent;
                 }
             }
@@ -79,6 +106,6 @@ Rectangle {
 
         Component { id: wifiComponent; WifiPage {} }
         Component { id: bluetoothComponent; BluetoothPage {} }
-        Component { id: fanControlComponent; FanControlPage {} }
+        Component { id: systemStatusComponent; SystemStatus {} }
     }
 } 

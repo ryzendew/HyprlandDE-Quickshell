@@ -29,20 +29,6 @@ DockButton {
 
     property bool isSeparator: appToplevel.appId === "SEPARATOR"
     property var desktopEntry: DesktopEntries.byId(appToplevel.appId)
-    
-    // Add a property to prevent double-clicking
-    property bool isProcessingClick: false
-    
-    // Timer to reset the click processing flag
-    Timer {
-        id: clickResetTimer
-        interval: 500
-        repeat: false
-        onTriggered: {
-            isProcessingClick = false
-        }
-    }
-
     Popup {
     id: customMenu
     x: mouseX
@@ -134,19 +120,18 @@ Menu {
     }
 }
 
-// Remove the overlapping MouseArea and handle all clicks in the main onClicked
-// MouseArea {
-//     anchors.fill: parent
-//     acceptedButtons: Qt.RightButton | Qt.LeftButton
-//     onClicked: (mouse) => {
-//         if (mouse.button === Qt.RightButton) {
-//             root.mouseX = mouse.x
-//             root.mouseY = mouse.y
-//             customMenu.open()
-//         }
-//         // Left-click logic here (if you have any)
-//     }
-// }
+MouseArea {
+    anchors.fill: parent
+    acceptedButtons: Qt.RightButton | Qt.LeftButton
+    onClicked: (mouse) => {
+        if (mouse.button === Qt.RightButton) {
+            root.mouseX = mouse.x
+            root.mouseY = mouse.y
+            customMenu.open()
+        }
+        // Left-click logic here (if you have any)
+    }
+}
 
 Loader {
         anchors.fill: parent
@@ -169,38 +154,17 @@ Loader {
         }
     }
 
-    // Handle right-click for context menu
-    altAction: () => {
-        customMenu.open()
-    }
-
-    // Handle middle-click for new instance
-    middleClickAction: () => {
-        if (!isProcessingClick) {
-            isProcessingClick = true
-            root.desktopEntry?.execute();
-            // Reset the flag after a short delay
-            clickResetTimer.start()
-        }
-    }
-
-    // Main click handler - consolidated to prevent double execution
     onClicked: {
-        if (isProcessingClick) {
-            return // Prevent double-clicking
-        }
-        
-        isProcessingClick = true
-        
         if (appToplevel.toplevels.length === 0) {
             root.desktopEntry?.execute();
-        } else {
-            lastFocused = (lastFocused + 1) % appToplevel.toplevels.length
-            appToplevel.toplevels[lastFocused].activate()
+            return;
         }
-        
-        // Reset the flag after a short delay
-        clickResetTimer.start()
+        lastFocused = (lastFocused + 1) % appToplevel.toplevels.length
+        appToplevel.toplevels[lastFocused].activate()
+    }
+
+    middleClickAction: () => {
+        root.desktopEntry?.execute();
     }
 
     contentItem: Loader {

@@ -42,13 +42,13 @@ Item {
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 20
+        anchors.margins: Math.max(12, parent.width * 0.02) // Responsive margins
+        spacing: Math.max(16, parent.height * 0.02) // Responsive spacing
         
         // Modern Header Card
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 80
+            Layout.preferredHeight: Math.max(70, parent.height * 0.08) // Responsive height
             radius: Appearance.rounding.large
             
             gradient: Gradient {
@@ -91,15 +91,15 @@ Item {
                 
                 // Calendar Icon
                 Rectangle {
-                    Layout.preferredWidth: 40
-                    Layout.preferredHeight: 40
+                    Layout.preferredWidth: Math.max(36, parent.height * 0.45) // Responsive width
+                    Layout.preferredHeight: Math.max(36, parent.height * 0.45) // Responsive height
                     radius: Appearance.rounding.medium
                     color: Appearance.m3colors.m3primary
                     
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: "calendar_month"
-                        iconSize: 24
+                        iconSize: Math.max(20, parent.height * 0.3) // Responsive icon size
                         color: Appearance.m3colors.m3onPrimary
                         fill: 1
                     }
@@ -112,7 +112,7 @@ Item {
                     
                     StyledText {
                         text: viewingDate.toLocaleDateString(Qt.locale(), "MMMM yyyy")
-                        font.pixelSize: Appearance.font.pixelSize.large + 4
+                        font.pixelSize: Math.max(Appearance.font.pixelSize.large + 4, parent.height * 0.15) // Responsive font size
                         font.weight: Font.Bold
                         color: Appearance.colors.colOnLayer1
                     }
@@ -121,7 +121,7 @@ Item {
                         text: monthShift === 0 ? qsTr("Current month") : 
                               monthShift > 0 ? qsTr("%1 months ahead").arg(monthShift) :
                               qsTr("%1 months ago").arg(-monthShift)
-                        font.pixelSize: Appearance.font.pixelSize.small
+                        font.pixelSize: Math.max(Appearance.font.pixelSize.small, parent.height * 0.1) // Responsive font size
                         color: Appearance.colors.colOnLayer1
                         opacity: 0.7
                     }
@@ -133,8 +133,8 @@ Item {
                     
                     // Previous Month
                     Rectangle {
-                        Layout.preferredWidth: 36
-                        Layout.preferredHeight: 36
+                        Layout.preferredWidth: Math.max(32, parent.height * 0.4) // Responsive width
+                        Layout.preferredHeight: Math.max(32, parent.height * 0.4) // Responsive height
                         radius: Appearance.rounding.full
                         color: monthNavPrev.pressed ? Qt.rgba(1, 1, 1, 0.2) : 
                                monthNavPrev.hovered ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
@@ -142,7 +142,7 @@ Item {
                         MaterialSymbol {
                             anchors.centerIn: parent
                             text: "chevron_left"
-                            iconSize: 20
+                            iconSize: Math.max(18, parent.height * 0.25) // Responsive icon size
                             color: Appearance.colors.colOnLayer1
                         }
                         
@@ -157,8 +157,8 @@ Item {
                     
                     // Reset to Current Month
                     Rectangle {
-                        Layout.preferredWidth: 36
-                        Layout.preferredHeight: 36
+                        Layout.preferredWidth: Math.max(32, parent.height * 0.4) // Responsive width
+                        Layout.preferredHeight: Math.max(32, parent.height * 0.4) // Responsive height
                         radius: Appearance.rounding.full
                         color: monthNavReset.pressed ? Qt.rgba(1, 1, 1, 0.2) : 
                                monthNavReset.hovered ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
@@ -167,7 +167,7 @@ Item {
                         MaterialSymbol {
                             anchors.centerIn: parent
                             text: "today"
-                            iconSize: 18
+                            iconSize: Math.max(16, parent.height * 0.22) // Responsive icon size
                             color: Appearance.colors.colOnLayer1
                         }
                         
@@ -182,8 +182,8 @@ Item {
                     
                     // Next Month
                     Rectangle {
-                        Layout.preferredWidth: 36
-                        Layout.preferredHeight: 36
+                        Layout.preferredWidth: Math.max(32, parent.height * 0.4) // Responsive width
+                        Layout.preferredHeight: Math.max(32, parent.height * 0.4) // Responsive height
                         radius: Appearance.rounding.full
                         color: monthNavNext.pressed ? Qt.rgba(1, 1, 1, 0.2) : 
                                monthNavNext.hovered ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
@@ -191,7 +191,7 @@ Item {
                         MaterialSymbol {
                             anchors.centerIn: parent
                             text: "chevron_right"
-                            iconSize: 20
+                            iconSize: Math.max(18, parent.height * 0.25) // Responsive icon size
                             color: Appearance.colors.colOnLayer1
                         }
                         
@@ -211,7 +211,7 @@ Item {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 20
+                spacing: Math.max(16, parent.height * 0.02) // Responsive spacing
             
             // Calendar Section (top 45%)
             Rectangle {
@@ -242,13 +242,13 @@ Item {
             
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 20
-                spacing: 16
+                anchors.margins: Math.max(16, parent.width * 0.03) // Responsive margins
+                spacing: Math.max(12, parent.height * 0.015) // Responsive spacing
                 
                 // Week Days Header
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 40
+                    Layout.preferredHeight: Math.max(35, parent.height * 0.04) // Responsive height
                     radius: Appearance.rounding.medium
                     color: Qt.rgba(
                         Appearance.colors.colLayer2.r,
@@ -271,7 +271,7 @@ Item {
                                 StyledText {
                                     anchors.centerIn: parent
                                     text: modelData.day
-                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    font.pixelSize: Math.max(Appearance.font.pixelSize.small, parent.height * 0.3) // Responsive font size
                                     font.weight: Font.DemiBold
                                     color: Appearance.colors.colOnLayer1
                                     opacity: 0.8
@@ -287,15 +287,15 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     columns: 7
-                    rowSpacing: 4
-                    columnSpacing: 4
+                    rowSpacing: Math.max(3, parent.height * 0.004) // Responsive row spacing
+                    columnSpacing: Math.max(3, parent.width * 0.005) // Responsive column spacing
                     
                     Repeater {
                         model: 42 // 6 weeks × 7 days
                         delegate: Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            Layout.minimumHeight: 32
+                            Layout.minimumHeight: Math.max(28, parent.height * 0.03) // Responsive minimum height
                             
                             property int weekIndex: Math.floor(index / 7)
                             property int dayIndex: index % 7
@@ -321,7 +321,7 @@ Item {
                             StyledText {
                                 anchors.centerIn: parent
                                 text: hasDay ? dayData.day : ""
-                                font.pixelSize: Appearance.font.pixelSize.normal
+                                font.pixelSize: Math.max(Appearance.font.pixelSize.normal, parent.height * 0.25) // Responsive font size
                                 font.weight: isToday ? Font.Bold : Font.Normal
                                 color: isToday ? "#FFFFFF" : 
                                        isDisabled ? "#FFFFFF" :

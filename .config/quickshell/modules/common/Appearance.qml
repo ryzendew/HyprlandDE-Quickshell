@@ -280,8 +280,95 @@ Singleton {
         property real barCenterSideModuleWidthHellaShortened: 190
         property real barShortenScreenWidthThreshold: 1200 // Shorten if screen width is at most this value
         property real barHellaShortenScreenWidthThreshold: 1000 // Shorten even more...
-        property real sidebarWidth: 600
-        property real sidebarWidthExtended: 750
+        
+        // Enhanced responsive sidebar sizing
+        property real sidebarWidth: {
+            // Base width scales with screen size
+            let baseWidth = Math.max(400, Screen.width * 0.22) // 22% of screen width, minimum 400px
+            
+            // Adjust based on screen resolution
+            if (Screen.width >= 3840) { // 4K
+                return Math.max(500, Screen.width * 0.18) // 18% for 4K
+            } else if (Screen.width >= 2560) { // 2K
+                return Math.max(450, Screen.width * 0.20) // 20% for 2K
+            } else if (Screen.width >= 1920) { // 1080p
+                return Math.max(420, Screen.width * 0.22) // 22% for 1080p
+            } else if (Screen.width >= 1366) { // 720p
+                return Math.max(380, Screen.width * 0.25) // 25% for 720p
+            } else { // Small screens
+                return Math.max(350, Screen.width * 0.28) // 28% for small screens
+            }
+        }
+        
+        property real sidebarWidthExtended: {
+            // Extended width for content-heavy sidebars
+            let baseWidth = Math.max(600, Screen.width * 0.28) // 28% of screen width, minimum 600px
+            
+            // Adjust based on screen resolution
+            if (Screen.width >= 3840) { // 4K
+                return Math.max(700, Screen.width * 0.22) // 22% for 4K
+            } else if (Screen.width >= 2560) { // 2K
+                return Math.max(650, Screen.width * 0.25) // 25% for 2K
+            } else if (Screen.width >= 1920) { // 1080p
+                return Math.max(600, Screen.width * 0.28) // 28% for 1080p
+            } else if (Screen.width >= 1366) { // 720p
+                return Math.max(550, Screen.width * 0.32) // 32% for 720p
+            } else { // Small screens
+                return Math.max(500, Screen.width * 0.35) // 35% for small screens
+            }
+        }
+        
+        // Weather-optimized width for 10-day forecast
+        property real sidebarWidthWeather: {
+            // 20% reduced width for weather content
+            let baseWidth = Math.max(520, Screen.width * 0.24) // 24% of screen width, minimum 520px
+            
+            // Adjust based on screen resolution
+            if (Screen.width >= 3840) { // 4K
+                return Math.max(600, Screen.width * 0.192) // 19.2% for 4K
+            } else if (Screen.width >= 2560) { // 2K
+                return Math.max(560, Screen.width * 0.216) // 21.6% for 2K
+            } else if (Screen.width >= 1920) { // 1080p
+                return Math.max(520, Screen.width * 0.24) // 24% for 1080p
+            } else if (Screen.width >= 1366) { // 720p
+                return Math.max(480, Screen.width * 0.272) // 27.2% for 720p
+            } else { // Small screens
+                return Math.max(440, Screen.width * 0.296) // 29.6% for small screens
+            }
+        }
+        
+        // Content-aware sidebar width that adapts to content
+        property real sidebarWidthContentAware: {
+            // This will be calculated dynamically based on content
+            return sidebarWidth
+        }
+        
+        // Responsive padding and spacing
+        property real sidebarPadding: {
+            if (Screen.width >= 3840) return Math.max(16, Screen.height * 0.012) // 4K
+            else if (Screen.width >= 2560) return Math.max(14, Screen.height * 0.014) // 2K
+            else if (Screen.width >= 1920) return Math.max(12, Screen.height * 0.016) // 1080p
+            else if (Screen.width >= 1366) return Math.max(10, Screen.height * 0.018) // 720p
+            else return Math.max(8, Screen.height * 0.02) // Small screens
+        }
+        
+        property real sidebarSpacing: {
+            if (Screen.width >= 3840) return Math.max(8, Screen.height * 0.006) // 4K
+            else if (Screen.width >= 2560) return Math.max(7, Screen.height * 0.007) // 2K
+            else if (Screen.width >= 1920) return Math.max(6, Screen.height * 0.008) // 1080p
+            else if (Screen.width >= 1366) return Math.max(5, Screen.height * 0.01) // 720p
+            else return Math.max(4, Screen.height * 0.012) // Small screens
+        }
+        
+        // Responsive header heights
+        property real sidebarHeaderHeight: {
+            if (Screen.width >= 3840) return Math.max(70, Screen.height * 0.04) // 4K
+            else if (Screen.width >= 2560) return Math.max(65, Screen.height * 0.045) // 2K
+            else if (Screen.width >= 1920) return Math.max(60, Screen.height * 0.05) // 1080p
+            else if (Screen.width >= 1366) return Math.max(55, Screen.height * 0.055) // 720p
+            else return Math.max(50, Screen.height * 0.06) // Small screens
+        }
+        
         property real osdWidth: 200
         property real mediaControlsWidth: 440
         property real mediaControlsHeight: 160

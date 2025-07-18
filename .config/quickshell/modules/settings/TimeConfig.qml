@@ -7,56 +7,62 @@ import "root:/modules/common/widgets/"
 import "root:/modules/common/functions/color_utils.js" as ColorUtils
 
 ColumnLayout {
-    spacing: 24
+    spacing: 24 * (root.scaleFactor ?? 1.0)
     anchors.left: parent ? parent.left : undefined
-    anchors.leftMargin: 40
+    anchors.leftMargin: 40 * (root.scaleFactor ?? 1.0)
+
+    // Responsive scaling properties
+    property real scaleFactor: root.scaleFactor ?? 1.0
+    property int baseSectionMargin: 16
+    property int baseIconSize: 20
+    property int baseSpacing: 12
 
     // Time & Date Configuration Section
     Rectangle {
         Layout.fillWidth: true
-        Layout.preferredHeight: childrenRect.height + 40
-        Layout.topMargin: 16
-        Layout.bottomMargin: 16
-        radius: Appearance.rounding.large
+        Layout.preferredHeight: childrenRect.height + (40 * scaleFactor)
+        Layout.topMargin: baseSectionMargin * scaleFactor
+        Layout.bottomMargin: baseSectionMargin * scaleFactor
+        radius: Appearance.rounding.large * scaleFactor
         color: Appearance.colors.colLayer1
         border.width: 2
         border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.4)
 
         ColumnLayout {
             anchors.left: parent.left
-            anchors.leftMargin: 40
+            anchors.leftMargin: 40 * scaleFactor
             anchors.right: undefined
             anchors.top: parent.top
-            anchors.margins: 16
-            spacing: 24
+            anchors.margins: baseSectionMargin * scaleFactor
+            spacing: 24 * scaleFactor
 
             // Section header
             RowLayout {
-                spacing: 16
-                Layout.topMargin: 24
+                spacing: 16 * scaleFactor
+                Layout.topMargin: 24 * scaleFactor
 
                 Rectangle {
-                    width: 40; height: 40
-                    radius: Appearance.rounding.normal
+                    width: 40 * scaleFactor; height: 40 * scaleFactor
+                    radius: Appearance.rounding.normal * scaleFactor
                     color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.1)
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: "schedule"
-                        iconSize: 20
+                        iconSize: baseIconSize * scaleFactor
                         color: "#000"
                     }
                 }
                 ColumnLayout {
-                    spacing: 4
+                    spacing: 4 * scaleFactor
                     StyledText {
                         text: "Time & Date"
-                        font.pixelSize: Appearance.font.pixelSize.large
+                        font.pixelSize: (Appearance.font.pixelSize.large * scaleFactor)
                         font.weight: Font.Bold
                         color: "#fff"
                     }
                     StyledText {
                         text: "Configure time display, timezone, and date formatting"
-                        font.pixelSize: Appearance.font.pixelSize.normal
+                        font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                         color: "#fff"
                         opacity: 0.9
                     }
@@ -65,40 +71,40 @@ ColumnLayout {
 
             // Time Zone Settings
             ColumnLayout {
-                spacing: 16
+                spacing: 16 * scaleFactor
                 anchors.left: parent.left
                 anchors.leftMargin: 0
 
                 StyledText {
                     text: "Time Zone"
-                    font.pixelSize: Appearance.font.pixelSize.normal
+                    font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                     font.weight: Font.Medium
                     color: "#fff"
                 }
 
                 ColumnLayout {
-                    spacing: 12
+                    spacing: baseSpacing * scaleFactor
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         StyledText {
                             text: "Current timezone:"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                         StyledText {
                             text: DateTime.timeZoneName
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: Appearance.colors.colPrimary
                             font.weight: Font.Medium
                         }
                     }
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         StyledText {
                             text: "Time zone:"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                         ComboBox {
@@ -118,7 +124,7 @@ ColumnLayout {
                                 const selectedValue = timeZoneModel.get(currentIndex).value
                                 ConfigLoader.setConfigValue("time.timeZone", selectedValue)
                             }
-                            Layout.preferredWidth: 300
+                            Layout.preferredWidth: 300 * scaleFactor
                         }
                     }
                 }
@@ -126,24 +132,24 @@ ColumnLayout {
 
             // Time Format Settings
             ColumnLayout {
-                spacing: 16
+                spacing: 16 * scaleFactor
                 anchors.left: parent.left
                 anchors.leftMargin: 0
 
                 StyledText {
                     text: "Time Format"
-                    font.pixelSize: Appearance.font.pixelSize.normal
+                    font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                     font.weight: Font.Medium
                     color: "#fff"
                 }
 
                 ColumnLayout {
-                    spacing: 12
+                    spacing: baseSpacing * scaleFactor
 
                     RowLayout {
-                        spacing: 24
+                        spacing: 24 * scaleFactor
                         RowLayout {
-                            spacing: 12
+                            spacing: baseSpacing * scaleFactor
                             StyledRadioButton {
                                 id: format12Hour
                                 checked: !ConfigOptions.time.use24Hour
@@ -156,7 +162,7 @@ ColumnLayout {
                             }
                         }
                         RowLayout {
-                            spacing: 12
+                            spacing: baseSpacing * scaleFactor
                             StyledRadioButton {
                                 id: format24Hour
                                 checked: ConfigOptions.time.use24Hour
@@ -171,23 +177,23 @@ ColumnLayout {
                     }
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         ConfigSwitch {
                             checked: ConfigOptions.time.showSeconds
                             onCheckedChanged: { ConfigLoader.setConfigValue("time.showSeconds", checked); }
                         }
                         StyledText {
                             text: "Show seconds"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                     }
 
                     ColumnLayout {
-                        spacing: 8
+                        spacing: 8 * scaleFactor
                         StyledText {
                             text: "Custom time format:"
-                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.pixelSize: (Appearance.font.pixelSize.small * scaleFactor)
                             color: "#fff"
                             opacity: 0.8
                         }
@@ -199,7 +205,7 @@ ColumnLayout {
                         }
                         StyledText {
                             text: "Leave empty to use default format. See Qt date format documentation for options."
-                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            font.pixelSize: (Appearance.font.pixelSize.smaller * scaleFactor)
                             color: "#fff"
                             opacity: 0.6
                             wrapMode: Text.WordWrap
@@ -211,64 +217,64 @@ ColumnLayout {
 
             // Date Format Settings
             ColumnLayout {
-                spacing: 16
+                spacing: 16 * scaleFactor
                 anchors.left: parent.left
                 anchors.leftMargin: 0
 
                 StyledText {
                     text: "Date Format"
-                    font.pixelSize: Appearance.font.pixelSize.normal
+                    font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                     font.weight: Font.Medium
                     color: "#fff"
                 }
 
                 ColumnLayout {
-                    spacing: 12
+                    spacing: baseSpacing * scaleFactor
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         ConfigSwitch {
                             checked: ConfigOptions.time.showDate
                             onCheckedChanged: { ConfigLoader.setConfigValue("time.showDate", checked); }
                         }
                         StyledText {
                             text: "Show date"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                     }
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         ConfigSwitch {
                             checked: ConfigOptions.time.showDayOfWeek
                             onCheckedChanged: { ConfigLoader.setConfigValue("time.showDayOfWeek", checked); }
                         }
                         StyledText {
                             text: "Show day of week"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                     }
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         ConfigSwitch {
                             checked: ConfigOptions.time.showYear
                             onCheckedChanged: { ConfigLoader.setConfigValue("time.showYear", checked); }
                         }
                         StyledText {
                             text: "Show year"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                     }
 
                     ColumnLayout {
-                        spacing: 8
+                        spacing: 8 * scaleFactor
                         StyledText {
                             text: "Custom date format:"
-                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.pixelSize: (Appearance.font.pixelSize.small * scaleFactor)
                             color: "#fff"
                             opacity: 0.8
                         }
@@ -280,7 +286,7 @@ ColumnLayout {
                         }
                         StyledText {
                             text: "Leave empty to use default format. See Qt date format documentation for options."
-                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            font.pixelSize: (Appearance.font.pixelSize.smaller * scaleFactor)
                             color: "#fff"
                             opacity: 0.6
                             wrapMode: Text.WordWrap
@@ -292,64 +298,64 @@ ColumnLayout {
 
             // Display Settings
             ColumnLayout {
-                spacing: 16
+                spacing: 16 * scaleFactor
                 anchors.left: parent.left
                 anchors.leftMargin: 0
 
                 StyledText {
                     text: "Display Settings"
-                    font.pixelSize: Appearance.font.pixelSize.normal
+                    font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                     font.weight: Font.Medium
                     color: "#fff"
                 }
 
                 ColumnLayout {
-                    spacing: 12
+                    spacing: baseSpacing * scaleFactor
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         ConfigSwitch {
                             checked: ConfigOptions.time.display.showInBar
                             onCheckedChanged: { ConfigLoader.setConfigValue("time.display.showInBar", checked); }
                         }
                         StyledText {
                             text: "Show in top bar"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                     }
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         ConfigSwitch {
                             checked: ConfigOptions.time.display.bold
                             onCheckedChanged: { ConfigLoader.setConfigValue("time.display.bold", checked); }
                         }
                         StyledText {
                             text: "Bold text"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                     }
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         ConfigSwitch {
                             checked: ConfigOptions.time.display.italic
                             onCheckedChanged: { ConfigLoader.setConfigValue("time.display.italic", checked); }
                         }
                         StyledText {
                             text: "Italic text"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                     }
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         StyledText {
                             text: "Font size:"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                         ConfigSpinBox {
@@ -361,7 +367,7 @@ ColumnLayout {
                         }
                         StyledText {
                             text: "0 = auto"
-                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.pixelSize: (Appearance.font.pixelSize.small * scaleFactor)
                             color: "#fff"
                             opacity: 0.6
                         }
@@ -371,38 +377,38 @@ ColumnLayout {
 
             // Localization Settings
             ColumnLayout {
-                spacing: 16
+                spacing: 16 * scaleFactor
                 anchors.left: parent.left
                 anchors.leftMargin: 0
 
                 StyledText {
                     text: "Localization"
-                    font.pixelSize: Appearance.font.pixelSize.normal
+                    font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                     font.weight: Font.Medium
                     color: "#fff"
                 }
 
                 ColumnLayout {
-                    spacing: 12
+                    spacing: baseSpacing * scaleFactor
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         ConfigSwitch {
                             checked: ConfigOptions.time.localization.useLocalizedNames
                             onCheckedChanged: { ConfigLoader.setConfigValue("time.localization.useLocalizedNames", checked); }
                         }
                         StyledText {
                             text: "Use localized day/month names"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                     }
 
                     RowLayout {
-                        spacing: 12
+                        spacing: baseSpacing * scaleFactor
                         StyledText {
                             text: "First day of week:"
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: "#fff"
                         }
                         ComboBox {
@@ -425,34 +431,34 @@ ColumnLayout {
 
             // Preview Section
             ColumnLayout {
-                spacing: 16
+                spacing: 16 * scaleFactor
                 anchors.left: parent.left
                 anchors.leftMargin: 0
 
                 StyledText {
                     text: "Preview"
-                    font.pixelSize: Appearance.font.pixelSize.normal
+                    font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                     font.weight: Font.Medium
                     color: "#fff"
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
-                    radius: Appearance.rounding.normal
+                    Layout.preferredHeight: 60 * scaleFactor
+                    radius: Appearance.rounding.normal * scaleFactor
                     color: Appearance.colors.colLayer2
                     border.width: 1
                     border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.3)
 
                     RowLayout {
                         anchors.centerIn: parent
-                        spacing: 16
+                        spacing: 16 * scaleFactor
 
                         ColumnLayout {
-                            spacing: 4
+                            spacing: 4 * scaleFactor
                             StyledText {
                                 text: DateTime.time
-                                font.pixelSize: ConfigOptions.time.display.fontSize > 0 ? ConfigOptions.time.display.fontSize : Appearance.font.pixelSize.normal
+                                font.pixelSize: ConfigOptions.time.display.fontSize > 0 ? ConfigOptions.time.display.fontSize * scaleFactor : Appearance.font.pixelSize.normal * scaleFactor
                                 font.weight: ConfigOptions.time.display.bold ? Font.Bold : Font.Normal
                                 font.italic: ConfigOptions.time.display.italic
                                 color: "#fff"
@@ -460,7 +466,7 @@ ColumnLayout {
                             }
                             StyledText {
                                 text: DateTime.date
-                                font.pixelSize: ConfigOptions.time.display.fontSize > 0 ? ConfigOptions.time.display.fontSize - 2 : Appearance.font.pixelSize.small
+                                font.pixelSize: ConfigOptions.time.display.fontSize > 0 ? ConfigOptions.time.display.fontSize * scaleFactor - 2 : Appearance.font.pixelSize.small * scaleFactor
                                 font.weight: ConfigOptions.time.display.bold ? Font.Bold : Font.Normal
                                 font.italic: ConfigOptions.time.display.italic
                                 color: "#fff"
@@ -470,22 +476,22 @@ ColumnLayout {
                         }
 
                         Rectangle {
-                            width: 1
-                            height: 40
+                            width: 1 * scaleFactor
+                            height: 40 * scaleFactor
                             color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.5)
                         }
 
                         ColumnLayout {
-                            spacing: 4
+                            spacing: 4 * scaleFactor
                             StyledText {
                                 text: "Current timezone:"
-                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.pixelSize: (Appearance.font.pixelSize.small * scaleFactor)
                                 color: "#fff"
                                 opacity: 0.7
                             }
                             StyledText {
                                 text: DateTime.timeZoneName
-                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.pixelSize: (Appearance.font.pixelSize.small * scaleFactor)
                                 color: Appearance.colors.colPrimary
                                 font.weight: Font.Medium
                             }
@@ -494,7 +500,7 @@ ColumnLayout {
                 }
             }
 
-            Layout.bottomMargin: 24
+            Layout.bottomMargin: 24 * scaleFactor
         }
     }
 

@@ -16,11 +16,136 @@ import Quickshell.Hyprland
 import "../sidebarRight/quickToggles"
 
 Scope {
-    property int sidebarWidth: Appearance.sizes.sidebarWidth
-    property int sidebarPadding: 8
+    // Independent sizing properties for left sidebar
+    property int sidebarWidth: {
+        // Base width scales with screen size
+        let baseWidth = Math.max(400, Screen.width * 0.22) // 22% of screen width, minimum 400px
+        
+        // Adjust based on screen resolution
+        if (Screen.width >= 3840) { // 4K
+            return Math.max(500, Screen.width * 0.18) // 18% for 4K
+        } else if (Screen.width >= 2560) { // 2K
+            return Math.max(450, Screen.width * 0.20) // 20% for 2K
+        } else if (Screen.width >= 1920) { // 1080p
+            return Math.max(420, Screen.width * 0.22) // 22% for 1080p
+        } else if (Screen.width >= 1366) { // 720p
+            return Math.max(380, Screen.width * 0.25) // 25% for 720p
+        } else { // Small screens
+            return Math.max(350, Screen.width * 0.28) // 28% for small screens
+        }
+    }
+    
+    property int sidebarWidthExtended: {
+        // Extended width for content-heavy tabs
+        let baseWidth = Math.max(600, Screen.width * 0.28) // 28% of screen width, minimum 600px
+        
+        // Adjust based on screen resolution
+        if (Screen.width >= 3840) { // 4K
+            return Math.max(700, Screen.width * 0.22) // 22% for 4K
+        } else if (Screen.width >= 2560) { // 2K
+            return Math.max(650, Screen.width * 0.25) // 25% for 2K
+        } else if (Screen.width >= 1920) { // 1080p
+            return Math.max(600, Screen.width * 0.28) // 28% for 1080p
+        } else if (Screen.width >= 1366) { // 720p
+            return Math.max(550, Screen.width * 0.32) // 32% for 720p
+        } else { // Small screens
+            return Math.max(500, Screen.width * 0.35) // 35% for small screens
+        }
+    }
+    
+    property int sidebarPadding: {
+        if (Screen.width >= 3840) return Math.max(16, Screen.height * 0.012) // 4K
+        else if (Screen.width >= 2560) return Math.max(14, Screen.height * 0.014) // 2K
+        else if (Screen.width >= 1920) return Math.max(12, Screen.height * 0.016) // 1080p
+        else if (Screen.width >= 1366) return Math.max(10, Screen.height * 0.018) // 720p
+        else return Math.max(8, Screen.height * 0.02) // Small screens
+    }
+    
+    property int sidebarSpacing: {
+        if (Screen.width >= 3840) return Math.max(8, Screen.height * 0.006) // 4K
+        else if (Screen.width >= 2560) return Math.max(7, Screen.height * 0.007) // 2K
+        else if (Screen.width >= 1920) return Math.max(6, Screen.height * 0.008) // 1080p
+        else if (Screen.width >= 1366) return Math.max(5, Screen.height * 0.01) // 720p
+        else return Math.max(4, Screen.height * 0.012) // Small screens
+    }
+    
+    property int sidebarHeaderHeight: {
+        if (Screen.width >= 3840) return Math.max(70, Screen.height * 0.04) // 4K
+        else if (Screen.width >= 2560) return Math.max(65, Screen.height * 0.045) // 2K
+        else if (Screen.width >= 1920) return Math.max(60, Screen.height * 0.05) // 1080p
+        else if (Screen.width >= 1366) return Math.max(55, Screen.height * 0.055) // 720p
+        else return Math.max(50, Screen.height * 0.06) // Small screens
+    }
+    
+    property int hyprlandGapsOut: 5
+    
     property bool pinned: false
     property real slideOffset: 0
     property bool isAnimating: false
+    
+    // Content-aware width calculation
+    property real contentAwareWidth: {
+        // Base width from responsive sizing
+        let baseWidth = sidebarWidth
+        
+        // Adjust based on content complexity
+        if (centerWidgetGroup && centerWidgetGroup.selectedTab === 2) { // System Status tab
+            // System status has more complex content, use extended width
+            return sidebarWidthExtended
+        }
+        
+        return baseWidth
+    }
+    
+    // Dynamic width adjustment with animation
+    property real currentWidth: contentAwareWidth
+    
+    // Timer to smoothly adjust width when content changes
+    Timer {
+        id: widthAdjustmentTimer
+        interval: 100
+        repeat: false
+        onTriggered: {
+            if (Math.abs(currentWidth - contentAwareWidth) > 5) { // Only animate if difference is significant
+                widthAnimation.start()
+            }
+        }
+    }
+    
+    // Width animation
+    NumberAnimation {
+        id: widthAnimation
+        target: sidebarRoot
+        property: "implicitWidth"
+        from: currentWidth
+        to: contentAwareWidth
+        duration: 300
+        easing.type: Easing.OutCubic
+        onFinished: {
+            currentWidth = contentAwareWidth
+        }
+    }
+    
+    // Monitor content changes
+    Connections {
+        target: centerWidgetGroup
+        function onSelectedTabChanged() {
+            widthAdjustmentTimer.start()
+        }
+    }
+    
+    // Monitor screen size changes
+    Connections {
+        target: Screen
+        function onWidthChanged() {
+            // Adjust sidebar width when screen size changes
+            widthAdjustmentTimer.start()
+        }
+        function onHeightChanged() {
+            // Adjust sidebar width when screen size changes
+            widthAdjustmentTimer.start()
+        }
+    }
 
     Loader {
         id: sidebarLoader
@@ -126,7 +251,7 @@ Scope {
             }
 
             exclusiveZone: 0
-            implicitWidth: sidebarWidth
+            implicitWidth: contentAwareWidth
             WlrLayershell.namespace: "quickshell:sidebarLeft"
             color: "transparent"
 
@@ -149,8 +274,8 @@ Scope {
             Rectangle {
                 id: sidebarLeftBackground
                 anchors.centerIn: parent
-                width: parent.width - Appearance.sizes.hyprlandGapsOut * 2
-                height: parent.height - Appearance.sizes.hyprlandGapsOut * 2
+                width: parent.width - hyprlandGapsOut * 2
+                height: parent.height - hyprlandGapsOut * 2
                 radius: Appearance.rounding.verylarge
                 
                 gradient: Gradient {
@@ -217,12 +342,12 @@ Scope {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: sidebarPadding
-                    spacing: 6
+                    spacing: sidebarSpacing
 
                     // Header with logo and uptime
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 60
+                        Layout.preferredHeight: sidebarHeaderHeight
                         radius: Appearance.rounding.large
                         color: Qt.rgba(
                             Appearance.colors.colLayer1.r,
@@ -236,24 +361,24 @@ Scope {
                         // Logo and uptime
                         RowLayout {
                             anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 16
+                            anchors.margins: Math.max(12, parent.width * 0.02) // Responsive margins
+                            spacing: Math.max(16, parent.width * 0.025) // Responsive spacing
 
                             Item {
-                                implicitWidth: 25
-                                implicitHeight: 25
+                                implicitWidth: Math.max(25, parent.height * 0.35) // Responsive logo size
+                                implicitHeight: Math.max(25, parent.height * 0.35)
                                 Layout.alignment: Qt.AlignVCenter
                                 antialiasing: true
                                 Image {
                                     id: nobaraLogo
-                                    width: 25
-                                    height: 25
+                                    width: parent.width
+                                    height: parent.height
                                     source: "root:/assets/icons/" + (ConfigOptions.appearance.logo || "distro-nobara-symbolic.svg")
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
                                     antialiasing: true
-                                    sourceSize.width: 25
-                                    sourceSize.height: 25
+                                    sourceSize.width: parent.width
+                                    sourceSize.height: parent.height
                                     layer.enabled: true
                                     layer.smooth: true
                                 }
@@ -265,7 +390,7 @@ Scope {
                             }
 
                             StyledText {
-                                font.pixelSize: Appearance.font.pixelSize.normal
+                                font.pixelSize: Math.max(Appearance.font.pixelSize.normal, parent.height * 0.25) // Responsive font size
                                 color: Appearance.colors.colOnLayer0
                                 text: StringUtils.format(qsTr("Uptime: {0}"), DateTime.uptime)
                                 textFormat: Text.MarkdownText
@@ -279,6 +404,9 @@ Scope {
                                 toggled: pinned
                                 onClicked: pinned = !pinned
                                 Layout.alignment: Qt.AlignVCenter
+                                // Scale button size with sidebar width
+                                implicitWidth: Math.max(32, parent.height * 0.4)
+                                implicitHeight: Math.max(32, parent.height * 0.4)
                                 StyledToolTip {
                                     content: pinned ? qsTr("Unpin sidebar (auto-close)") : qsTr("Pin sidebar (keep open)")
                                 }
@@ -288,6 +416,7 @@ Scope {
 
                     // Main content area with tabs
                     CenterWidgetGroup {
+                        id: centerWidgetGroup
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }

@@ -62,7 +62,7 @@ Item {
         Repeater {
             model: forecastData
             delegate: Rectangle {
-                Layout.preferredWidth: 120
+                Layout.preferredWidth: 85
                 Layout.preferredHeight: 160
                 radius: Appearance.rounding.small
                 color: Appearance.colors.colLayer1
@@ -252,7 +252,7 @@ Item {
                 var dateStr = data.daily.time[i];
                 var dateParts = dateStr.split('-');
                 var date = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
-                var dayName = date.toLocaleDateString(Qt.locale(), "ddd");
+                var dayName = date.toLocaleDateString(Qt.locale(), "dddd"); // Changed from "ddd" to "dddd" for full day names
                 var maxTemp = Math.round(data.daily.temperature_2m_max[i]);
                 var minTemp = Math.round(data.daily.temperature_2m_min[i]);
                 var weatherCode = data.daily.weather_code[i];
@@ -310,7 +310,7 @@ Item {
                 // Fix timezone issue: parse date in local time instead of UTC
                 var dateParts = dateStr.split('-');
                 var date = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
-                var dayName = date.toLocaleDateString(Qt.locale(), "ddd");
+                var dayName = date.toLocaleDateString(Qt.locale(), "dddd"); // Changed from "ddd" to "dddd" for full day names
                 var maxTemp = day.maxtempC;
                 var minTemp = day.mintempC;
                 var condition = day.hourly[4]?.weatherDesc[0]?.value || day.hourly[0]?.weatherDesc[0]?.value || "";

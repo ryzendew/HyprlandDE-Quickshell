@@ -69,11 +69,71 @@ Rectangle {
             border.width: 1
             visible: root.showGraph
             
-            // Line graph
+            // Glow effect canvas (behind the main line)
+            Canvas {
+                id: glowCanvas
+                anchors.fill: parent
+                anchors.margins: 4
+                z: 1
+                
+                onPaint: {
+                    const ctx = getContext("2d")
+                    ctx.reset()
+                    
+                    if (root.history.length < 2) return
+                    
+                    const width = glowCanvas.width
+                    const height = glowCanvas.height
+                    const step = width / (root.history.length - 1)
+                    
+                    // Create glow effect with multiple strokes
+                    ctx.lineCap = "round"
+                    ctx.lineJoin = "round"
+                    
+                    // Draw multiple glow layers
+                    for (let glow = 0; glow < 3; glow++) {
+                        ctx.strokeStyle = Qt.rgba(
+                            root.graphColor.r, 
+                            root.graphColor.g, 
+                            root.graphColor.b, 
+                            0.3 - (glow * 0.1)
+                        )
+                        ctx.lineWidth = 6 - (glow * 1.5)
+                        
+                        ctx.beginPath()
+                        
+                        for (let i = 0; i < root.history.length; i++) {
+                            const x = i * step
+                            // Center the line vertically by using only 80% of the height and centering it
+                            const graphHeight = height * 0.8
+                            const yOffset = height * 0.1  // 10% margin top and bottom
+                            const y = yOffset + graphHeight - (root.history[i] * graphHeight)
+                            
+                            if (i === 0) {
+                                ctx.moveTo(x, y)
+                            } else {
+                                ctx.lineTo(x, y)
+                            }
+                        }
+                        
+                        ctx.stroke()
+                    }
+                }
+                
+                Connections {
+                    target: root
+                    function onHistoryChanged() {
+                        glowCanvas.requestPaint()
+                    }
+                }
+            }
+            
+            // Main line graph (on top of glow)
             Canvas {
                 id: graphCanvas
                 anchors.fill: parent
                 anchors.margins: 4
+                z: 2
                 
                 onPaint: {
                     const ctx = getContext("2d")

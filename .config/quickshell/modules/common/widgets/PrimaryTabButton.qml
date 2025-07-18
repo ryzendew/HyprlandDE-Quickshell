@@ -12,7 +12,7 @@ TabButton {
     id: button
     property string buttonText
     property string buttonIcon
-    property real minimumWidth: 110
+    property real minimumWidth: Math.max(110, parent ? parent.width * 0.15 : 110) // Responsive minimum width
     property bool selected: false
     property int tabContentWidth: contentItem.children[0].implicitWidth
     property int rippleDuration: 1200
@@ -94,7 +94,7 @@ TabButton {
 
     background: Item {
         id: buttonBackground
-        implicitHeight: 50
+        implicitHeight: Math.max(50, parent ? parent.height * 0.08 : 50) // Responsive height
         
         // Professional selected tab background with top-only rounded corners
         Item {
@@ -235,7 +235,7 @@ TabButton {
                 Layout.alignment: Qt.AlignHCenter
                 horizontalAlignment: Text.AlignHCenter
                 text: buttonIcon
-                iconSize: Appearance?.font.pixelSize.hugeass ?? 25
+                iconSize: Math.max(Appearance?.font.pixelSize.hugeass ?? 25, parent ? parent.height * 0.04 : 25) // Responsive icon size
                 fill: selected ? 1 : 0
                 color: selected ? button.colActive : button.colInactive
                 Behavior on color {
@@ -246,7 +246,7 @@ TabButton {
                 id: buttonTextWidget
                 Layout.alignment: Qt.AlignHCenter
                 horizontalAlignment: Text.AlignHCenter
-                font.pixelSize: Appearance?.font.pixelSize.small
+                font.pixelSize: Math.max(Appearance?.font.pixelSize.small, parent ? parent.height * 0.015 : Appearance?.font.pixelSize.small) // Responsive font size
                 color: selected ? button.colActive : button.colInactive
                 text: buttonText
                 Behavior on color {
