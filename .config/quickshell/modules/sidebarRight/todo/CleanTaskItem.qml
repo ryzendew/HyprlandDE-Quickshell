@@ -58,19 +58,19 @@ Item {
         RowLayout {
             id: contentRow
             anchors.fill: parent
-            anchors.margins: 12
-            spacing: 12
+            anchors.margins: Math.max(8, parent.width * 0.012) // Reduced margins
+            spacing: Math.max(8, parent.width * 0.01) // Reduced spacing
             Layout.alignment: Qt.AlignVCenter
 
             // Checkbox
             Rectangle {
                 id: checkCircle
-                width: 24
-                height: 24
+                Layout.preferredWidth: Math.max(20, parent.height * 0.25) // Reduced size
+                Layout.preferredHeight: Math.max(20, parent.height * 0.25) // Reduced size
                 radius: 12
-                color: taskData.done ? Qt.rgba(1, 1, 1, 0.9) : "transparent"
+                color: taskData.done ? Qt.rgba(1, 1, 1, 0.3) : "transparent"
                 border.width: 2
-                border.color: taskData.done ? Qt.rgba(1, 1, 1, 0.9) : Qt.rgba(1, 1, 1, 0.4)
+                border.color: taskData.done ? Qt.rgba(1, 1, 1, 0.5) : Qt.rgba(1, 1, 1, 0.3)
                 anchors.verticalCenter: parent.verticalCenter
                 Layout.alignment: Qt.AlignVCenter
 
@@ -80,8 +80,8 @@ Item {
                 MaterialSymbol {
                     anchors.centerIn: parent
                     text: "check"
-                    iconSize: 16
-                    color: taskData.done ? "#000000" : Qt.rgba(1, 1, 1, 0.4)
+                    iconSize: Math.max(12, parent.height * 0.15) // Reduced icon size
+                    color: "#FFFFFF"
                     visible: taskData.done
                 }
 
@@ -100,7 +100,7 @@ Item {
                 id: taskTitle
                 Layout.fillWidth: true
                 text: taskData && taskData.content ? taskData.content : "NO CONTENT"
-                font.pixelSize: 16
+                font.pixelSize: Math.max(Appearance.font.pixelSize.medium, parent.height * 0.08) // Reduced font size
                 font.weight: Font.Bold
                 color: "#FFFFFF"
                 verticalAlignment: Text.AlignVCenter
@@ -113,9 +113,9 @@ Item {
             // Priority indicator (if high priority)
             Rectangle {
                 visible: taskData.priority === "high"
-                Layout.preferredWidth: 8
-                Layout.preferredHeight: 8
-                radius: 4
+                Layout.preferredWidth: Math.max(6, parent.height * 0.08) // Reduced size
+                Layout.preferredHeight: Math.max(6, parent.height * 0.08) // Reduced size
+                radius: 3
                 color: "#FF6B6B"
                 anchors.verticalCenter: parent.verticalCenter
                 Layout.alignment: Qt.AlignVCenter
@@ -123,8 +123,8 @@ Item {
 
             // Delete button
             Rectangle {
-                Layout.preferredWidth: 20
-                Layout.preferredHeight: 20
+                Layout.preferredWidth: Math.max(16, parent.height * 0.2) // Reduced size
+                Layout.preferredHeight: Math.max(16, parent.height * 0.2) // Reduced size
                 radius: 4
                 color: deleteButton.pressed ? Qt.rgba(1, 1, 1, 0.3) : 
                        deleteButton.hovered ? Qt.rgba(1, 1, 1, 0.2) : "transparent"
@@ -134,7 +134,7 @@ Item {
                 MaterialSymbol {
                     anchors.centerIn: parent
                     text: "close"
-                    iconSize: 14
+                    iconSize: Math.max(10, parent.height * 0.12) // Reduced icon size
                     color: Qt.rgba(1, 1, 1, 0.6)
                 }
 

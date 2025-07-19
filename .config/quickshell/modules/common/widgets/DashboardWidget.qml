@@ -30,17 +30,17 @@ Rectangle {
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: Math.max(8, parent.width * 0.025) // Reduced margins for more content space
+        spacing: Math.max(6, parent.height * 0.015) // Reduced spacing for more content space
         
         // Title row with optional right content
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Math.max(4, parent.width * 0.01) // Reduced spacing
             
             StyledText {
                 text: root.title
-                font.pixelSize: Appearance.font.pixelSize.large
+                font.pixelSize: Math.max(Appearance.font.pixelSize.medium, parent.height * 0.06) // Reduced font size for more space
                 font.weight: Font.Bold
                 color: "white"
                 Layout.fillWidth: true
@@ -61,9 +61,9 @@ Rectangle {
         Rectangle {
             id: graphContainer
             Layout.fillWidth: true
-            Layout.preferredHeight: 80
+            Layout.preferredHeight: Math.max(40, parent.height * 0.20) // Reduced graph height for more text space
             Layout.minimumHeight: 60
-            color: Qt.rgba(0.05, 0.05, 0.1, 0.5)
+            color: Qt.rgba(0.05, 0.05, 0.1, 0.8)
             radius: 8
             border.color: Qt.rgba(1, 1, 1, 0.05)
             border.width: 1
@@ -181,12 +181,12 @@ Rectangle {
         // Statistics
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: Math.max(2, parent.height * 0.008) // Reduced spacing for more content
             
             // Main value
             StyledText {
                 text: root.valueText
-                font.pixelSize: Appearance.font.pixelSize.large
+                font.pixelSize: Math.max(Appearance.font.pixelSize.medium, parent.height * 0.05) // Reduced font size for more space
                 font.weight: Font.Bold
                 color: "white"
                 Layout.fillWidth: true
@@ -195,11 +195,11 @@ Rectangle {
             // Subtitle
             StyledText {
                 text: root.subtitle
-                font.pixelSize: Appearance.font.pixelSize.small
+                font.pixelSize: Math.max(Appearance.font.pixelSize.small, parent.height * 0.035) // Reduced font size to fit more content
                 color: Qt.rgba(1, 1, 1, 0.7)
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
-                maximumLineCount: 3
+                maximumLineCount: 5 // Allow more lines to fit all information
                 elide: Text.ElideRight
                 visible: root.showSubtitle && root.subtitle !== ""
             }

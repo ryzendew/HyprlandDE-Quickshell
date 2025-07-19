@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15 // Import Qt Quick Controls for UI components like 
 import QtQuick.Layouts 1.15 // Import Qt Quick Layouts for automatic positioning and sizing
 import "root:/modules/common" // Import common QML modules for shared functionality
 import "root:/modules/common/widgets" // Import common widgets like RippleButton and MaterialSymbol
-import "root:/modules/weather" // Import weather-related QML modules for forecast data
+// Weather module import removed - module was deleted
 
 Item { // Root container for the entire weather sidebar page - controls the overall page structure
     id: root // Set the id for this Item so other components can reference it
@@ -212,19 +212,85 @@ Item { // Root container for the entire weather sidebar page - controls the over
     // --- Weather data refresh function - controls the refresh button functionality ---
     function refreshWeather() { // Function to refresh weather and air quality
         root.lastUpdated = Qt.formatDateTime(new Date(), "hh:mm AP") // Update last updated time - controls header timestamp
+        
+        // Refresh enhanced weather service if available
+        if (typeof Quickshell !== 'undefined' && Quickshell.weatherService) {
+            Quickshell.weatherService.clearCache();
+            Quickshell.weatherService.loadWeather();
+        }
+        
+        // Fallback to original weather loader
         if (weatherLoader.item) { // If weatherLoader is loaded
             weatherLoader.item.clearCache() // Clear weather cache - controls data freshness
             weatherLoader.item.loadWeather() // Load new weather data - controls forecast content
         }
+        
         airQualityLoader.active = false // Deactivate air quality loader - controls AQI refresh
         airQualityLoader.active = true // Reactivate to trigger reload - controls AQI refresh
     }
 
-    // --- Loader: Hidden weather data provider - controls the weather data source ---
+
+
+    // --- Enhanced Weather Service Integration - controls the weather data source ---
+    Component.onCompleted: {
+        // Connect to enhanced weather service if available
+        if (typeof Quickshell !== 'undefined' && Quickshell.weatherService && Quickshell.weatherService.enhancedWeatherData) {
+            Quickshell.weatherService.enhancedWeatherDataChanged.connect(updateFromEnhancedService);
+            updateFromEnhancedService();
+        } else {
+            // Fallback to original weather loader
+            weatherLoader.active = true;
+        }
+    }
+    
+    function updateFromEnhancedService() {
+        if (Quickshell.weatherService && Quickshell.weatherService.enhancedWeatherData) {
+            var enhanced = Quickshell.weatherService.enhancedWeatherData;
+            
+            // Update current weather
+            root.currentTemp = enhanced.current.temp;
+            root.feelsLike = enhanced.current.feelsLike;
+            root.locationDisplay = enhanced.location.name + ", " + enhanced.location.region + ", " + enhanced.location.country;
+            
+            // Update forecast data
+            root.forecastData = enhanced.forecast.daily.map(function(day) {
+                return {
+                    date: day.date,
+                    emoji: day.icon,
+                    tempMin: day.tempMin,
+                    tempMax: day.tempMax,
+                    precip: day.precipitation,
+                    precipMean: day.precipitation,
+                    condition: day.condition,
+                    wind: day.wind,
+                    humidity: day.humidity
+                };
+            });
+            
+            // Update air quality if available
+            if (enhanced.current.airQuality && enhanced.current.airQuality !== "?") {
+                root.airQuality = enhanced.current.airQuality;
+            }
+            
+            // Calculate temperature range for bars
+            root.calculateTempRange();
+            
+            // Check for weather alerts
+            if (enhanced.forecast.alerts && enhanced.forecast.alerts.length > 0) {
+                root.checkWeatherAlerts();
+            }
+            
+            // Update last updated time
+            root.lastUpdated = Qt.formatDateTime(new Date(), "hh:mm AP");
+        }
+    }
+    
+    // --- Fallback Loader: Original weather data provider - controls the weather data source ---
     Loader { // Loader for weather data - controls the weather forecast loading
         id: weatherLoader // Set id for reference
         source: "../weather/WeatherForecast.qml" // QML file to load - controls the weather data source
         visible: false // Keep loader hidden - controls loader visibility
+        active: false // Start inactive, will be activated if needed
         onLoaded: { // When loaded - controls the data connection
             if (item) { // If item is loaded
                 root.forecastData = item.forecastData // Set forecast data - controls forecast cards
@@ -284,7 +350,7 @@ Item { // Root container for the entire weather sidebar page - controls the over
         anchors.margins: Math.max(12, parent.width * 0.02) // Responsive margins
         spacing: Math.max(10, parent.height * 0.015) // Responsive spacing between sections
 
-        // --- Modern Header: Location, last updated, refresh button - controls the header section ---
+        // --- Modern Header: Location, last updated, home and refresh buttons - controls the header section ---
         RowLayout { // Header row layout - controls header positioning
             Layout.fillWidth: true // Fill the width - controls header width
             Layout.preferredHeight: Math.max(50, parent.height * 0.07) // Responsive header height
@@ -301,7 +367,7 @@ Item { // Root container for the entire weather sidebar page - controls the over
                 Layout.alignment: Qt.AlignVCenter // Center vertically - controls vertical alignment
             }
             
-            // Flexible spacer to push updated text to the right
+            // Flexible spacer to push buttons to the right
             Item { Layout.fillWidth: true }
             
             // Updated text on the right
@@ -315,6 +381,8 @@ Item { // Root container for the entire weather sidebar page - controls the over
                 horizontalAlignment: Text.AlignRight // Right aligned - controls text alignment
                 Layout.alignment: Qt.AlignVCenter // Center vertically - controls vertical alignment
             }
+            
+
             
             RippleButton { // Refresh button - controls the refresh functionality
                 Layout.preferredWidth: Math.max(36, parent.height * 0.65) // Responsive button width

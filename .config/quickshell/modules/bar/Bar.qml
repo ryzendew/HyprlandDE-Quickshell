@@ -105,8 +105,8 @@ Scope {
             WlrLayershell.namespace: "quickshell:bar:blur"
 
             anchors {
-                top: ConfigOptions.bar?.bottom ? undefined : true
-                bottom: ConfigOptions.bar?.bottom ? true : undefined
+                top: (ConfigOptions.bar?.bottom ?? false) ? false : true
+                bottom: (ConfigOptions.bar?.bottom ?? false) ? true : false
                 left: true
                 right: true
             }
@@ -118,12 +118,12 @@ Scope {
                 anchors.top: parent.top
                 height: barHeight
                 radius: 0
-                color: ConfigOptions.bar?.showBackground ? Qt.rgba(
-                    Appearance.colors.colLayer0.r,
-                    Appearance.colors.colLayer0.g,
-                    Appearance.colors.colLayer0.b,
-                    ConfigOptions.bar?.transparency ?? 0.55
-                ) : "transparent"
+                color: Qt.rgba(
+                    Appearance.colors?.colLayer0?.r ?? 0,
+                    Appearance.colors?.colLayer0?.g ?? 0,
+                    Appearance.colors?.colLayer0?.b ?? 0,
+                    0.3
+                )
                 anchors.margins: 0
                 layer.enabled: true
                 layer.smooth: true
@@ -142,12 +142,12 @@ Scope {
                     anchors.right: parent.right
                     anchors.top: parent.top
                     height: 3
-                    visible: ConfigOptions.bar.borderTop ?? false
+                    visible: ConfigOptions.bar?.borderTop ?? false
                     z: 10
                     
                     color: {
-                        let colorStr = ConfigOptions.bar.borderColor || "#ffffff"
-                        let opacity = ConfigOptions.bar.borderOpacity || 0.12
+                        let colorStr = ConfigOptions.bar?.borderColor || "#ffffff"
+                        let opacity = ConfigOptions.bar?.borderOpacity || 0.12
                         let color = Qt.color(colorStr)
                         return Qt.rgba(color.r, color.g, color.b, opacity)
                     }
@@ -162,12 +162,12 @@ Scope {
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     width: 3
-                    visible: ConfigOptions.bar.borderLeft ?? false
+                    visible: ConfigOptions.bar?.borderLeft ?? false
                     z: 10
                     
                     color: {
-                        let colorStr = ConfigOptions.bar.borderColor || "#ffffff"
-                        let opacity = ConfigOptions.bar.borderOpacity || 0.12
+                        let colorStr = ConfigOptions.bar?.borderColor || "#ffffff"
+                        let opacity = ConfigOptions.bar?.borderOpacity || 0.12
                         let color = Qt.color(colorStr)
                         return Qt.rgba(color.r, color.g, color.b, opacity)
                     }
@@ -182,12 +182,12 @@ Scope {
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     width: 3
-                    visible: ConfigOptions.bar.borderRight ?? false
+                    visible: ConfigOptions.bar?.borderRight ?? false
                     z: 10
                     
                     color: {
-                        let colorStr = ConfigOptions.bar.borderColor || "#ffffff"
-                        let opacity = ConfigOptions.bar.borderOpacity || 0.12
+                        let colorStr = ConfigOptions.bar?.borderColor || "#ffffff"
+                        let opacity = ConfigOptions.bar?.borderOpacity || 0.12
                         let color = Qt.color(colorStr)
                         return Qt.rgba(color.r, color.g, color.b, opacity)
                     }
@@ -202,12 +202,12 @@ Scope {
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     height: 3
-                    visible: ConfigOptions.bar.borderBottom ?? true
+                    visible: ConfigOptions.bar?.borderBottom ?? true
                     z: 10
                     
                     color: {
-                        let colorStr = ConfigOptions.bar.borderColor || "#ffffff"
-                        let opacity = ConfigOptions.bar.borderOpacity || 0.12
+                        let colorStr = ConfigOptions.bar?.borderColor || "#ffffff"
+                        let opacity = ConfigOptions.bar?.borderOpacity || 0.12
                         let color = Qt.color(colorStr)
                         return Qt.rgba(color.r, color.g, color.b, opacity)
                     }
@@ -275,7 +275,7 @@ Scope {
                                 
                                 radius: Appearance.rounding.full
                                 color: archMouseArea.containsMouse ? 
-                                    Qt.rgba(Appearance.colors.colLayer1Active.r, Appearance.colors.colLayer1Active.g, Appearance.colors.colLayer1Active.b, 0.8) : 
+                                    Qt.rgba(Appearance.colors?.colLayer1Active?.r ?? 0, Appearance.colors?.colLayer1Active?.g ?? 0, Appearance.colors?.colLayer1Active?.b ?? 0, 0.8) : 
                                     "transparent"
                                 implicitWidth: archLogo.width + 10
                                 implicitHeight: barHeight
@@ -397,14 +397,14 @@ Scope {
                                 Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
                                 implicitWidth: indicatorsRowLayout.implicitWidth + 6*2
                                 buttonRadius: Appearance.rounding.full
-                                colBackground: barRightSideMouseArea.hovered ? Appearance.colors.colLayer1Hover : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
-                                colBackgroundHover: Appearance.colors.colLayer1Hover
-                                colRipple: Appearance.colors.colLayer1Active
+                                colBackground: barRightSideMouseArea.hovered ? (Appearance.colors?.colLayer1Hover ?? Qt.rgba(0, 0, 0, 0.1)) : ColorUtils.transparentize(Appearance.colors?.colLayer1Hover ?? Qt.rgba(0, 0, 0, 0.1), 1)
+                                colBackgroundHover: Appearance.colors?.colLayer1Hover ?? Qt.rgba(0, 0, 0, 0.1)
+                                colRipple: Appearance.colors?.colLayer1Active ?? Qt.rgba(0, 0, 0, 0.2)
                                 colBackgroundToggled: Appearance.m3colors.m3secondaryContainer
-                                colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
-                                colRippleToggled: Appearance.colors.colSecondaryContainerActive
+                                colBackgroundToggledHover: Appearance.colors?.colSecondaryContainerHover ?? Qt.rgba(0, 0, 0, 0.1)
+                                colRippleToggled: Appearance.colors?.colSecondaryContainerActive ?? Qt.rgba(0, 0, 0, 0.2)
                                 toggled: GlobalStates.sidebarRightOpen
-                                property color colText: toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer0
+                                property color colText: toggled ? (Appearance.m3colors?.m3onSecondaryContainer ?? "#000000") : (Appearance.colors?.colOnLayer0 ?? "#000000")
 
                                 Behavior on colText {
                                     animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -692,7 +692,7 @@ Scope {
                                 width: 120 // Reserve more space for weather
                                 height: 40 // Ensure proper height
                                 Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
-                                visible: ConfigOptions.bar?.weather?.enable || false
+                                visible: ConfigOptions.bar?.weather?.enable ?? false
                                 BarComponents.Weather {
                                     anchors.centerIn: parent
                                     weatherLocation: "Halifax"

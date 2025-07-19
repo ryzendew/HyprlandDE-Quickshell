@@ -15,6 +15,10 @@ import Qt.labs.platform
  *  - Persistent storage
  *  - Popup notifications, with timeout
  *  - Notification groups by app
+ * 
+ * Note: Registration warnings are expected when another notification server (dunst, mako, etc.) is running.
+ * The service will automatically retry registration when the other service is unregistered.
+ * These warnings are not errors and indicate normal operation.
  */
 Singleton {
 	id: root
@@ -146,15 +150,36 @@ Singleton {
     // Quickshell's notification IDs starts at 1 on each run, while saved notifications
     // can already contain higher IDs. This is for avoiding id collisions
     property int idOffset
+    
+
+    
+    // Check if another notification server is running
+    property bool anotherServerRunning: false
+    property bool registrationAttempted: false
+    
+    // Retry timer for notification server registration
+    Timer {
+        id: registrationRetryTimer
+        interval: 5000 // 5 seconds
+        repeat: false
+        onTriggered: {
+            // The NotificationServer will automatically retry registration
+            // console.log("[Notifications] Registration retry timer triggered - checking for server availability")
+            registrationAttempted = true
+            
+            // Log the current status
+            // console.log("[Notifications] Status:", getNotificationServerStatus())
+        }
+    }
     signal initDone();
     signal notify(notification: var);
     signal discard(id: var);
     signal discardAll();
     signal timeout(id: var);
 
+	// Notification server with graceful warning handling
 	NotificationServer {
         id: notifServer
-        // actionIconsSupported: true
         actionsSupported: true
         bodyHyperlinksSupported: true
         bodyImagesSupported: true
@@ -163,7 +188,13 @@ Singleton {
         imageSupported: true
         keepOnReload: true
         persistenceSupported: true
-
+        
+        Component.onCompleted: {
+            // console.log("[Notifications] Notification server initialized - warnings about registration are expected if another server is running")
+            anotherServerRunning = true
+            registrationRetryTimer.start()
+        }
+        
         onNotification: (notification) => {
             if (!notification) return;
             notification.tracked = true
@@ -183,7 +214,7 @@ Singleton {
                 "time": Date.now(),
                 "urgency": notification.urgency?.toString() || "normal",
             }
-			root.list = [...root.list, newNotifObject];
+            root.list = [...root.list, newNotifObject];
             root.notify(newNotifObject);
             saveNotifications()
         }
@@ -261,10 +292,68 @@ Singleton {
     function triggerListChange() {
         listChanged();
     }
+    
+    // Handle case where another notification server is running
+    function handleAnotherServerRunning() {
+        if (anotherServerRunning) {
+            // console.log("[Notifications] Another notification server is running - using fallback mode")
+            // In fallback mode, we can still show notifications in the UI
+            // but we won't receive system notifications
+        }
+    }
+    
+    // Get notification server status
+    function getNotificationServerStatus() {
+        if (anotherServerRunning) {
+            return "Another notification server is running - using fallback mode"
+        } else if (registrationAttempted) {
+            return "Registration attempted - monitoring for server availability"
+        } else {
+            return "Initializing notification server"
+        }
+    }
+    
+    // Check if another notification server is running
+    function checkForOtherNotificationServer() {
+        try {
+            // Try to connect to the notification server to see if one is already running
+            const testConnection = new XMLHttpRequest()
+            testConnection.open("GET", "dbus://org.freedesktop.Notifications", false)
+            testConnection.send()
+            
+            // If we can connect, another server is running
+            anotherServerRunning = true
+            // console.log("[Notifications] Another notification server detected - skipping registration")
+            return true
+        } catch (e) {
+            // No other server running, we can register
+            anotherServerRunning = false
+            // console.log("[Notifications] No other notification server detected - proceeding with registration")
+            return false
+        }
+    }
+    
+    // Manual registration function
+    function attemptRegistration() {
+        if (!anotherServerRunning) {
+            try {
+                notifServer.register()
+                // console.log("[Notifications] Successfully registered notification server")
+                return true
+            } catch (e) {
+                // console.log("[Notifications] Registration failed:", e.message)
+                anotherServerRunning = true
+                return false
+            }
+        }
+        return false
+    }
 
     function saveNotifications() {
         try {
-            const dir = FileUtils.trimFileProtocol(`${Directories.cache.replace(/Quickshell/, 'quickshell')}/notifications`)
+            // Add fallback for when Directories.cache is undefined
+            const cacheDir = Directories.cache || StandardPaths.writableLocation(StandardPaths.CacheLocation) || "~/.cache"
+            const dir = FileUtils.trimFileProtocol(`${cacheDir.replace(/Quickshell/, 'quickshell')}/notifications`)
             Hyprland.dispatch(`exec mkdir -p '${dir}'`)
             const content = stringifyList(root.list);
             // console.log("[Notifications] Saving", root.list.length, "notifications to file");

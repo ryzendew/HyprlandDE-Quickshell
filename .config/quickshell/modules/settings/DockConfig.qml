@@ -21,43 +21,43 @@ Flickable {
         id: dockConfigColumn
         width: dockConfigFlickable.width
         spacing: 24
-        anchors.left: parent.left
+                anchors.left: parent.left
         anchors.right: parent.right
         anchors.margins: 40
 
-        // Section header
-        RowLayout {
-            spacing: 16
-            Layout.topMargin: 24
+                // Section header
+                RowLayout {
+                    spacing: 16
+                    Layout.topMargin: 24
             Layout.fillWidth: true
 
-            Rectangle {
-                width: 40; height: 40
-                radius: Appearance.rounding.normal
-                color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.1)
-                MaterialSymbol {
-                    anchors.centerIn: parent
-                    text: "dock"
-                    iconSize: 20
-                    color: "#000"
+                    Rectangle {
+                        width: 40; height: 40
+                        radius: Appearance.rounding.normal
+                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.1)
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "dock"
+                            iconSize: 20
+                            color: "#000"
+                        }
+                    }
+                    ColumnLayout {
+                        spacing: 4
+                        StyledText {
+                            text: "Dock Settings"
+                            font.pixelSize: Appearance.font.pixelSize.large
+                            font.weight: Font.Bold
+                            color: "#fff"
+                        }
+                        StyledText {
+                            text: "Configure application dock appearance and behavior"
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            color: "#fff"
+                            opacity: 0.9
+                        }
+                    }
                 }
-            }
-            ColumnLayout {
-                spacing: 4
-                StyledText {
-                    text: "Dock Settings"
-                    font.pixelSize: Appearance.font.pixelSize.large
-                    font.weight: Font.Bold
-                    color: "#fff"
-                }
-                StyledText {
-                    text: "Configure application dock appearance and behavior"
-                    font.pixelSize: Appearance.font.pixelSize.normal
-                    color: "#fff"
-                    opacity: 0.9
-                }
-            }
-        }
 
         // Two-column layout for settings
         RowLayout {
@@ -96,28 +96,28 @@ Flickable {
                     ColumnLayout {
                         spacing: 16
 
-                        RowLayout {
-                            spacing: 12
-                            ConfigSwitch {
-                                checked: ConfigOptions.dock.enable
-                                onCheckedChanged: {
-                                    ConfigLoader.setConfigValueAndSave("dock.enable", checked);
-                                }
-                            }
-                            StyledText {
-                                text: "Enable dock"
-                                font.pixelSize: Appearance.font.pixelSize.normal
-                                color: "#fff"
+                    RowLayout {
+                        spacing: 12
+                        ConfigSwitch {
+                            checked: ConfigOptions.dock.enable
+                            onCheckedChanged: {
+                                ConfigLoader.setConfigValueAndSave("dock.enable", checked);
                             }
                         }
-
                         StyledText {
-                            text: "Show a dock for quick access to frequently used applications"
-                            font.pixelSize: Appearance.font.pixelSize.small
+                            text: "Enable dock"
+                            font.pixelSize: Appearance.font.pixelSize.normal
                             color: "#fff"
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                            Layout.topMargin: 8
+                        }
+                    }
+
+                    StyledText {
+                        text: "Show a dock for quick access to frequently used applications"
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: "#fff"
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                        Layout.topMargin: 8
                         }
                     }
 

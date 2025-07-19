@@ -66,9 +66,9 @@ ColumnLayout {
                         Rectangle {
                             Layout.preferredWidth: 28 * scaleFactor
                             Layout.preferredHeight: 28 * scaleFactor
+                            Layout.alignment: Qt.AlignVCenter
                             radius: 8 * scaleFactor
                             color: appearanceTab.selectedSubTab === modelData.id ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colPrimary, 0.08)
-                            anchors.verticalCenter: parent.verticalCenter
                             MaterialSymbol {
                                 anchors.centerIn: parent
                                 text: modelData.icon
@@ -79,8 +79,8 @@ ColumnLayout {
 
                         ColumnLayout {
                             Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
                             spacing: 0
-                            anchors.verticalCenter: parent.verticalCenter
 
                             StyledText {
                                 text: modelData.title

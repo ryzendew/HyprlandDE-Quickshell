@@ -12,7 +12,7 @@ TabButton {
     id: button
     property string buttonText
     property string buttonIcon
-    property real minimumWidth: Math.max(110, parent ? parent.width * 0.15 : 110) // Responsive minimum width
+    property real minimumWidth: Math.max(80, parent ? parent.width * 0.18 : 80) // More responsive minimum width
     property bool selected: false
     property int tabContentWidth: contentItem.children[0].implicitWidth
     property int rippleDuration: 1200
@@ -94,12 +94,12 @@ TabButton {
 
     background: Item {
         id: buttonBackground
-        implicitHeight: Math.max(50, parent ? parent.height * 0.08 : 50) // Responsive height
+        implicitHeight: Math.max(40, parent ? parent.height * 0.07 : 40) // More responsive height
         
         // Professional selected tab background with top-only rounded corners
         Item {
             anchors.centerIn: parent
-            width: Math.max(button.tabContentWidth + 8, button.minimumWidth * 0.75)
+            width: Math.max(button.tabContentWidth + 6, button.minimumWidth * 0.8)
             height: parent.height - 1
             visible: button.selected
             
@@ -173,7 +173,7 @@ TabButton {
         // Minimal hover background with top-only rounded corners
         Rectangle {
             anchors.centerIn: parent
-            width: Math.max(button.tabContentWidth + 16, button.minimumWidth * 0.8)
+            width: Math.max(button.tabContentWidth + 12, button.minimumWidth * 0.85)
             height: parent.height - 1
             topLeftRadius: (Appearance?.rounding.medium ?? 8) + 2
             topRightRadius: (Appearance?.rounding.medium ?? 8) + 2
@@ -235,7 +235,7 @@ TabButton {
                 Layout.alignment: Qt.AlignHCenter
                 horizontalAlignment: Text.AlignHCenter
                 text: buttonIcon
-                iconSize: Math.max(Appearance?.font.pixelSize.hugeass ?? 25, parent ? parent.height * 0.04 : 25) // Responsive icon size
+                iconSize: Math.max(Appearance?.font.pixelSize.large ?? 20, parent ? parent.height * 0.035 : 20) // More responsive icon size
                 fill: selected ? 1 : 0
                 color: selected ? button.colActive : button.colInactive
                 Behavior on color {
@@ -246,7 +246,7 @@ TabButton {
                 id: buttonTextWidget
                 Layout.alignment: Qt.AlignHCenter
                 horizontalAlignment: Text.AlignHCenter
-                font.pixelSize: Math.max(Appearance?.font.pixelSize.small, parent ? parent.height * 0.015 : Appearance?.font.pixelSize.small) // Responsive font size
+                font.pixelSize: Math.max(Appearance?.font.pixelSize.small, parent ? parent.height * 0.012 : Appearance?.font.pixelSize.small) // More responsive font size
                 color: selected ? button.colActive : button.colInactive
                 text: buttonText
                 Behavior on color {

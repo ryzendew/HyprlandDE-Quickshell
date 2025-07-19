@@ -16,9 +16,9 @@ Rectangle {
 
     function safeSignal(val) {
         if (val === undefined || val === null) return 0;
-        if (typeof val === "number" && !isNaN(val)) return val;
+        if (typeof val === "number" && !isNaN(val)) return Math.max(0, Math.min(100, val));
         var n = parseInt(val);
-        return (!isNaN(n) && n >= 0) ? n : 0;
+        return (!isNaN(n) && n >= 0) ? Math.max(0, Math.min(100, n)) : 0;
     }
 
     property bool showPasswordDialog: false
@@ -29,7 +29,7 @@ Rectangle {
     // Auto-scan timer based on config
     Timer {
         interval: ConfigOptions.networking?.wifi?.scanInterval || 30000
-        running: (ConfigOptions.networking?.wifi?.autoScan || false) && Network.wifiEnabled
+                        running: (ConfigOptions.networking?.wifi?.autoScan ?? false) && Network.wifiEnabled
         repeat: true
         onTriggered: {
             if (Network.wifiEnabled) {
@@ -98,7 +98,7 @@ Rectangle {
                     Layout.alignment: Qt.AlignVCenter
                     StyledText {
                         text: Network.wifiEnabled ? qsTr("WiFi is enabled") : qsTr("WiFi is disabled")
-                        font.pixelSize: Appearance.font.pixelSize.small
+                        font.pixelSize: Appearance.font?.pixelSize?.small ?? 12
                         color: Network.wifiEnabled ? "#2196F3" : "#F44336"
                         font.weight: Font.Medium
                     }
@@ -153,27 +153,27 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.max(72, 72 * (Network.connected ? 1 : 0))
                 model: Network.connected ? [{
-                    ssid: Network.ssid || Network.networkName,
+                    ssid: Network.ssid || Network.networkName || "",
                     security: "Unknown",
-                    signal: Network.networkStrength || 0,
+                    signal: Network.networkStrength ?? 0,
                     connected: true
                 }] : []
                 spacing: 4
                 delegate: Rectangle {
                     width: parent.width * 1.0
-                    implicitHeight: modelData.connected ? 72 : Math.max(48, rowContent.implicitHeight + 16)
-                    color: modelData.connected ? Qt.rgba(30/255, 30/255, 32/255, 0.92) : mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent"
-                    radius: modelData.connected ? 12 : Appearance.rounding.small
-                    border.color: modelData.connected ? Qt.rgba(255/255,255/255,255/255,0.13) : (mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(1, 1, 1, 0.05))
-                    border.width: modelData.connected ? 1.5 : 1
+                    implicitHeight: modelData && modelData.connected ? 72 : Math.max(48, (rowContent.implicitHeight || 32) + 16)
+                    color: modelData && modelData.connected ? Qt.rgba(30/255, 30/255, 32/255, 0.92) : mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent"
+                    radius: modelData && modelData.connected ? 12 : Appearance.rounding.small
+                    border.color: modelData && modelData.connected ? Qt.rgba(255/255,255/255,255/255,0.13) : (mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(1, 1, 1, 0.05))
+                    border.width: modelData && modelData.connected ? 1.5 : 1
 
                     // Overlay for connected network
                     Rectangle {
                         anchors.fill: parent
-                        radius: modelData.connected ? 12 : Appearance.rounding.small
-                        color: modelData.connected ? Qt.rgba(0, 200/255, 255/255, 0.18) : "transparent"
+                        radius: modelData && modelData.connected ? 12 : Appearance.rounding.small
+                        color: modelData && modelData.connected ? Qt.rgba(0, 200/255, 255/255, 0.18) : "transparent"
                         z: 2
-                        visible: modelData.connected
+                        visible: modelData && modelData.connected
                     }
 
                     Item {
@@ -199,7 +199,7 @@ Rectangle {
                                                    "signal_wifi_0_bar";
                                         }
                                 iconSize: 24
-                                color: modelData.connected ? "#4CAF50" : Appearance.colors.colOnLayer1
+                                color: modelData && modelData.connected ? "#4CAF50" : Appearance.colors.colOnLayer1
                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                             }
 
@@ -210,9 +210,9 @@ Rectangle {
                                 spacing: 2
                                 // Blue 'Connected' label above SSID
                                 Text {
-                                    visible: modelData.connected
+                                    visible: modelData && modelData.connected
                                     text: qsTr("Connected")
-                                    font.pixelSize: Appearance.font.pixelSize.tiny
+                                    font.pixelSize: Appearance.font.pixelSize?.tiny || 10
                                     color: "#1ec8ff"
                                     font.weight: Font.Medium
                                     horizontalAlignment: Text.AlignLeft
@@ -220,9 +220,9 @@ Rectangle {
                                     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                 }
                                 Text {
-                                    text: modelData.ssid
-                                    font.pixelSize: Appearance.font.pixelSize.normal
-                                    font.weight: modelData.connected ? Font.Medium : Font.Normal
+                                    text: modelData ? (modelData.ssid || "") : ""
+                                    font.pixelSize: Appearance.font.pixelSize?.normal || 14
+                                    font.weight: modelData && modelData.connected ? Font.Medium : Font.Normal
                                     color: Appearance.colors.colOnLayer0
                                     horizontalAlignment: Text.AlignLeft
                                     verticalAlignment: Text.AlignVCenter
@@ -241,24 +241,24 @@ Rectangle {
                                 ColumnLayout {
                                     spacing: 4
                                     StyledText {
-                                        visible: modelData.connected
+                                        visible: modelData && modelData.connected
                                         text: qsTr("Connected")
-                                        font.pixelSize: Appearance.font.pixelSize.tiny
+                                        font.pixelSize: Appearance.font.pixelSize?.tiny || 10
                                         color: Appearance.colors.colAccent
                                         font.weight: Font.Medium
                                     }
                                     StyledText {
-                                        visible: ConfigOptions.networking?.wifi?.showSecurityType || false
-                                        text: modelData.security
-                                        font.pixelSize: Appearance.font.pixelSize.tiny
+                                        visible: ConfigOptions.networking?.wifi?.showSecurityType ?? false
+                                        text: modelData ? (modelData.security || "") : ""
+                                        font.pixelSize: Appearance.font.pixelSize?.tiny || 10
                                         color: Appearance.colors.colSubtext
                                         horizontalAlignment: Text.AlignLeft
                                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                     }
                                     StyledText {
-                                        visible: ConfigOptions.networking?.wifi?.showSignalStrength || false
-                                        text: safeSignal(modelData.signal) + "%"
-                                        font.pixelSize: Appearance.font.pixelSize.tiny
+                                        visible: ConfigOptions.networking?.wifi?.showSignalStrength ?? false
+                                        text: safeSignal(modelData ? modelData.signal : 0) + "%"
+                                        font.pixelSize: Appearance.font.pixelSize?.tiny || 10
                                         color: Appearance.colors.colSubtext
                                         horizontalAlignment: Text.AlignLeft
                                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -266,11 +266,11 @@ Rectangle {
                                 }
                                 // Status icon
                                 MaterialSymbol {
-                                    text: modelData.connected ? "check_circle" : 
-                                          (Network.isConnecting && selectedNetwork === modelData.ssid ? "sync" : "radio_button_unchecked")
+                                    text: modelData && modelData.connected ? "check_circle" : 
+                                          (Network.isConnecting && selectedNetwork === (modelData ? modelData.ssid : "") ? "sync" : "radio_button_unchecked")
                                     iconSize: 18
-                                    color: modelData.connected ? "#4CAF50" : 
-                                          (Network.isConnecting && selectedNetwork === modelData.ssid ? Appearance.colors.colAccent : Appearance.colors.colOnLayer1)
+                                    color: modelData && modelData.connected ? "#4CAF50" : 
+                                          (Network.isConnecting && selectedNetwork === (modelData ? modelData.ssid : "") ? Appearance.colors.colAccent : Appearance.colors.colOnLayer1)
                                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                                 }
                             }
@@ -283,10 +283,10 @@ Rectangle {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            if (!modelData.connected && !Network.isConnecting) {
-                                selectedNetwork = modelData.ssid;
+                            if (modelData && !modelData.connected && !Network.isConnecting) {
+                                selectedNetwork = modelData.ssid || "";
                                 if (modelData.security === "Open") {
-                                    Network.connectToNetwork(modelData.ssid);
+                                    Network.connectToNetwork(modelData.ssid || "");
                                 } else {
                                     showPasswordDialog = true;
                                 }
@@ -323,7 +323,7 @@ Rectangle {
 
                     StyledText {
                         text: qsTr("Available Networks")
-                        font.pixelSize: Appearance.font.pixelSize.small
+                        font.pixelSize: Appearance.font?.pixelSize?.small ?? 12
                         font.weight: Font.Medium
                         color: Appearance.colors.colOnLayer0
                     }
@@ -331,9 +331,9 @@ Rectangle {
                     Item { Layout.fillWidth: true }
 
                     StyledText {
-                        text: ((Network.networks || []).filter(function(n) { return !n.connected; }).length || 0) + " networks"
-                        font.pixelSize: Appearance.font.pixelSize.tiny
-                        color: Appearance.colors.colSubtext
+                        text: ((Network.networks || []).filter(function(n) { return !n.connected; }).length ?? 0) + " networks"
+                        font.pixelSize: Appearance.font?.pixelSize?.tiny ?? 10
+                        color: Appearance.colors?.colSubtext ?? "#888888"
                     }
                 }
 
@@ -349,19 +349,19 @@ Rectangle {
                         spacing: 4
                         delegate: Rectangle {
                             width: networkListView.width
-                            implicitHeight: modelData.connected ? 72 : Math.max(48, rowContent.implicitHeight + 16)
-                            color: modelData.connected ? Qt.rgba(30/255, 30/255, 32/255, 0.92) : mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent"
-                            radius: modelData.connected ? 12 : Appearance.rounding.small
-                            border.color: modelData.connected ? Qt.rgba(255/255,255/255,255/255,0.13) : (mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(1, 1, 1, 0.05))
-                            border.width: modelData.connected ? 1.5 : 1
+                            implicitHeight: modelData && modelData.connected ? 72 : Math.max(48, (rowContent.implicitHeight || 32) + 16)
+                            color: modelData && modelData.connected ? Qt.rgba(30/255, 30/255, 32/255, 0.92) : mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent"
+                            radius: modelData && modelData.connected ? 12 : Appearance.rounding.small
+                            border.color: modelData && modelData.connected ? Qt.rgba(255/255,255/255,255/255,0.13) : (mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(1, 1, 1, 0.05))
+                            border.width: modelData && modelData.connected ? 1.5 : 1
 
                             // Overlay for connected network
                             Rectangle {
                                 anchors.fill: parent
-                                radius: modelData.connected ? 12 : Appearance.rounding.small
-                                color: modelData.connected ? Qt.rgba(0, 200/255, 255/255, 0.18) : "transparent"
+                                radius: modelData && modelData.connected ? 12 : Appearance.rounding.small
+                                color: modelData && modelData.connected ? Qt.rgba(0, 200/255, 255/255, 0.18) : "transparent"
                                 z: 2
-                                visible: modelData.connected
+                                visible: modelData && modelData.connected
                             }
 
                             Item {
@@ -379,7 +379,7 @@ Rectangle {
                                     // Signal strength icon
                                     MaterialSymbol {
                                         text: {
-                                            const signal = safeSignal(modelData.signal);
+                                            const signal = safeSignal(modelData ? modelData.signal : 0);
                                             return signal > 80 ? "signal_wifi_4_bar" :
                                                    signal > 60 ? "network_wifi_3_bar" :
                                                    signal > 40 ? "network_wifi_2_bar" :
@@ -387,7 +387,7 @@ Rectangle {
                                                    "signal_wifi_0_bar";
                                         }
                                         iconSize: 24
-                                        color: modelData.connected ? "#4CAF50" : Appearance.colors.colOnLayer1
+                                        color: modelData && modelData.connected ? "#4CAF50" : (Appearance.colors?.colOnLayer1 ?? "#FFFFFF")
                                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                     }
 
@@ -398,9 +398,9 @@ Rectangle {
                                         spacing: 2
                                         // Blue 'Connected' label above SSID
                                         Text {
-                                            visible: modelData.connected
+                                            visible: modelData && modelData.connected
                                             text: qsTr("Connected")
-                                            font.pixelSize: Appearance.font.pixelSize.tiny
+                                            font.pixelSize: Appearance.font.pixelSize?.tiny || 10
                                             color: "#1ec8ff"
                                             font.weight: Font.Medium
                                             horizontalAlignment: Text.AlignLeft
@@ -408,10 +408,10 @@ Rectangle {
                                             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                         }
                                         Text {
-                                            text: modelData.ssid
-                                            font.pixelSize: Appearance.font.pixelSize.normal
-                                            font.weight: modelData.connected ? Font.Medium : Font.Normal
-                                            color: Appearance.colors.colOnLayer0
+                                            text: modelData ? (modelData.ssid || "") : ""
+                                            font.pixelSize: Appearance.font.pixelSize?.normal || 14
+                                            font.weight: modelData && modelData.connected ? Font.Medium : Font.Normal
+                                            color: Appearance.colors?.colOnLayer0 ?? "#000000"
                                             horizontalAlignment: Text.AlignLeft
                                             verticalAlignment: Text.AlignVCenter
                                             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -428,38 +428,38 @@ Rectangle {
                                         Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                                         ColumnLayout {
                                             spacing: 2
-                                        StyledText {
-                                                visible: modelData.connected
+                                                                                StyledText {
+                                            visible: modelData && modelData.connected
                                             text: qsTr("Connected")
-                                            font.pixelSize: Appearance.font.pixelSize.tiny
-                                            color: Appearance.colors.colAccent
+                                            font.pixelSize: Appearance.font.pixelSize?.tiny || 10
+                                            color: Appearance.colors?.colAccent ?? "#2196F3"
                                             font.weight: Font.Medium
                                         }
                                             StyledText {
-                                                visible: ConfigOptions.networking?.wifi?.showSecurityType || false
-                                                text: modelData.security
-                                                font.pixelSize: Appearance.font.pixelSize.tiny
-                                                color: Appearance.colors.colSubtext
+                                                visible: ConfigOptions.networking?.wifi?.showSecurityType ?? false
+                                                text: modelData ? (modelData.security || "") : ""
+                                                font.pixelSize: Appearance.font.pixelSize?.tiny || 10
+                                                color: Appearance.colors?.colSubtext ?? "#888888"
                                                 horizontalAlignment: Text.AlignLeft
                                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                             }
                                             StyledText {
-                                                visible: ConfigOptions.networking?.wifi?.showSignalStrength || false
-                                                text: safeSignal(modelData.signal) + "%"
-                                                font.pixelSize: Appearance.font.pixelSize.tiny
-                                                color: Appearance.colors.colSubtext
+                                                visible: ConfigOptions.networking?.wifi?.showSignalStrength ?? false
+                                                text: safeSignal(modelData ? modelData.signal : 0) + "%"
+                                                font.pixelSize: Appearance.font.pixelSize?.tiny || 10
+                                                color: Appearance.colors?.colSubtext ?? "#888888"
                                                 horizontalAlignment: Text.AlignLeft
                                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                             }
                                         }
                                         // Status icon
-                                    MaterialSymbol {
-                                        text: modelData.connected ? "check_circle" : 
-                                              (Network.isConnecting && selectedNetwork === modelData.ssid ? "sync" : "radio_button_unchecked")
-                                        iconSize: 18
-                                        color: modelData.connected ? "#4CAF50" : 
-                                              (Network.isConnecting && selectedNetwork === modelData.ssid ? Appearance.colors.colAccent : Appearance.colors.colOnLayer1)
-                                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                                                            MaterialSymbol {
+                                            text: modelData && modelData.connected ? "check_circle" : 
+                                                  (Network.isConnecting && selectedNetwork === (modelData ? modelData.ssid : "") ? "sync" : "radio_button_unchecked")
+                                            iconSize: 18
+                                            color: modelData && modelData.connected ? "#4CAF50" : 
+                                                  (Network.isConnecting && selectedNetwork === (modelData ? modelData.ssid : "") ? (Appearance.colors?.colAccent ?? "#2196F3") : (Appearance.colors?.colOnLayer1 ?? "#FFFFFF"))
+                                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                                         }
                                     }
                                 }
@@ -471,10 +471,10 @@ Rectangle {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    if (!modelData.connected && !Network.isConnecting) {
-                                        selectedNetwork = modelData.ssid;
+                                    if (modelData && !modelData.connected && !Network.isConnecting) {
+                                        selectedNetwork = modelData.ssid || "";
                                         if (modelData.security === "Open") {
-                                            Network.connectToNetwork(modelData.ssid);
+                                            Network.connectToNetwork(modelData.ssid || "");
                                         } else {
                                             showPasswordDialog = true;
                                         }
@@ -537,7 +537,7 @@ Rectangle {
                 StyledText {
                     anchors.centerIn: parent
                     text: qsTr("Connect to %1").arg(selectedNetwork)
-                    font.pixelSize: Appearance.font.pixelSize.normal
+                    font.pixelSize: Appearance.font?.pixelSize?.normal ?? 14
                     font.weight: Font.Medium
                     color: Appearance.colors.colOnLayer0
                 }
@@ -552,7 +552,7 @@ Rectangle {
 
                 StyledText {
                     text: qsTr("Enter password for %1").arg(selectedNetwork)
-                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.pixelSize: Appearance.font?.pixelSize?.small ?? 12
                     color: Appearance.colors.colOnLayer0
                     horizontalAlignment: Text.AlignHCenter
                     Layout.alignment: Qt.AlignHCenter
@@ -562,7 +562,7 @@ Rectangle {
                     id: passwordField
                     Layout.fillWidth: true
                     placeholderText: qsTr("Password")
-                    echoMode: (ConfigOptions.networking?.wifi?.connection?.showPassword || false) ? TextInput.Normal : TextInput.Password
+                                            echoMode: (ConfigOptions.networking?.wifi?.connection?.showPassword ?? false) ? TextInput.Normal : TextInput.Password
                     text: passwordInput
                     onTextChanged: passwordInput = text
                     onAccepted: connectButton.clicked()
@@ -600,7 +600,7 @@ Rectangle {
                         contentItem: StyledText {
                             text: parent.text
                             color: Appearance.colors.colOnLayer0
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: Appearance.font?.pixelSize?.normal ?? 14
                         }
                     }
                     Button {
@@ -620,7 +620,7 @@ Rectangle {
                         contentItem: StyledText {
                             text: parent.text
                             color: enabled ? Appearance.colors.colOnLayer0 : Appearance.colors.colOnLayer1
-                            font.pixelSize: Appearance.font.pixelSize.normal
+                            font.pixelSize: Appearance.font?.pixelSize?.normal ?? 14
                         }
                     }
                 }

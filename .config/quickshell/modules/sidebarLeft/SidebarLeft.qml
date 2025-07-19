@@ -27,7 +27,7 @@ Scope {
         } else if (Screen.width >= 2560) { // 2K
             return Math.max(450, Screen.width * 0.20) // 20% for 2K
         } else if (Screen.width >= 1920) { // 1080p
-            return Math.max(420, Screen.width * 0.22) // 22% for 1080p
+            return Math.max(520, Screen.width * 0.27) // 27% for 1080p - increased for better scaling
         } else if (Screen.width >= 1366) { // 720p
             return Math.max(380, Screen.width * 0.25) // 25% for 720p
         } else { // Small screens
@@ -45,7 +45,7 @@ Scope {
         } else if (Screen.width >= 2560) { // 2K
             return Math.max(650, Screen.width * 0.25) // 25% for 2K
         } else if (Screen.width >= 1920) { // 1080p
-            return Math.max(600, Screen.width * 0.28) // 28% for 1080p
+            return Math.max(680, Screen.width * 0.34) // 34% for 1080p - increased for better scaling
         } else if (Screen.width >= 1366) { // 720p
             return Math.max(550, Screen.width * 0.32) // 32% for 720p
         } else { // Small screens
@@ -54,27 +54,43 @@ Scope {
     }
     
     property int sidebarPadding: {
-        if (Screen.width >= 3840) return Math.max(16, Screen.height * 0.012) // 4K
-        else if (Screen.width >= 2560) return Math.max(14, Screen.height * 0.014) // 2K
-        else if (Screen.width >= 1920) return Math.max(12, Screen.height * 0.016) // 1080p
-        else if (Screen.width >= 1366) return Math.max(10, Screen.height * 0.018) // 720p
-        else return Math.max(8, Screen.height * 0.02) // Small screens
+        if (Screen.width >= 3840) return Math.max(20, Screen.height * 0.02) // 4K
+        else if (Screen.width >= 2560) return Math.max(18, Screen.height * 0.019) // 2K
+        else if (Screen.width >= 1920) return Math.max(12, Screen.height * 0.015) // 1080p - reduced padding
+        else if (Screen.width >= 1366) return Math.max(14, Screen.height * 0.018) // 720p
+        else return Math.max(10, Screen.height * 0.02) // Small screens
     }
     
     property int sidebarSpacing: {
-        if (Screen.width >= 3840) return Math.max(8, Screen.height * 0.006) // 4K
-        else if (Screen.width >= 2560) return Math.max(7, Screen.height * 0.007) // 2K
-        else if (Screen.width >= 1920) return Math.max(6, Screen.height * 0.008) // 1080p
-        else if (Screen.width >= 1366) return Math.max(5, Screen.height * 0.01) // 720p
-        else return Math.max(4, Screen.height * 0.012) // Small screens
+        if (Screen.width >= 3840) return Math.max(12, Screen.height * 0.012) // 4K
+        else if (Screen.width >= 2560) return Math.max(10, Screen.height * 0.011) // 2K
+        else if (Screen.width >= 1920) return Math.max(6, Screen.height * 0.008) // 1080p - reduced spacing
+        else if (Screen.width >= 1366) return Math.max(8, Screen.height * 0.012) // 720p
+        else return Math.max(6, Screen.height * 0.01) // Small screens
     }
     
     property int sidebarHeaderHeight: {
         if (Screen.width >= 3840) return Math.max(70, Screen.height * 0.04) // 4K
         else if (Screen.width >= 2560) return Math.max(65, Screen.height * 0.045) // 2K
-        else if (Screen.width >= 1920) return Math.max(60, Screen.height * 0.05) // 1080p
+        else if (Screen.width >= 1920) return Math.max(55, Screen.height * 0.045) // 1080p - reduced header height
         else if (Screen.width >= 1366) return Math.max(55, Screen.height * 0.055) // 720p
         else return Math.max(50, Screen.height * 0.06) // Small screens
+    }
+    
+    property int sidebarContentHeight: {
+        if (Screen.width >= 3840) return Math.max(Screen.height * 0.85, Screen.height - 200) // 4K
+        else if (Screen.width >= 2560) return Math.max(Screen.height * 0.87, Screen.height - 180) // 2K
+        else if (Screen.width >= 1920) return Math.max(Screen.height * 0.90, Screen.height - 120) // 1080p - increased to use more space
+        else if (Screen.width >= 1366) return Math.max(Screen.height * 0.89, Screen.height - 120) // 720p
+        else return Math.max(Screen.height * 0.90, Screen.height - 100) // Small screens
+    }
+    
+    property int sidebarBottomMargin: {
+        if (Screen.width >= 3840) return Math.max(20, Screen.height * 0.015) // 4K
+        else if (Screen.width >= 2560) return Math.max(18, Screen.height * 0.017) // 2K
+        else if (Screen.width >= 1920) return Math.max(12, Screen.height * 0.015) // 1080p - reduced bottom margin
+        else if (Screen.width >= 1366) return Math.max(14, Screen.height * 0.022) // 720p
+        else return Math.max(12, Screen.height * 0.025) // Small screens
     }
     
     property int hyprlandGapsOut: 5
@@ -342,6 +358,7 @@ Scope {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: sidebarPadding
+                    anchors.bottomMargin: sidebarBottomMargin
                     spacing: sidebarSpacing
 
                     // Header with logo and uptime
@@ -418,7 +435,7 @@ Scope {
                     CenterWidgetGroup {
                         id: centerWidgetGroup
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        Layout.preferredHeight: sidebarContentHeight - sidebarHeaderHeight - sidebarPadding - sidebarBottomMargin
                     }
                 }
             }

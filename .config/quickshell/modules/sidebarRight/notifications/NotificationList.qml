@@ -109,9 +109,9 @@ Item {
             Layout.fillHeight: true // Fills all available space
             radius: Appearance.rounding.large
             color: Qt.rgba(
-                Appearance.colors.colLayer1.r,
-                Appearance.colors.colLayer1.g,
-                Appearance.colors.colLayer1.b,
+                Appearance.colors?.colLayer1?.r ?? 0,
+                Appearance.colors?.colLayer1?.g ?? 0,
+                Appearance.colors?.colLayer1?.b ?? 0,
                 0.3
             )
             border.color: Qt.rgba(1, 1, 1, 0.1)
@@ -131,8 +131,8 @@ Item {
 
                     StyledText {
                         text: `${(notificationWidgetList?.length ?? 0)} notification${(notificationWidgetList?.length ?? 0) > 1 ? "s" : ""}`
-                        font.pixelSize: Appearance.font.pixelSize.tiny
-                        color: Appearance.colors.colOnLayer1
+                        font.pixelSize: Appearance.font?.pixelSize?.tiny ?? 10
+                        color: Appearance.colors?.colOnLayer1 ?? "#FFFFFF"
                         opacity: 0.7
                         visible: (notificationWidgetList?.length ?? 0) > 0
                     }
@@ -179,12 +179,12 @@ Item {
                     Item {
                         anchors.fill: flickable
                         visible: opacity > 0
-                        opacity: (root.notificationWidgetList ? root.notificationWidgetList.length : 0) === 0 ? 1 : 0
+                        opacity: (root.notificationWidgetList?.length ?? 0) === 0 ? 1 : 0
 
                         Behavior on opacity {
                             NumberAnimation {
-                                duration: Appearance.animation.menuDecel.duration
-                                easing.type: Appearance.animation.menuDecel.type
+                                duration: Appearance.animation?.menuDecel?.duration ?? 200
+                                easing.type: Appearance.animation?.menuDecel?.type ?? Easing.OutCubic
                             }
                         }
 
@@ -195,7 +195,7 @@ Item {
                             // Removed MaterialSymbol icon to avoid duplicate large bell
                             StyledText {
                                 Layout.alignment: Qt.AlignHCenter
-                                font.pixelSize: Appearance.font.pixelSize.normal
+                                font.pixelSize: Appearance.font?.pixelSize?.normal ?? 14
                                 color: "#FFFFFF"
                                 horizontalAlignment: Text.AlignHCenter
                                 text: qsTr("No notifications")

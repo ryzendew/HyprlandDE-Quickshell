@@ -7,6 +7,8 @@ import QtCore
 Item {
     id: service
     
+
+    
     property var shell
     
     // Public properties
@@ -34,8 +36,31 @@ Item {
         property int lastWeatherTimestamp: 0
     }
     
+    // Set organization properties immediately to prevent QSettings warnings
+    Timer {
+        running: true
+        repeat: false
+        interval: 0
+        onTriggered: {
+            Qt.application.organizationName = "Quickshell"
+            Qt.application.organizationDomain = "quickshell.org"
+            Qt.application.applicationName = "Quickshell"
+        }
+    }
+    
     // Initialize on component completion
     Component.onCompleted: {
+        // Set organization properties if not already set
+        if (!Qt.application.organizationName) {
+            Qt.application.organizationName = "Quickshell"
+        }
+        if (!Qt.application.organizationDomain) {
+            Qt.application.organizationDomain = "quickshell.org"
+        }
+        if (!Qt.application.applicationName) {
+            Qt.application.applicationName = "Quickshell"
+        }
+        
         // console.log("Weather service initialized with location:", location)
         loadWeather()
         updateTimer.start()

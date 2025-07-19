@@ -18,8 +18,8 @@ RippleButton {
     property var entry
     property string query
     property bool entryShown: entry?.shown ?? true
-    property string itemType: entry?.type
-    property string itemName: entry?.name
+    property string itemType: entry?.type || ""
+    property string itemName: entry?.name || ""
     property string itemIcon: entry?.icon ?? ""
     property var itemExecute: entry?.execute
     property string fontType: entry?.fontType ?? "main"

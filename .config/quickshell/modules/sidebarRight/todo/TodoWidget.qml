@@ -103,12 +103,12 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 12
+        spacing: Math.max(8, parent.height * 0.01) // Reduced spacing
 
         // Clean Header with title and add button
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 50
+            Layout.preferredHeight: Math.max(40, parent.height * 0.05) // Reduced height
             radius: 12
             color: Qt.rgba(1, 1, 1, 0.1)
             border.width: 1
@@ -116,14 +116,14 @@ Item {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 12
+                anchors.margins: Math.max(8, parent.width * 0.015) // Reduced margins
+                spacing: Math.max(8, parent.width * 0.012) // Reduced spacing
                 Layout.alignment: Qt.AlignVCenter
 
                 // Title
                 Text {
                     text: qsTr("Tasks")
-                    font.pixelSize: 18
+                    font.pixelSize: Math.max(Appearance.font.pixelSize.medium, parent.height * 0.08) // Reduced font size
                     font.weight: Font.Bold
                     color: "#FFFFFF"
                     verticalAlignment: Text.AlignVCenter
@@ -134,14 +134,14 @@ Item {
 
                 // Tab buttons
                 RowLayout {
-                    spacing: 4
+                    spacing: Math.max(3, parent.width * 0.005) // Reduced spacing
                     Layout.alignment: Qt.AlignVCenter
 
                     Repeater {
                         model: root.tabButtonList
                         delegate: Rectangle {
-                            Layout.preferredWidth: 28
-                            Layout.preferredHeight: 28
+                            Layout.preferredWidth: Math.max(24, parent.height * 0.3) // Reduced size
+                            Layout.preferredHeight: Math.max(24, parent.height * 0.3) // Reduced size
                             radius: 6
                             color: currentTab === index ? Qt.rgba(1, 1, 1, 0.3) : "transparent"
                             border.width: 1
@@ -151,7 +151,7 @@ Item {
                             MaterialSymbol {
                                 anchors.centerIn: parent
                                 text: modelData.icon
-                                iconSize: 16
+                                iconSize: Math.max(14, parent.height * 0.18) // Reduced icon size
                                 color: "#FFFFFF"
                             }
 
@@ -165,19 +165,19 @@ Item {
 
                 // Add button
                 Rectangle {
-                    Layout.preferredWidth: 32
-                    Layout.preferredHeight: 32
-                    radius: 8
+                    Layout.preferredWidth: Math.max(24, parent.height * 0.3) // Reduced size
+                    Layout.preferredHeight: Math.max(24, parent.height * 0.3) // Reduced size
+                    radius: 6
                     color: addButton.pressed ? Qt.rgba(1, 1, 1, 0.3) : 
-                           addButton.hovered ? Qt.rgba(1, 1, 1, 0.2) : Qt.rgba(1, 1, 1, 0.1)
+                           addButton.hovered ? Qt.rgba(1, 1, 1, 0.2) : "transparent"
                     border.width: 1
-                    border.color: Qt.rgba(1, 1, 1, 0.3)
+                    border.color: Qt.rgba(1, 1, 1, 0.2)
                     Layout.alignment: Qt.AlignVCenter
 
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: "add"
-                        iconSize: 18
+                        iconSize: Math.max(14, parent.height * 0.18) // Reduced icon size
                         color: "#FFFFFF"
                     }
 
@@ -185,6 +185,7 @@ Item {
                         id: addButton
                         anchors.fill: parent
                         hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: root.showAddDialog = true
                     }
                 }
@@ -194,7 +195,7 @@ Item {
         // Search bar
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 40
+            Layout.preferredHeight: Math.max(32, parent.height * 0.04) // Reduced height
             radius: 10
             color: Qt.rgba(1, 1, 1, 0.08)
             border.width: 1
@@ -202,13 +203,13 @@ Item {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 8
+                anchors.margins: Math.max(8, parent.width * 0.012) // Reduced margins
+                spacing: Math.max(6, parent.width * 0.008) // Reduced spacing
                 Layout.alignment: Qt.AlignVCenter
 
                 MaterialSymbol {
                     text: "search"
-                    iconSize: 16
+                    iconSize: Math.max(14, parent.height * 0.18) // Reduced icon size
                     color: "#FFFFFF"
                     opacity: 0.7
                     Layout.alignment: Qt.AlignVCenter
@@ -222,7 +223,7 @@ Item {
                     text: root.searchQuery
                     onTextChanged: root.searchQuery = text
                     color: "#FFFFFF"
-                    font.pixelSize: 14
+                    font.pixelSize: Math.max(Appearance.font.pixelSize.small, parent.height * 0.06) // Reduced font size
                     background: Rectangle { color: "transparent" }
                     placeholderTextColor: Qt.rgba(1, 1, 1, 0.5)
                     verticalAlignment: Text.AlignVCenter
@@ -256,7 +257,7 @@ Item {
             }
         }
 
-        // Task list content
+        // Task list container
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -268,36 +269,36 @@ Item {
             Flickable {
                 id: flickable
                 anchors.fill: parent
-                anchors.margins: 8
+                anchors.margins: Math.max(6, parent.width * 0.01) // Reduced margins
                 contentHeight: taskColumn.height
                 clip: true
 
                 ColumnLayout {
                     id: taskColumn
                     width: parent.width
-                    spacing: 8
+                    spacing: Math.max(6, parent.height * 0.008) // Reduced spacing
 
                     // Empty state
                     Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Layout.preferredHeight: 200
+                        Layout.preferredHeight: Math.max(150, parent.height * 0.2) // Reduced height
                         visible: filteredTasks.length === 0
 
                         ColumnLayout {
                             anchors.centerIn: parent
-                            spacing: 12
+                            spacing: Math.max(8, parent.height * 0.01) // Reduced spacing
 
                             MaterialSymbol {
                                 text: root.tabButtonList[currentTab].icon
-                                iconSize: 48
+                                iconSize: Math.max(36, parent.height * 0.25) // Reduced icon size
                                 color: "#FFFFFF"
                                 opacity: 0.3
                             }
 
                             Text {
                                 text: getEmptyText(root.tabButtonList[currentTab].filter)
-                                font.pixelSize: 16
+                                font.pixelSize: Math.max(Appearance.font.pixelSize.medium, parent.height * 0.06) // Reduced font size
                                 color: "#FFFFFF"
                                 opacity: 0.6
                                 horizontalAlignment: Text.AlignHCenter

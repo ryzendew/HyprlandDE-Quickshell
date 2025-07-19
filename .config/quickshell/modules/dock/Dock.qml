@@ -1977,18 +1977,32 @@ Scope {
                                     }
                                     
                                     onClicked: {
-                                        // Use the unified launcher for all apps
-                                        if (modelData.class) {
-                                            dock.launchApp(modelData.class);
-                                            return;
-                                        }
                                         // For unpinned apps, we already have the specific window
                                         if (modelData.address) {
-                                            Hyprland.dispatch(`focuswindow address:${modelData.address}`)
-                                            
-                                            // Switch to the workspace containing the window
+                                            // Switch to the workspace containing the window first
                                             if (modelData.workspace && modelData.workspace.id) {
                                                 Hyprland.dispatch(`workspace ${modelData.workspace.id}`)
+                                            }
+                                            // Then focus the specific window
+                                            Hyprland.dispatch(`focuswindow address:${modelData.address}`)
+                                        } else if (modelData.class) {
+                                            // Try to find existing window for this app
+                                            var targetWindow = dock.findWindowForApp(modelData.class);
+                                            if (targetWindow) {
+                                                // Focus existing window
+                                                if (targetWindow.address) {
+                                                    // Switch to workspace first
+                                                    if (targetWindow.workspace && targetWindow.workspace.id) {
+                                                        Hyprland.dispatch(`workspace ${targetWindow.workspace.id}`);
+                                                    }
+                                                    // Then focus window
+                                                    Hyprland.dispatch(`focuswindow address:${targetWindow.address}`);
+                                                } else {
+                                                    Hyprland.dispatch(`focuswindow class:${targetWindow.class}`);
+                                                }
+                                            } else {
+                                                // No existing window found, launch new instance
+                                                dock.launchApp(modelData.class);
                                             }
                                         } else {
                                             // Fallback to focusing by class

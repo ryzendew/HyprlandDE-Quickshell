@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "root:/modules/common"
 import QtCore
+import "root:/services"
 
 Item {
     id: weatherWidget
@@ -10,6 +11,10 @@ Item {
     height: parent.height
     implicitWidth: weatherRow.implicitWidth
     implicitHeight: 40
+    
+
+
+
 
     property string weatherLocation: "auto"
     property var weatherData: ({
@@ -30,7 +35,19 @@ Item {
         property string lastLocation: ""
         property int lastWeatherTimestamp: 0
     }
-
+    
+    // Set organization properties immediately to prevent QSettings warnings
+    Timer {
+        running: true
+        repeat: false
+        interval: 0
+        onTriggered: {
+            Qt.application.organizationName = "Quickshell"
+            Qt.application.organizationDomain = "quickshell.org"
+            Qt.application.applicationName = "Quickshell"
+        }
+    }
+    
     Timer {
         interval: 600000  // Update every 10 minutes
         running: true
@@ -39,7 +56,38 @@ Item {
     }
 
     Component.onCompleted: {
-        loadWeather();
+        // Set organization properties if not already set
+        if (!Qt.application.organizationName) {
+            Qt.application.organizationName = "Quickshell"
+        }
+        if (!Qt.application.organizationDomain) {
+            Qt.application.organizationDomain = "quickshell.org"
+        }
+        if (!Qt.application.applicationName) {
+            Qt.application.applicationName = "Quickshell"
+        }
+        
+        // Use enhanced weather service if available
+        if (typeof Quickshell !== 'undefined' && Quickshell.weatherService && Quickshell.weatherService.enhancedWeatherData) {
+            // Connect to enhanced weather service
+            Quickshell.weatherService.enhancedWeatherDataChanged.connect(updateFromEnhancedService);
+            updateFromEnhancedService();
+        } else {
+            // Fallback to local weather loading
+            loadWeather();
+        }
+    }
+    
+    function updateFromEnhancedService() {
+        if (Quickshell.weatherService && Quickshell.weatherService.enhancedWeatherData) {
+            var enhanced = Quickshell.weatherService.enhancedWeatherData;
+            weatherData = {
+                currentTemp: enhanced.current.temp,
+                feelsLike: enhanced.current.feelsLike,
+                currentEmoji: getWeatherEmoji(enhanced.current.condition),
+                currentCondition: enhanced.current.condition
+            };
+        }
     }
 
     RowLayout {

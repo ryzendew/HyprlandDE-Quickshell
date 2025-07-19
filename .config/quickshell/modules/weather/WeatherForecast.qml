@@ -21,12 +21,14 @@ Item {
         property string lastWeatherJson: ""
         property double lastWeatherTimestamp: 0
         property string lastLocation: ""
+        
+        // Handle initialization errors gracefully
+        Component.onCompleted: {
+            // Settings will work even if organization properties aren't set yet
+        }
     }
 
     Component.onCompleted: {
-        Qt.application.organizationName = "Quickshell";
-        Qt.application.organizationDomain = "quickshell.org";
-        Qt.application.name = "Quickshell";
         // Clear cache to ensure fresh 7-day data
         clearCache()
         loadWeather()

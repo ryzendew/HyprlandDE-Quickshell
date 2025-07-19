@@ -9,11 +9,11 @@ import Quickshell.Hyprland
 
 Singleton {
     // XDG Dirs, with "file://"
-    readonly property string config: StandardPaths.writableLocation(StandardPaths.ConfigLocation)
-    readonly property string state: StandardPaths.writableLocation(StandardPaths.StateLocation)
-    readonly property string cache: StandardPaths.writableLocation(StandardPaths.CacheLocation)
-    readonly property string pictures: StandardPaths.writableLocation(StandardPaths.PicturesLocation)
-    readonly property string downloads: StandardPaths.writableLocation(StandardPaths.DownloadLocation)
+    readonly property string config: StandardPaths.writableLocation(StandardPaths.ConfigLocation) || "~/.config"
+    readonly property string state: StandardPaths.writableLocation(StandardPaths.StateLocation) || "~/.local/state"
+    readonly property string cache: StandardPaths.writableLocation(StandardPaths.CacheLocation) || "~/.cache"
+    readonly property string pictures: StandardPaths.writableLocation(StandardPaths.PicturesLocation) || "~/Pictures"
+    readonly property string downloads: StandardPaths.writableLocation(StandardPaths.DownloadLocation) || "~/Downloads"
     
     // Other dirs used by the shell, without "file://"
     property string favicons: FileUtils.trimFileProtocol(`${Directories.cache.replace(/Quickshell/, 'quickshell')}/media/favicons`)

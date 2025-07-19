@@ -17,7 +17,7 @@ ColumnLayout {
     property bool centerTabBar: parent.width > Math.max(500, parent ? parent.width * 0.4 : 500) // Responsive centering threshold
     Layout.fillWidth: !centerTabBar
     Layout.alignment: Qt.AlignHCenter
-    implicitWidth: Math.max(tabBar.implicitWidth, Math.max(600, parent ? parent.width * 0.8 : 600)) // Responsive width
+    implicitWidth: Math.max(tabBar.implicitWidth, Math.max(400, parent ? parent.width * 0.9 : 400)) // More responsive width
 
     TabBar {
         id: tabBar
@@ -46,7 +46,7 @@ ColumnLayout {
                 selected: (index == root.externalTrackedTab)
                 buttonText: modelData.name
                 buttonIcon: modelData.icon
-                minimumWidth: Math.max(130, parent ? parent.width * 0.18 : 130) // Responsive minimum width
+                minimumWidth: Math.max(100, parent ? parent.width * 0.2 : 100) // More responsive minimum width
             }
         }
     }

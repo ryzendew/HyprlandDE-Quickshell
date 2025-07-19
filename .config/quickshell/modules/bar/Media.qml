@@ -361,7 +361,7 @@ Item {
         }
         function onLengthChanged() {
             // Update display length when we get valid length data
-            if (activePlayer?.length > 0) {
+            if (activePlayer?.length && activePlayer.length > 0) {
                 displayLength = activePlayer.length
             }
         }
@@ -370,9 +370,10 @@ Item {
     RowLayout { // Real content
         id: rowLayout
         spacing: 10
-        anchors.left: parent.left
+        anchors.left: root.activePlayer ? parent.left : undefined
         anchors.verticalCenter: parent.verticalCenter
-        anchors.leftMargin: 12
+        anchors.leftMargin: root.activePlayer ? 12 : 0
+        anchors.horizontalCenter: root.activePlayer ? undefined : parent.horizontalCenter
         height: parent.height - anchors.topMargin
 
         // Album art on the left with visualizer
@@ -449,14 +450,16 @@ Item {
             // Song name on top
             StyledText {
                 id: songTitle
-                Layout.fillWidth: false
-                Layout.preferredWidth: contentWidth
+                Layout.fillWidth: !root.activePlayer
+                Layout.preferredWidth: root.activePlayer ? contentWidth : undefined
+                Layout.alignment: root.activePlayer ? undefined : Qt.AlignHCenter
                 text: activePlayer?.trackTitle || cleanedTitle
                 color: Appearance.colors.colOnLayer1
                 font.pixelSize: Appearance.font.pixelSize.normal
                 font.weight: Font.Medium
                 elide: Text.ElideNone
                 maximumLineCount: 1
+                horizontalAlignment: root.activePlayer ? Text.AlignLeft : Text.AlignHCenter
             }
 
             // Album - Artist name with time display

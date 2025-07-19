@@ -154,6 +154,13 @@ Scope {
                 property bool isAnimating: false
                 property real animationProgress: 0
                 
+                // Close on escape key
+                Keys.onPressed: (event) => {
+                    if (event.key === Qt.Key_Escape) {
+                        GlobalStates.hyprMenuOpen = false
+                    }
+                }
+                
                 // Dynamic positioning based on menuPosition
                 anchors.horizontalCenter: root.menuPosition.includes("center") || root.menuPosition === "center" ? parent.horizontalCenter : undefined
                 anchors.left: root.menuPosition.includes("left") ? parent.left : undefined
@@ -225,7 +232,6 @@ Scope {
                 // Enhanced drop shadow with blur
                 layer.enabled: true
                 layer.effect: MultiEffect {
-                    source: menuContainer
                     shadowEnabled: true
                     shadowColor: Qt.rgba(0, 0, 0, 0.7)  // Black shadow
                     shadowVerticalOffset: 8
@@ -719,12 +725,7 @@ Scope {
                 // })
             }
             
-            // Close on escape key
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
-                    GlobalStates.hyprMenuOpen = false
-                }
-            }
+            // Close on escape key - moved to menuContainer
         }
     }
     

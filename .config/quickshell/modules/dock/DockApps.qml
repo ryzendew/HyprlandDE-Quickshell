@@ -171,7 +171,8 @@ Item {
             implicitHeight: root.maxWindowPreviewHeight + root.windowControlsHeight + Appearance.sizes.elevationMargin * 2
             hoverEnabled: true
             x: {
-                const itemCenter = root.QsWindow?.mapFromItem(root.lastHoveredButton, root.lastHoveredButton?.width / 2, 0);
+                if (!root.lastHoveredButton || !root.QsWindow) return 0;
+                const itemCenter = root.QsWindow.mapFromItem(root.lastHoveredButton, root.lastHoveredButton.width / 2, 0);
                 return itemCenter.x - width / 2
             }
             StyledRectangularShadow {
@@ -191,7 +192,7 @@ Item {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                 }
                 clip: true
-                color: Appearance.colors.colSurfaceContainer
+                color: Appearance.colors?.colSurfaceContainer ?? Qt.rgba(0, 0, 0, 0.1)
                 radius: Appearance.rounding.normal
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: Appearance.sizes.elevationMargin
@@ -230,7 +231,7 @@ Item {
                                     contentWidth: parent.width - anchors.margins * 2
                                     WrapperRectangle {
                                         Layout.fillWidth: true
-                                        color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer)
+                                        color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer) ?? Qt.rgba(0, 0, 0, 0.1)
                                         radius: Appearance.rounding.small
                                         margin: 5
                                         StyledText {
@@ -238,7 +239,7 @@ Item {
                                             font.pixelSize: Appearance.font.pixelSize.small
                                             text: windowButton.modelData?.title
                                             elide: Text.ElideRight
-                                            color: Appearance.m3colors.m3onSurface
+                                            color: Appearance.m3colors?.m3onSurface ?? "#000000"
                                         }
                                     }
                                     GroupButton {
@@ -252,7 +253,7 @@ Item {
                                             horizontalAlignment: Text.AlignHCenter
                                             text: "close"
                                             iconSize: ConfigOptions.dock.iconSize * 0.4 // Scale down for close button
-                                            color: Appearance.m3colors.m3onSurface
+                                            color: Appearance.m3colors?.m3onSurface ?? "#000000"
                                         }
                                         onClicked: {
                                             windowButton.modelData?.close();

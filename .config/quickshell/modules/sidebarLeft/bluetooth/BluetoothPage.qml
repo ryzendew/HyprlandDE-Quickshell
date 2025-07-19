@@ -37,25 +37,40 @@ Rectangle {
     // After refreshDevices updates deviceList, check connection status for each device
     function refreshDevices() {
         loadingDevices = true;
-        BluetoothManager.listDevices(function(devs) {
-            deviceList = devs;
-            let checked = 0;
-            if (devs.length === 0) {
-                loadingDevices = false;
-                return;
-            }
-            for (let i = 0; i < devs.length; ++i) {
-                let mac = devs[i].mac;
-                BluetoothManager.checkConnected(mac, function(isConnected) {
-                    devs[i].connected = isConnected;
-                    checked++;
-                    if (checked === devs.length) {
-                        deviceList = devs.slice(); // force UI update
-                        loadingDevices = false;
+        if (typeof BluetoothManager !== 'undefined' && BluetoothManager && typeof BluetoothManager.listDevices === 'function') {
+            BluetoothManager.listDevices(function(devs) {
+                deviceList = devs || [];
+                let checked = 0;
+                if (devs && devs.length === 0) {
+                    loadingDevices = false;
+                    return;
+                }
+                if (devs && devs.length > 0) {
+                    for (let i = 0; i < devs.length; ++i) {
+                        let mac = devs[i].mac;
+                        if (typeof BluetoothManager.checkConnected === 'function') {
+                            BluetoothManager.checkConnected(mac, function(isConnected) {
+                                devs[i].connected = isConnected;
+                                checked++;
+                                if (checked === devs.length) {
+                                    deviceList = devs.slice(); // force UI update
+                                    loadingDevices = false;
+                                }
+                            });
+                        } else {
+                            checked++;
+                            if (checked === devs.length) {
+                                loadingDevices = false;
+                            }
+                        }
                     }
-                });
-            }
-        });
+                } else {
+                    loadingDevices = false;
+                }
+            });
+        } else {
+            loadingDevices = false;
+        }
     }
 
     function isDeviceConnected(mac, callback) {
@@ -98,7 +113,7 @@ Rectangle {
     // Clear device lists when sidebar is closed
     Connections {
         target: root.parent // SidebarLeft or parent container
-        onVisibleChanged: {
+        function onVisibleChanged() {
             if (!root.visible) {
                 Bluetooth.connectedDevices = [];
                 Bluetooth.pairedDevices = [];
@@ -110,7 +125,9 @@ Rectangle {
     // Call updateConnectedDeviceHistory() after every device update (e.g., after scan or device list update)
     Connections {
         target: Bluetooth
-        onConnectedDevicesChanged: updateConnectedDeviceHistory()
+        function onConnectedDevicesChanged() {
+            updateConnectedDeviceHistory()
+        }
     }
 
     ColumnLayout {
@@ -320,7 +337,7 @@ Rectangle {
                         width: parent.width - 16
                         height: 60
                         color: "transparent"
-                        visible: deviceListView.count === 0
+                        visible: !deviceListView.count || deviceListView.count === 0
                         
                         ColumnLayout {
                             anchors.centerIn: parent
@@ -405,9 +422,11 @@ Rectangle {
                                         if (modelData.paired) {
                                             Bluetooth.connectDevice(modelData.address)
                                         } else {
-                                            BluetoothManager.pair(modelData.mac, function() {
-                                                refreshDevices();
-                                            });
+                                            if (typeof BluetoothManager !== 'undefined' && BluetoothManager && typeof BluetoothManager.pair === 'function' && modelData.address) {
+                                                BluetoothManager.pair(modelData.address, function() {
+                                                    refreshDevices();
+                                                });
+                                            }
                                         }
                                     }
                                 }
@@ -429,9 +448,11 @@ Rectangle {
                                     if (modelData.paired) {
                                         Bluetooth.connectDevice(modelData.address)
                                     } else {
-                                        BluetoothManager.pair(modelData.mac, function() {
-                                            refreshDevices();
-                                        });
+                                        if (typeof BluetoothManager !== 'undefined' && BluetoothManager && typeof BluetoothManager.pair === 'function' && modelData.address) {
+                                            BluetoothManager.pair(modelData.address, function() {
+                                                refreshDevices();
+                                            });
+                                        }
                                     }
                                 }
                             }

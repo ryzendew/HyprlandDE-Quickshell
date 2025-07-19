@@ -52,11 +52,11 @@ Singleton {
         property bool showBackground: true
         property real transparency: 0.55
         property int height: 40
-        property int iconSize: undefined
-        property int workspaceIconSize: undefined
-        property int indicatorIconSize: undefined
-        property int systrayIconSize: undefined
-        property int logoIconSize: undefined
+        property int iconSize: 0 // 0 = auto, will be calculated by getIconSize()
+        property int workspaceIconSize: 0 // 0 = auto, will be calculated by getWorkspaceIconSize()
+        property int indicatorIconSize: 0 // 0 = auto, will be calculated by getIndicatorIconSize()
+        property int systrayIconSize: 0 // 0 = auto, will be calculated by getSystrayIconSize()
+        property int logoIconSize: 0 // 0 = auto, will be calculated by getLogoIconSize()
         property string borderColor: "#ffffff" // Bar border color (white with opacity)
         property real borderOpacity: 0.12 // Bar border opacity (0.0-1.0)
         property bool borderTop: false // Top border visibility

@@ -153,33 +153,33 @@ Singleton {
             })
             
             detectedApps = categorizedApps
-            console.log("[DefaultApps] Loaded apps from desktop entries:", Object.keys(detectedApps).map(k => `${k}: ${detectedApps[k].length}`))
+            // console.log("[DefaultApps] Loaded apps from desktop entries:", Object.keys(detectedApps).map(k => `${k}: ${detectedApps[k].length}`))
             
             // Debug: Log all detected apps for each category
-            Object.keys(detectedApps).forEach(category => {
-                console.log(`[DefaultApps] ${category} apps:`, detectedApps[category].map(app => `${app.name} (${app.desktopId})`))
-            })
+            // Object.keys(detectedApps).forEach(category => {
+            //     console.log(`[DefaultApps] ${category} apps:`, detectedApps[category].map(app => `${app.name} (${app.desktopId || 'undefined'})`))
+            // })
             
             // Debug: Log web apps specifically
-            if (detectedApps.web && detectedApps.web.length > 0) {
-                console.log("[DefaultApps] Web apps detected:", detectedApps.web.map(app => `${app.name} (${app.desktopId})`))
-            } else {
-                console.log("[DefaultApps] No web apps detected")
-            }
+            // if (detectedApps.web && detectedApps.web.length > 0) {
+            //     console.log("[DefaultApps] Web apps detected:", detectedApps.web.map(app => `${app.name} (${app.desktopId || 'undefined'})`))
+            // } else {
+            //     console.log("[DefaultApps] No web apps detected")
+            // }
             
             // Debug: Log terminal apps specifically
-            if (detectedApps.terminal && detectedApps.terminal.length > 0) {
-                console.log("[DefaultApps] Terminal apps detected:", detectedApps.terminal.map(app => app.name))
-            } else {
-                console.log("[DefaultApps] No terminal apps detected")
-            }
+            // if (detectedApps.terminal && detectedApps.terminal.length > 0) {
+            //     console.log("[DefaultApps] Terminal apps detected:", detectedApps.terminal.map(app => app.name))
+            // } else {
+            //     console.log("[DefaultApps] No terminal apps detected")
+            // }
             
             // Debug: Log video apps specifically
-            if (detectedApps.video && detectedApps.video.length > 0) {
-                console.log("[DefaultApps] Video apps detected:", detectedApps.video.map(app => app.name))
-            } else {
-                console.log("[DefaultApps] No video apps detected")
-            }
+            // if (detectedApps.video && detectedApps.video.length > 0) {
+            //     console.log("[DefaultApps] Video apps detected:", detectedApps.video.map(app => app.name))
+            // } else {
+            //     console.log("[DefaultApps] No video apps detected")
+            // }
             
         } catch (error) {
             console.error("[DefaultApps] Error loading detected apps:", error)
@@ -216,7 +216,7 @@ Singleton {
                 currentDefaults[key] = newDefaults[key]
             })
             
-            console.log("[DefaultApps] Loaded current defaults:", currentDefaults)
+            // console.log("[DefaultApps] Loaded current defaults:", currentDefaults)
         } catch (error) {
             console.error("[DefaultApps] Error loading current defaults:", error)
             currentDefaults = {}
@@ -247,7 +247,7 @@ Singleton {
 
     // Test current system defaults (for debugging)
     function testSystemDefaults() {
-        console.log("[DefaultApps] Testing current system defaults:")
+        // console.log("[DefaultApps] Testing current system defaults:")
         
         const testMimeTypes = {
             web: "x-scheme-handler/http",
@@ -261,7 +261,7 @@ Singleton {
             try {
                 // Use Hyprland.dispatch to run xdg-mime query command
                 Hyprland.dispatch(`exec xdg-mime query default "${mimeType}"`)
-                console.log(`[DefaultApps] ${category}: ${mimeType} -> query sent`)
+                // console.log(`[DefaultApps] ${category}: ${mimeType} -> query sent`)
             } catch (error) {
                 console.error(`[DefaultApps] Error querying ${category}:`, error)
             }
@@ -478,7 +478,7 @@ Singleton {
 
     // Refresh apps (compatibility with UI)
     function refreshApps() {
-        console.log("[DefaultApps] Refreshing apps...")
+        // console.log("[DefaultApps] Refreshing apps...")
         loadDetectedApps()
         loadCurrentDefaults()
     }
@@ -498,7 +498,7 @@ Singleton {
         interval: 2000
         repeat: false
         onTriggered: {
-            console.log("[DefaultApps] Testing system defaults...")
+            // console.log("[DefaultApps] Testing system defaults...")
             testSystemDefaults()
         }
     }

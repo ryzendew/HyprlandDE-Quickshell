@@ -28,8 +28,9 @@ import "./services/"
 ShellRoot {
     id: root
     
-    // Configure QSettings
+    // Set organization properties immediately when the component is created
     Component.onCompleted: {
+        // Set organization properties for QSettings first, before any other initialization
         Qt.application.organizationName = "Quickshell"
         Qt.application.organizationDomain = "quickshell.org"
         Qt.application.applicationName = "Quickshell"
@@ -46,6 +47,18 @@ ShellRoot {
         
         // Initialize enableDock
         // root.enableDock = ConfigOptions.dock.enable
+    }
+    
+    // Set organization properties immediately to prevent QSettings warnings
+    Timer {
+        running: true
+        repeat: false
+        interval: 0
+        onTriggered: {
+            Qt.application.organizationName = "Quickshell"
+            Qt.application.organizationDomain = "quickshell.org"
+            Qt.application.applicationName = "Quickshell"
+        }
     }
     property bool enableBar: true
     property bool enableCheatsheet: true
@@ -71,13 +84,14 @@ ShellRoot {
     property bool enableSidebarLeft: true
     property bool enableHyprMenu: true
 
-    // Weather service for widgets
-    property var weatherService: Weather {
+    // Enhanced Weather service for widgets
+    property var weatherService: WeatherEnhanced {
         id: weatherService
         shell: root
     }
     property alias weatherData: weatherService.weatherData
     property alias weatherLoading: weatherService.loading
+    property alias enhancedWeatherData: weatherService.enhancedWeatherData
 
     // Watch for dock enable/disable changes
     // Connections {

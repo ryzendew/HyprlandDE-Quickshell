@@ -22,56 +22,56 @@ Scope {
     
     // Independent sizing properties for right sidebar
     property int sidebarWidth: {
-        // Base width scales with screen size
+        // Base width scales with screen size - increased by 1.1x (10% wider)
         let baseWidth = Math.max(400, Screen.width * 0.22) // 22% of screen width, minimum 400px
         
         // Adjust based on screen resolution
         if (Screen.width >= 3840) { // 4K
-            return Math.max(500, Screen.width * 0.18) // 18% for 4K
+            return Math.max(550, Screen.width * 0.20) // 20% for 4K (was 18%)
         } else if (Screen.width >= 2560) { // 2K
-            return Math.max(450, Screen.width * 0.20) // 20% for 2K
+            return Math.max(495, Screen.width * 0.22) // 22% for 2K (was 20%)
         } else if (Screen.width >= 1920) { // 1080p
-            return Math.max(420, Screen.width * 0.22) // 22% for 1080p
+            return Math.max(418, Screen.width * 0.22) // 22% for 1080p (was 20%)
         } else if (Screen.width >= 1366) { // 720p
-            return Math.max(380, Screen.width * 0.25) // 25% for 720p
+            return Math.max(418, Screen.width * 0.275) // 27.5% for 720p (was 25%)
         } else { // Small screens
-            return Math.max(350, Screen.width * 0.28) // 28% for small screens
+            return Math.max(385, Screen.width * 0.308) // 30.8% for small screens (was 28%)
         }
     }
     
     property int sidebarWidthExtended: {
-        // Extended width for content-heavy sidebars
+        // Extended width for content-heavy sidebars - increased by 1.1x (10% wider)
         let baseWidth = Math.max(600, Screen.width * 0.28) // 28% of screen width, minimum 600px
         
         // Adjust based on screen resolution
         if (Screen.width >= 3840) { // 4K
-            return Math.max(700, Screen.width * 0.22) // 22% for 4K
+            return Math.max(770, Screen.width * 0.242) // 24.2% for 4K (was 22%)
         } else if (Screen.width >= 2560) { // 2K
-            return Math.max(650, Screen.width * 0.25) // 25% for 2K
+            return Math.max(715, Screen.width * 0.275) // 27.5% for 2K (was 25%)
         } else if (Screen.width >= 1920) { // 1080p
-            return Math.max(600, Screen.width * 0.28) // 28% for 1080p
+            return Math.max(572, Screen.width * 0.275) // 27.5% for 1080p (was 25%)
         } else if (Screen.width >= 1366) { // 720p
-            return Math.max(550, Screen.width * 0.32) // 32% for 720p
+            return Math.max(605, Screen.width * 0.352) // 35.2% for 720p (was 32%)
         } else { // Small screens
-            return Math.max(500, Screen.width * 0.35) // 35% for small screens
+            return Math.max(550, Screen.width * 0.385) // 38.5% for small screens (was 35%)
         }
     }
     
     property int sidebarWidthWeather: {
-        // 20% reduced width for weather content
+        // Weather-optimized width - increased by 1.1x (10% wider)
         let baseWidth = Math.max(520, Screen.width * 0.24) // 24% of screen width, minimum 520px
         
         // Adjust based on screen resolution
         if (Screen.width >= 3840) { // 4K
-            return Math.max(600, Screen.width * 0.192) // 19.2% for 4K
+            return Math.max(660, Screen.width * 0.211) // 21.1% for 4K (was 19.2%)
         } else if (Screen.width >= 2560) { // 2K
-            return Math.max(560, Screen.width * 0.216) // 21.6% for 2K
+            return Math.max(616, Screen.width * 0.238) // 23.8% for 2K (was 21.6%)
         } else if (Screen.width >= 1920) { // 1080p
-            return Math.max(520, Screen.width * 0.24) // 24% for 1080p
+            return Math.max(528, Screen.width * 0.264) // 26.4% for 1080p (was 24%)
         } else if (Screen.width >= 1366) { // 720p
-            return Math.max(480, Screen.width * 0.272) // 27.2% for 720p
+            return Math.max(528, Screen.width * 0.299) // 29.9% for 720p (was 27.2%)
         } else { // Small screens
-            return Math.max(440, Screen.width * 0.296) // 29.6% for small screens
+            return Math.max(484, Screen.width * 0.326) // 32.6% for small screens (was 29.6%)
         }
     }
     
@@ -114,15 +114,33 @@ Scope {
         // Base width from responsive sizing
         let baseWidth = sidebarWidth
         
-        // Adjust based on content complexity
+        // Adjust based on content complexity and screen resolution
         if (centerWidgetGroup) {
             switch (centerWidgetGroup.selectedTab) {
-                case 1: // Volume mixer - use standard width
-                    return sidebarWidth
-                case 2: // Weather - needs space for 10-day forecast
-                    return sidebarWidthWeather
-                case 3: // Calendar - needs space for calendar grid
-                    return sidebarWidthExtended
+                case 0: // Notifications - needs more space for notification content and tab text
+                    if (Screen.width >= 1920) return Math.max(450, Screen.width * 0.24) // 24% for 1080p - increased for better tab spacing
+                    else if (Screen.width >= 2560) return Math.max(500, Screen.width * 0.21) // 21% for 2K - increased
+                    else if (Screen.width >= 3840) return Math.max(550, Screen.width * 0.19) // 19% for 4K - increased
+                    else return Math.max(420, Screen.width * 0.25) // 25% for smaller screens - increased
+                    
+                case 1: // Volume mixer - needs more space for device list and volume controls
+                    if (Screen.width >= 1920) return Math.max(460, Screen.width * 0.24) // 24% for 1080p - increased for better device display
+                    else if (Screen.width >= 2560) return Math.max(520, Screen.width * 0.22) // 22% for 2K - increased
+                    else if (Screen.width >= 3840) return Math.max(570, Screen.width * 0.20) // 20% for 4K - increased
+                    else return Math.max(440, Screen.width * 0.26) // 26% for smaller screens - increased
+                    
+                case 2: // Weather - needs more space for 10-day forecast and weather details
+                    if (Screen.width >= 1920) return Math.max(580, Screen.width * 0.30) // 30% for 1080p - increased for better forecast display
+                    else if (Screen.width >= 2560) return Math.max(640, Screen.width * 0.28) // 28% for 2K
+                    else if (Screen.width >= 3840) return Math.max(700, Screen.width * 0.25) // 25% for 4K
+                    else return Math.max(540, Screen.width * 0.32) // 32% for smaller screens
+                    
+                case 3: // Calendar - needs space for calendar grid and todo list
+                    if (Screen.width >= 1920) return Math.max(520, Screen.width * 0.27) // 27% for 1080p
+                    else if (Screen.width >= 2560) return Math.max(580, Screen.width * 0.25) // 25% for 2K
+                    else if (Screen.width >= 3840) return Math.max(640, Screen.width * 0.22) // 22% for 4K
+                    else return Math.max(500, Screen.width * 0.29) // 29% for smaller screens
+                    
                 default:
                     return baseWidth
             }
@@ -220,86 +238,14 @@ Scope {
             id: sidebarRoot
             visible: sidebarLoader.active
 
-            // Animation properties for slide effect
-            property real slideOffset: 0
-            property bool isAnimating: false
-
             function hide() {
                 if (!pinned) {
-                    isAnimating = true
-                    slideOutAnimation.start()
+                    sidebarLoader.active = false
                 }
             }
 
             function show() {
-                isAnimating = true
-                slideInAnimation.start()
-            }
-
-            // Slide out animation (closing)
-            ParallelAnimation {
-                id: slideOutAnimation
-                NumberAnimation {
-                    target: sidebarRoot
-                    property: "x"
-                    from: 0
-                    to: slideOffset
-                    duration: 200
-                    easing.type: Easing.OutCubic
-                }
-                NumberAnimation {
-                    target: sidebarRoot
-                    property: "opacity"
-                    from: 1.0
-                    to: 0.0
-                    duration: 200
-                    easing.type: Easing.OutCubic
-                }
-                onFinished: {
-                    sidebarLoader.active = false
-                    isAnimating = false
-                    sidebarRoot.opacity = 1.0  // Reset opacity for next time
-                }
-            }
-
-            // Slide in animation (opening)
-            SequentialAnimation {
-                id: slideInAnimation
-                ScriptAction {
-                    script: {
-                        sidebarRoot.x = slideOffset
-                        sidebarRoot.opacity = 0.0  // Start transparent
-                    }
-                }
-                ParallelAnimation {
-                    NumberAnimation {
-                        target: sidebarRoot
-                        property: "x"
-                        from: slideOffset
-                        to: 0
-                        duration: 200
-                        easing.type: Easing.OutCubic
-                    }
-                    NumberAnimation {
-                        target: sidebarRoot
-                        property: "opacity"
-                        from: 0.0
-                        to: 1.0
-                        duration: 200
-                        easing.type: Easing.OutCubic
-                    }
-                }
-                ScriptAction {
-                    script: {
-                        isAnimating = false
-                    }
-                }
-            }
-
-            // Initialize position when component is created
-            Component.onCompleted: {
-                x = 0
-                opacity = 1.0
+                sidebarLoader.active = true
             }
 
             exclusiveZone: 0
@@ -455,23 +401,23 @@ Scope {
                         RowLayout {
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.rightMargin: Math.max(12, parent.width * 0.02) // Responsive margins
-                            spacing: Math.max(4, parent.width * 0.006) // Responsive spacing
+                            anchors.rightMargin: Math.max(6, contentAwareWidth * 0.015) // Dynamic margins based on sidebar width
+                            spacing: Math.max(2, contentAwareWidth * 0.005) // Dynamic spacing based on sidebar width
 
                             BatteryToggle {
                                 visible: Battery.available
-                                // Scale button size with sidebar width
-                                implicitWidth: Math.max(32, parent.height * 0.4)
-                                implicitHeight: Math.max(32, parent.height * 0.4)
+                                // Dynamic button size based on sidebar width
+                                implicitWidth: Math.max(24, contentAwareWidth * 0.06)
+                                implicitHeight: Math.max(24, contentAwareWidth * 0.06)
                             }
 
                             QuickToggleButton {
                                 toggled: pinned
                                 buttonIcon: "push_pin"
                                 onClicked: pinned = !pinned
-                                // Scale button size with sidebar width
-                                implicitWidth: Math.max(32, parent.height * 0.4)
-                                implicitHeight: Math.max(32, parent.height * 0.4)
+                                // Dynamic button size based on sidebar width
+                                implicitWidth: Math.max(24, contentAwareWidth * 0.06)
+                                implicitHeight: Math.max(24, contentAwareWidth * 0.06)
                                 StyledToolTip {
                                     content: pinned ? qsTr("Unpin sidebar (auto-close)") : qsTr("Pin sidebar (keep open)")
                                 }
@@ -484,9 +430,9 @@ Scope {
                                     Hyprland.dispatch("reload")
                                     Quickshell.reload(true)
                                 }
-                                // Scale button size with sidebar width
-                                implicitWidth: Math.max(32, parent.height * 0.4)
-                                implicitHeight: Math.max(32, parent.height * 0.4)
+                                // Dynamic button size based on sidebar width
+                                implicitWidth: Math.max(24, contentAwareWidth * 0.06)
+                                implicitHeight: Math.max(24, contentAwareWidth * 0.06)
                                 StyledToolTip {
                                     content: qsTr("Reload Hyprland & Quickshell")
                                 }
@@ -498,9 +444,9 @@ Scope {
                                 onClicked: {
                                     Hyprland.dispatch("global quickshell:settingsOpen")
                                 }
-                                // Scale button size with sidebar width
-                                implicitWidth: Math.max(32, parent.height * 0.4)
-                                implicitHeight: Math.max(32, parent.height * 0.4)
+                                // Dynamic button size based on sidebar width
+                                implicitWidth: Math.max(24, contentAwareWidth * 0.06)
+                                implicitHeight: Math.max(24, contentAwareWidth * 0.06)
                                 StyledToolTip {
                                     content: qsTr("Settings")
                                 }
@@ -512,9 +458,9 @@ Scope {
                                 onClicked: {
                                     Hyprland.dispatch("global quickshell:sessionOpen")
                                 }
-                                // Scale button size with sidebar width
-                                implicitWidth: Math.max(32, parent.height * 0.4)
-                                implicitHeight: Math.max(32, parent.height * 0.4)
+                                // Dynamic button size based on sidebar width
+                                implicitWidth: Math.max(24, contentAwareWidth * 0.06)
+                                implicitHeight: Math.max(24, contentAwareWidth * 0.06)
                                 StyledToolTip {
                                     content: qsTr("Session")
                                 }
@@ -542,45 +488,45 @@ Scope {
                             anchors.centerIn: parent
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            anchors.margins: Math.max(5, parent.width * 0.008) // Responsive margins
-                            spacing: Math.max(14, parent.width * 0.02) // Responsive spacing
+                            anchors.margins: Math.max(3, contentAwareWidth * 0.006) // Dynamic margins based on sidebar width
+                            spacing: Math.max(6, contentAwareWidth * 0.012) // Dynamic spacing based on sidebar width
                             
                             Item { Layout.fillWidth: true }
                             
                             RowLayout {
-                                spacing: Math.max(14, parent.width * 0.02) // Responsive spacing
+                                spacing: Math.max(6, contentAwareWidth * 0.012) // Dynamic spacing based on sidebar width
                                 Layout.alignment: Qt.AlignVCenter
 
                                 NetworkToggle {
                                     Layout.alignment: Qt.AlignVCenter
-                                    // Scale button size with sidebar width
-                                    implicitWidth: Math.max(36, parent.height * 0.45)
-                                    implicitHeight: Math.max(36, parent.height * 0.45)
+                                    // Dynamic button size based on sidebar width
+                                    implicitWidth: Math.max(26, contentAwareWidth * 0.065)
+                                    implicitHeight: Math.max(26, contentAwareWidth * 0.065)
                                 }
                                 BluetoothToggle {
                                     id: bluetoothToggle
                                     Layout.alignment: Qt.AlignVCenter
-                                    // Scale button size with sidebar width
-                                    implicitWidth: Math.max(36, parent.height * 0.45)
-                                    implicitHeight: Math.max(36, parent.height * 0.45)
+                                    // Dynamic button size based on sidebar width
+                                    implicitWidth: Math.max(26, contentAwareWidth * 0.065)
+                                    implicitHeight: Math.max(26, contentAwareWidth * 0.065)
                                 }
                                 NightLight {
                                     Layout.alignment: Qt.AlignVCenter
-                                    // Scale button size with sidebar width
-                                    implicitWidth: Math.max(36, parent.height * 0.45)
-                                    implicitHeight: Math.max(36, parent.height * 0.45)
+                                    // Dynamic button size based on sidebar width
+                                    implicitWidth: Math.max(26, contentAwareWidth * 0.065)
+                                    implicitHeight: Math.max(26, contentAwareWidth * 0.065)
                                 }
                                 GameMode {
                                     Layout.alignment: Qt.AlignVCenter
-                                    // Scale button size with sidebar width
-                                    implicitWidth: Math.max(36, parent.height * 0.45)
-                                    implicitHeight: Math.max(36, parent.height * 0.45)
+                                    // Dynamic button size based on sidebar width
+                                    implicitWidth: Math.max(26, contentAwareWidth * 0.065)
+                                    implicitHeight: Math.max(26, contentAwareWidth * 0.065)
                                 }
                                 IdleInhibitor {
                                     Layout.alignment: Qt.AlignVCenter
-                                    // Scale button size with sidebar width
-                                    implicitWidth: Math.max(36, parent.height * 0.45)
-                                    implicitHeight: Math.max(36, parent.height * 0.45)
+                                    // Dynamic button size based on sidebar width
+                                    implicitWidth: Math.max(26, contentAwareWidth * 0.065)
+                                    implicitHeight: Math.max(26, contentAwareWidth * 0.065)
                                 }
                                 QuickToggleButton {
                                     id: perfProfilePerformance
@@ -588,9 +534,9 @@ Scope {
                                     toggled: PowerProfiles.profile === PowerProfile.Performance
                                     onClicked: PowerProfiles.profile = PowerProfile.Performance
                                     Layout.alignment: Qt.AlignVCenter
-                                    // Scale button size with sidebar width
-                                    implicitWidth: Math.max(36, parent.height * 0.45)
-                                    implicitHeight: Math.max(36, parent.height * 0.45)
+                                    // Dynamic button size based on sidebar width
+                                    implicitWidth: Math.max(26, contentAwareWidth * 0.065)
+                                    implicitHeight: Math.max(26, contentAwareWidth * 0.065)
                                     StyledToolTip { content: qsTr("Performance Mode") }
                                 }
                                 QuickToggleButton {
@@ -599,9 +545,9 @@ Scope {
                                     toggled: PowerProfiles.profile === PowerProfile.Balanced
                                     onClicked: PowerProfiles.profile = PowerProfile.Balanced
                                     Layout.alignment: Qt.AlignVCenter
-                                    // Scale button size with sidebar width
-                                    implicitWidth: Math.max(36, parent.height * 0.45)
-                                    implicitHeight: Math.max(36, parent.height * 0.45)
+                                    // Dynamic button size based on sidebar width
+                                    implicitWidth: Math.max(26, contentAwareWidth * 0.065)
+                                    implicitHeight: Math.max(26, contentAwareWidth * 0.065)
                                     StyledToolTip { content: qsTr("Balanced Mode") }
                                 }
                                 QuickToggleButton {
@@ -610,9 +556,9 @@ Scope {
                                     toggled: PowerProfiles.profile === PowerProfile.PowerSaver
                                     onClicked: PowerProfiles.profile = PowerProfile.PowerSaver
                                     Layout.alignment: Qt.AlignVCenter
-                                    // Scale button size with sidebar width
-                                    implicitWidth: Math.max(36, parent.height * 0.45)
-                                    implicitHeight: Math.max(36, parent.height * 0.45)
+                                    // Dynamic button size based on sidebar width
+                                    implicitWidth: Math.max(26, contentAwareWidth * 0.065)
+                                    implicitHeight: Math.max(26, contentAwareWidth * 0.065)
                                     StyledToolTip { content: qsTr("Power Saver Mode") }
                                 }
                             }
