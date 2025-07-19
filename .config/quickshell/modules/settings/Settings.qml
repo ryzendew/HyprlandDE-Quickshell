@@ -31,7 +31,7 @@ Scope {
     property int baseSidebarWidth: 320
     property int baseContentMargin: 40
     property int baseHeaderHeight: 56
-    property int baseNavItemHeight: 80
+    property int baseNavItemHeight: 120
     property int baseIconSize: 22
     property int baseFontSize: 14
 
@@ -269,7 +269,7 @@ Scope {
 
                                             ColumnLayout {
                                                 Layout.fillWidth: true
-                                                spacing: 4 * scaleFactor
+                                                spacing: 6 * scaleFactor
 
                                                 StyledText {
                                                     text: modelData.title

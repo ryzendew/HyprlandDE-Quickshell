@@ -12,10 +12,10 @@ ColumnLayout {
 
     // Responsive scaling properties
     property real scaleFactor: root.scaleFactor ?? 1.0
-    property int baseTabHeight: 56
-    property int baseTabWidth: 240
+    property int baseTabHeight: 88
+    property int baseTabWidth: 280
     property int baseIconSize: 16
-    property int baseSpacing: 10
+    property int baseSpacing: 12
 
     // Horizontal tab navigation with responsive sizing
     Rectangle {
@@ -35,6 +35,7 @@ ColumnLayout {
                 model: [
                     { "id": "appearance", "title": "Appearance", "icon": "palette", "subtitle": "Colors, themes & visual effects" },
                     { "id": "logo", "title": "Logo", "icon": "image", "subtitle": "System logo selection" },
+                    { "id": "wallpaper", "title": "Wallpaper", "icon": "wallpaper", "subtitle": "Desktop background settings" },
                     { "id": "bar", "title": "Bar", "icon": "view_agenda", "subtitle": "Top bar settings" },
                     { "id": "dock", "title": "Dock", "icon": "dock", "subtitle": "Application dock settings" }
                 ]
@@ -60,7 +61,7 @@ ColumnLayout {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: baseSpacing * scaleFactor
+                        anchors.margins: 16 * scaleFactor
                         spacing: baseSpacing * scaleFactor
 
                         Rectangle {
@@ -80,7 +81,7 @@ ColumnLayout {
                         ColumnLayout {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter
-                            spacing: 0
+                            spacing: 2 * scaleFactor
 
                             StyledText {
                                 text: modelData.title
@@ -111,6 +112,7 @@ ColumnLayout {
             switch(appearanceTab.selectedSubTab) {
                 case "appearance": return appearanceComponent;
                 case "logo": return logoComponent;
+                case "wallpaper": return wallpaperComponent;
                 case "bar": return barComponent;
                 case "dock": return dockComponent;
                 default: return appearanceComponent;
@@ -121,6 +123,7 @@ ColumnLayout {
     // Sub-components
     Component { id: appearanceComponent; StyleConfig {} }
     Component { id: logoComponent; LogoConfig {} }
+    Component { id: wallpaperComponent; WallpaperConfig {} }
     Component { id: barComponent; BarConfig {} }
     Component { id: dockComponent; DockConfig {} }
 

@@ -8,7 +8,7 @@ Button {
     id: button
     property string buttonText
     
-    implicitHeight: 35
+    implicitHeight: 45
     leftPadding: 15
     rightPadding: 15
     

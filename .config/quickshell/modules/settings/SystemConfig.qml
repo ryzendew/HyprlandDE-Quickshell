@@ -17,10 +17,10 @@ ColumnLayout {
 
     // Responsive scaling properties
     property real scaleFactor: root.scaleFactor ?? 1.0
-    property int baseTabHeight: 56
-    property int baseTabWidth: 240
+    property int baseTabHeight: 88
+    property int baseTabWidth: 280
     property int baseIconSize: 16
-    property int baseSpacing: 10
+    property int baseSpacing: 12
 
     // Horizontal tab navigation with responsive sizing
     Rectangle {
@@ -64,7 +64,7 @@ ColumnLayout {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: baseSpacing * scaleFactor
+                        anchors.margins: 16 * scaleFactor
                         spacing: baseSpacing * scaleFactor
 
                         Rectangle {
@@ -83,7 +83,7 @@ ColumnLayout {
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 0
+                            spacing: 2 * scaleFactor
                             anchors.verticalCenter: parent.verticalCenter
 
                             StyledText {

@@ -10,7 +10,7 @@ import Quickshell.Services.Pipewire
 
 RadioButton {
     id: root
-    implicitHeight: 40
+    implicitHeight: 50
     property string description
     property color activeColor: Appearance?.colors.colPrimary ?? "#685496"
     property color inactiveColor: Appearance?.m3colors.m3onSurfaceVariant ?? "#45464F"

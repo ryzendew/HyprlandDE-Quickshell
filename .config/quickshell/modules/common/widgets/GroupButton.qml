@@ -32,7 +32,7 @@ Button {
 
     // --- Button sizing ---
     property int horizontalTextPadding: 12
-    property int verticalTextPadding: 8
+    property int verticalTextPadding: 12
     implicitWidth: contentItem.implicitWidth + horizontalTextPadding * 2
     implicitHeight: contentItem.implicitHeight + verticalTextPadding * 2
     Layout.fillWidth: false

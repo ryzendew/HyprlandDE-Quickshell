@@ -13,7 +13,7 @@ RippleButton {
     id: button
 
     property string buttonText
-    implicitHeight: 30
+    implicitHeight: 40
     implicitWidth: buttonTextWidget.implicitWidth + 15 * 2
     buttonRadius: Appearance?.rounding.full ?? 9999
 

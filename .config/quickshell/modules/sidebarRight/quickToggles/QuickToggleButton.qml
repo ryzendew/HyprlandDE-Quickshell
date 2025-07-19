@@ -11,7 +11,7 @@ Button {
     property bool toggled
     property string buttonIcon
     property bool hasRightClickAction: false
-    property real buttonSize: hasRightClickAction ? 48 : 40
+    property real buttonSize: hasRightClickAction ? 56 : 48
 
     implicitWidth: buttonSize
     implicitHeight: buttonSize

@@ -94,7 +94,7 @@ TabButton {
 
     background: Item {
         id: buttonBackground
-        implicitHeight: Math.max(40, parent ? parent.height * 0.07 : 40) // More responsive height
+        implicitHeight: Math.max(50, parent ? parent.height * 0.07 : 50) // More responsive height
         
         // Professional selected tab background with top-only rounded corners
         Item {

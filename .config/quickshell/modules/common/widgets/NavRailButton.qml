@@ -26,7 +26,7 @@ Button {
         spacing: 5
         Rectangle {
             width: 62
-            implicitHeight: navRailButtonIcon.height + 2 * 2
+            implicitHeight: navRailButtonIcon.height + 2 * 4
             Layout.alignment: Qt.AlignHCenter
             radius: Appearance.rounding.full
             color: toggled ? 

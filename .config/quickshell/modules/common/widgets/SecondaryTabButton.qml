@@ -93,7 +93,7 @@ TabButton {
     background: Rectangle {
         id: buttonBackground
         radius: Appearance?.rounding.small ?? 7
-        implicitHeight: 37
+        implicitHeight: 47
         color: (root.hovered ? root.colBackgroundHover : root.colBackground)
         layer.enabled: true
         layer.effect: OpacityMask {
