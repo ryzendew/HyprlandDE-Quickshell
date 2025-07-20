@@ -119,10 +119,10 @@ Scope {
                 height: barHeight
                 radius: 0
                 color: Qt.rgba(
-                    Appearance.colors?.colLayer0?.r ?? 0,
-                    Appearance.colors?.colLayer0?.g ?? 0,
-                    Appearance.colors?.colLayer0?.b ?? 0,
-                    0.3
+                    (Appearance.colors?.colLayer0?.r ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                    (Appearance.colors?.colLayer0?.g ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                    (Appearance.colors?.colLayer0?.b ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                    ConfigOptions.bar?.transparency ?? 0.3
                 )
                 anchors.margins: 0
                 layer.enabled: true
@@ -275,7 +275,12 @@ Scope {
                                 
                                 radius: Appearance.rounding.full
                                 color: archMouseArea.containsMouse ? 
-                                    Qt.rgba(Appearance.colors?.colLayer1Active?.r ?? 0, Appearance.colors?.colLayer1Active?.g ?? 0, Appearance.colors?.colLayer1Active?.b ?? 0, 0.8) : 
+                                    Qt.rgba(
+                                        (Appearance.colors?.colLayer1Active?.r ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                        (Appearance.colors?.colLayer1Active?.g ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                        (Appearance.colors?.colLayer1Active?.b ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                        0.8
+                                    ) : 
                                     "transparent"
                                 implicitWidth: archLogo.width + 10
                                 implicitHeight: barHeight
@@ -297,6 +302,14 @@ Scope {
                                         sourceSize.height: logoIconSize
                                         layer.enabled: true
                                         layer.smooth: true
+                                        
+                                        layer.effect: DropShadow {
+                                            horizontalOffset: 0
+                                            verticalOffset: 2
+                                            radius: 4.0
+                                            samples: 9
+                                            color: Qt.rgba(0, 0, 0, 0.3)
+                                        }
                                     }
                                     
                                     ColorOverlay {
@@ -397,12 +410,46 @@ Scope {
                                 Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
                                 implicitWidth: indicatorsRowLayout.implicitWidth + 6*2
                                 buttonRadius: Appearance.rounding.full
-                                colBackground: barRightSideMouseArea.hovered ? (Appearance.colors?.colLayer1Hover ?? Qt.rgba(0, 0, 0, 0.1)) : ColorUtils.transparentize(Appearance.colors?.colLayer1Hover ?? Qt.rgba(0, 0, 0, 0.1), 1)
-                                colBackgroundHover: Appearance.colors?.colLayer1Hover ?? Qt.rgba(0, 0, 0, 0.1)
-                                colRipple: Appearance.colors?.colLayer1Active ?? Qt.rgba(0, 0, 0, 0.2)
+                                colBackground: barRightSideMouseArea.hovered ? 
+                                    Qt.rgba(
+                                        (Appearance.colors?.colLayer1Hover?.r ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                        (Appearance.colors?.colLayer1Hover?.g ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                        (Appearance.colors?.colLayer1Hover?.b ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                        0.1
+                                    ) : 
+                                    ColorUtils.transparentize(
+                                        Qt.rgba(
+                                            (Appearance.colors?.colLayer1Hover?.r ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                            (Appearance.colors?.colLayer1Hover?.g ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                            (Appearance.colors?.colLayer1Hover?.b ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                            0.1
+                                        ), 1
+                                    )
+                                colBackgroundHover: Qt.rgba(
+                                    (Appearance.colors?.colLayer1Hover?.r ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    (Appearance.colors?.colLayer1Hover?.g ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    (Appearance.colors?.colLayer1Hover?.b ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    0.1
+                                )
+                                colRipple: Qt.rgba(
+                                    (Appearance.colors?.colLayer1Active?.r ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    (Appearance.colors?.colLayer1Active?.g ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    (Appearance.colors?.colLayer1Active?.b ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    0.2
+                                )
                                 colBackgroundToggled: Appearance.m3colors.m3secondaryContainer
-                                colBackgroundToggledHover: Appearance.colors?.colSecondaryContainerHover ?? Qt.rgba(0, 0, 0, 0.1)
-                                colRippleToggled: Appearance.colors?.colSecondaryContainerActive ?? Qt.rgba(0, 0, 0, 0.2)
+                                colBackgroundToggledHover: Qt.rgba(
+                                    (Appearance.colors?.colSecondaryContainerHover?.r ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    (Appearance.colors?.colSecondaryContainerHover?.g ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    (Appearance.colors?.colSecondaryContainerHover?.b ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    0.1
+                                )
+                                colRippleToggled: Qt.rgba(
+                                    (Appearance.colors?.colSecondaryContainerActive?.r ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    (Appearance.colors?.colSecondaryContainerActive?.g ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    (Appearance.colors?.colSecondaryContainerActive?.b ?? 0) * (ConfigOptions.bar?.brightness ?? 1.0),
+                                    0.2
+                                )
                                 toggled: GlobalStates.sidebarRightOpen
                                 property color colText: toggled ? (Appearance.m3colors?.m3onSecondaryContainer ?? "#000000") : (Appearance.colors?.colOnLayer0 ?? "#000000")
 
@@ -428,6 +475,17 @@ Scope {
                                         iconSize: indicatorIconSize
                                         color: rightSidebarButton.colText
                                         visible: Audio.sink?.audio?.muted ?? false
+                                        
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                        
+                                        layer.effect: DropShadow {
+                                            horizontalOffset: 0
+                                            verticalOffset: 2
+                                            radius: 4.0
+                                            samples: 9
+                                            color: Qt.rgba(0, 0, 0, 0.3)
+                                        }
                                         
                                         MouseArea {
                                             anchors.fill: parent
@@ -490,6 +548,17 @@ Scope {
                                             color: rightSidebarButton.colText
                                         visible: !(Audio.sink?.audio?.muted ?? false)
                                         
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                        
+                                        layer.effect: DropShadow {
+                                            horizontalOffset: 0
+                                            verticalOffset: 2
+                                            radius: 4.0
+                                            samples: 9
+                                            color: Qt.rgba(0, 0, 0, 0.3)
+                                        }
+                                        
                                         MouseArea {
                                             anchors.fill: parent
                                             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -546,6 +615,17 @@ Scope {
                                         color: rightSidebarButton.colText
                                         visible: Audio.source?.audio?.muted ?? false
                                         
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                        
+                                        layer.effect: DropShadow {
+                                            horizontalOffset: 0
+                                            verticalOffset: 2
+                                            radius: 4.0
+                                            samples: 9
+                                            color: Qt.rgba(0, 0, 0, 0.3)
+                                        }
+                                        
                                         MouseArea {
                                             anchors.fill: parent
                                             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -586,6 +666,17 @@ Scope {
                                         iconSize: indicatorIconSize
                                             color: rightSidebarButton.colText
                                         visible: !(Audio.source?.audio?.muted ?? false)
+                                        
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                        
+                                        layer.effect: DropShadow {
+                                            horizontalOffset: 0
+                                            verticalOffset: 2
+                                            radius: 4.0
+                                            samples: 9
+                                            color: Qt.rgba(0, 0, 0, 0.3)
+                                        }
                                         MouseArea {
                                             anchors.fill: parent
                                             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -625,6 +716,17 @@ Scope {
                                         text: "light_mode"
                                         iconSize: indicatorIconSize
                                         color: rightSidebarButton.colText
+                                        
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                        
+                                        layer.effect: DropShadow {
+                                            horizontalOffset: 0
+                                            verticalOffset: 2
+                                            radius: 4.0
+                                            samples: 9
+                                            color: Qt.rgba(0, 0, 0, 0.3)
+                                        }
                                         
                                         MouseArea {
                                             anchors.fill: parent
@@ -672,11 +774,33 @@ Scope {
                                         text: Network.materialSymbol
                                         iconSize: indicatorIconSize
                                         color: rightSidebarButton.colText
+                                        
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                        
+                                        layer.effect: DropShadow {
+                                            horizontalOffset: 0
+                                            verticalOffset: 2
+                                            radius: 4.0
+                                            samples: 9
+                                            color: Qt.rgba(0, 0, 0, 0.3)
+                                        }
                                     }
                                     MaterialSymbol {
                                         text: Bluetooth.bluetoothConnected ? "bluetooth_connected" : Bluetooth.bluetoothEnabled ? "bluetooth" : "bluetooth_disabled"
                                         iconSize: indicatorIconSize
                                         color: rightSidebarButton.colText
+                                        
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                        
+                                        layer.effect: DropShadow {
+                                            horizontalOffset: 0
+                                            verticalOffset: 2
+                                            radius: 4.0
+                                            samples: 9
+                                            color: Qt.rgba(0, 0, 0, 0.3)
+                                        }
                                     }
 
                                 }

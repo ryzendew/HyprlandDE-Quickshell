@@ -50,7 +50,12 @@ Singleton {
 
     property QtObject bar: QtObject {
         property bool showBackground: true
+        property bool blurEnabled: true
+        property bool xray: false
         property real transparency: 0.55
+        property real brightness: 1.0
+        property int blurAmount: 8
+        property int blurPasses: 4
         property int height: 40
         property int iconSize: 0 // 0 = auto, will be calculated by getIconSize()
         property int workspaceIconSize: 0 // 0 = auto, will be calculated by getWorkspaceIconSize()
@@ -225,6 +230,7 @@ Singleton {
         property bool suppressQmlWarnings: true // Suppress QML warnings
         property bool suppressHyprlandWarnings: true // Suppress Hyprland dispatch warnings
         property bool suppressMediaDebug: true // Suppress media player debug spam
+        property bool suppressShaderWarnings: true // Suppress shader effect warnings
     }
 
     function getIconSize() { return bar.iconSize !== undefined ? bar.iconSize : Math.round(bar.height * 0.7); }

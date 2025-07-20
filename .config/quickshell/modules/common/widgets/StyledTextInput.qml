@@ -7,8 +7,8 @@ import QtQuick.Controls
  */
 TextInput {
     renderType: Text.NativeRendering
-    selectedTextColor: Appearance.m3colors.m3onSecondaryContainer
-    selectionColor: Appearance.colors.colSecondaryContainer
+    selectedTextColor: Appearance.m3colors?.m3onSecondaryContainer || "#000000"
+    selectionColor: Appearance.colors?.colSecondaryContainer || "#cccccc"
     font {
         family: Appearance?.font.family.main ?? "sans-serif"
         pixelSize: Appearance?.font.pixelSize.small ?? 15

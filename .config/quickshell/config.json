@@ -7,12 +7,16 @@
     "error": false,
     "suppressIconWarnings": true,
     "suppressQmlWarnings": true,
-    "suppressHyprlandWarnings": true
+    "suppressHyprlandWarnings": true,
+    "suppressShaderWarnings": true
   },
   "bar": {
     "showBackground": true,
     "borderless": false,
     "transparency": 0.55,
+    "brightness": 1.0,
+    "blurAmount": 8,
+    "blurPasses": 4,
     "height": 40,
     "iconSize": 24,
     "workspaceIconSize": 24,

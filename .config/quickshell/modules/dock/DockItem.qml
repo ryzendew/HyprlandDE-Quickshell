@@ -145,6 +145,17 @@ Rectangle {
                     source = "image://icon/application-x-executable"
                 }
             }
+            
+            layer.enabled: true
+            layer.smooth: true
+            
+            layer.effect: DropShadow {
+                horizontalOffset: 0
+                verticalOffset: 2
+                radius: 4.0
+                samples: 9
+                color: Qt.rgba(0, 0, 0, 0.3)
+            }
         }
 
         // --- Multi-window Dots ---

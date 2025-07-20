@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Hyprland
 import "root:/modules/common"
 import "root:/services"
+import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: archLogoContainer
@@ -26,6 +27,17 @@ Rectangle {
         height: 22
         source: SystemPaths.getLogoPath()
         fillMode: Image.PreserveAspectFit
+        
+        layer.enabled: true
+        layer.smooth: true
+        
+        layer.effect: DropShadow {
+            horizontalOffset: 0
+            verticalOffset: 2
+            radius: 4.0
+            samples: 9
+            color: Qt.rgba(0, 0, 0, 0.3)
+        }
     }
     
     // Mouse area only for the Arch logo

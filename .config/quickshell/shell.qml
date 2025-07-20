@@ -1,6 +1,7 @@
 //@ pragma UseQApplication
 //@ pragma Env QS_NO_RELOAD_POPUP=1
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Basic
+//@ pragma Env QT_LOGGING_RULES=qt.qpa.*=false;qt.qml.*=false;qt.quick.*=false;qt.qml.qt5compat.*=false;qt.quick.layouts.*=false;qt.quick.controls.*=false
 
 import "./modules/common/"
 import "./modules/bar/"

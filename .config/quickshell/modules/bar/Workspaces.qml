@@ -226,6 +226,17 @@ Item {
                             (workspaceOccupied[index] ? Appearance.m3colors.m3onSecondaryContainer : 
                                 Appearance.colors.colOnLayer1Inactive)
 
+                        layer.enabled: true
+                        layer.smooth: true
+                        
+                        layer.effect: DropShadow {
+                            horizontalOffset: 0
+                            verticalOffset: 2
+                            radius: 4.0
+                            samples: 9
+                            color: Qt.rgba(0, 0, 0, 0.3)
+                        }
+
                         Behavior on opacity {
                             animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                         }
@@ -249,6 +260,17 @@ Item {
                             visible: opacity > 0
                             source: workspaceButtonBackground.mainAppIconSource
                             implicitSize: (!GlobalStates.workspaceShowNumbers && !(ConfigOptions.bar?.workspaces?.alwaysShowNumbers || false)) ? workspaceIconSize : workspaceIconSizeShrinked
+
+                            layer.enabled: true
+                            layer.smooth: true
+                            
+                            layer.effect: DropShadow {
+                                horizontalOffset: 0
+                                verticalOffset: 2
+                                radius: 4.0
+                                samples: 9
+                                color: Qt.rgba(0, 0, 0, 0.3)
+                            }
 
                             Behavior on opacity {
                                 animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)

@@ -17,7 +17,7 @@ RippleButton {
             // Layout.fillWidth: true  // REMOVE to prevent stretching
             text: root.text
             font.pixelSize: Appearance.font.pixelSize.small
-            color: Appearance.colors.colOnSecondaryContainer || Appearance.colors.text
+            color: (Appearance.colors?.colOnSecondaryContainer || Appearance.colors?.text || "#ffffff")
         }
         StyledSwitch {
             id: switchWidget

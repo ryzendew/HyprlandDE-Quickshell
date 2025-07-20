@@ -92,8 +92,7 @@ Flickable {
                     // Bar appearance settings
                     ColumnLayout {
                         spacing: 16
-                        anchors.left: parent.left
-                        anchors.leftMargin: 0
+                        Layout.fillWidth: true
 
                         StyledText {
                             text: "Appearance"
@@ -108,7 +107,7 @@ Flickable {
                                 spacing: 12
                                 ConfigSwitch {
                                     checked: ConfigOptions.bar.showBackground ?? true
-                                    onCheckedChanged: { ConfigLoader.setConfigValue("bar.showBackground", checked); }
+                                    onCheckedChanged: { ConfigLoader.setConfigValueAndSave("bar.showBackground", checked); }
                                 }
                                 StyledText {
                                     text: "Show background"
@@ -134,20 +133,58 @@ Flickable {
                             StyledSlider {
                                 from: 0.0
                                 to: 1.0
-                                value: ConfigOptions.bar.transparency ?? 0.55
+                                value: AppearanceSettingsState.barTransparency
                                 stepSize: 0.05
-                                onValueChanged: { ConfigLoader.setConfigValue("bar.transparency", value); }
+                                onValueChanged: { 
+                                    AppearanceSettingsState.barTransparency = value;
+                                    ConfigLoader.setConfigValueAndSave("bar.transparency", value);
+                                }
                                 Layout.fillWidth: true
                             }
                             Item { width: 8 }
                             StyledText {
-                                text: `${Math.round((ConfigOptions.bar.transparency ?? 0.55) * 100)}%`
+                                text: `${Math.round(AppearanceSettingsState.barTransparency * 100)}%`
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: "#fff"
                                 horizontalAlignment: Text.AlignHCenter
                             }
                         }
                     }
+
+                    // Bar brightness
+                    ColumnLayout {
+                        spacing: 8
+                        Layout.topMargin: 16
+
+                        StyledText {
+                            text: "Brightness"
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            color: "#fff"
+                        }
+                        RowLayout {
+                            spacing: 8
+                            StyledSlider {
+                                from: 0.0
+                                to: 1.0
+                                value: AppearanceSettingsState.barBrightness
+                                stepSize: 0.05
+                                onValueChanged: { 
+                                    AppearanceSettingsState.barBrightness = value;
+                                    ConfigLoader.setConfigValueAndSave("bar.brightness", value);
+                                }
+                                Layout.fillWidth: true
+                            }
+                            Item { width: 8 }
+                            StyledText {
+                                text: `${Math.round(AppearanceSettingsState.barBrightness * 100)}%`
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "#fff"
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
+                    }
+
+
 
                     // Icon sizes
                     ColumnLayout {
@@ -173,7 +210,7 @@ Flickable {
                                 from: 24
                                 to: 120
                                 stepSize: 2
-                                onValueChanged: { ConfigLoader.setConfigValue("bar.height", value); }
+                                onValueChanged: { ConfigLoader.setConfigValueAndSave("bar.height", value); }
                             }
 
                             StyledText { text: "Icon size"; font.pixelSize: Appearance.font.pixelSize.normal; color: "#fff" }
@@ -182,7 +219,7 @@ Flickable {
                                 from: 12
                                 to: 64
                                 stepSize: 2
-                                onValueChanged: { ConfigLoader.setConfigValue("bar.iconSize", value); }
+                                onValueChanged: { ConfigLoader.setConfigValueAndSave("bar.iconSize", value); }
                             }
 
                             StyledText { text: "Workspace icon size"; font.pixelSize: Appearance.font.pixelSize.normal; color: "#fff" }
@@ -191,7 +228,7 @@ Flickable {
                                 from: 12
                                 to: 64
                                 stepSize: 2
-                                onValueChanged: { ConfigLoader.setConfigValue("bar.workspaceIconSize", value); }
+                                onValueChanged: { ConfigLoader.setConfigValueAndSave("bar.workspaceIconSize", value); }
                             }
 
                             StyledText { text: "Indicator icon size"; font.pixelSize: Appearance.font.pixelSize.normal; color: "#fff" }
@@ -200,7 +237,7 @@ Flickable {
                                 from: 12
                                 to: 64
                                 stepSize: 2
-                                onValueChanged: { ConfigLoader.setConfigValue("bar.indicatorIconSize", value); }
+                                onValueChanged: { ConfigLoader.setConfigValueAndSave("bar.indicatorIconSize", value); }
                             }
 
                             StyledText { text: "Systray icon size"; font.pixelSize: Appearance.font.pixelSize.normal; color: "#fff" }
@@ -209,7 +246,7 @@ Flickable {
                                 from: 12
                                 to: 64
                                 stepSize: 2
-                                onValueChanged: { ConfigLoader.setConfigValue("bar.systrayIconSize", value); }
+                                onValueChanged: { ConfigLoader.setConfigValueAndSave("bar.systrayIconSize", value); }
                             }
 
                             StyledText { text: "Logo icon size"; font.pixelSize: Appearance.font.pixelSize.normal; color: "#fff" }
@@ -218,7 +255,7 @@ Flickable {
                                 from: 12
                                 to: 128
                                 stepSize: 2
-                                onValueChanged: { ConfigLoader.setConfigValue("bar.logoIconSize", value); }
+                                onValueChanged: { ConfigLoader.setConfigValueAndSave("bar.logoIconSize", value); }
                             }
                         }
                     }

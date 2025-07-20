@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "root:/modules/common"
 import QtCore
 import "root:/services"
+import Qt5Compat.GraphicalEffects
 
 Item {
     id: weatherWidget
@@ -120,6 +121,17 @@ Item {
             font.pixelSize: Appearance.font.pixelSize.larger
             color: Appearance.colors.colOnLayer0
                 visible: !isFogCondition(weatherData.currentCondition)
+                
+                layer.enabled: true
+                layer.smooth: true
+                
+                layer.effect: DropShadow {
+                    horizontalOffset: 0
+                    verticalOffset: 2
+                    radius: 4.0
+                    samples: 9
+                    color: Qt.rgba(0, 0, 0, 0.3)
+                }
             }
         }
 
@@ -133,6 +145,17 @@ Item {
                 font.pixelSize: Appearance.font.pixelSize.normal
                 color: Appearance.colors.colOnLayer0
                 Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
+                
+                layer.enabled: true
+                layer.smooth: true
+                
+                layer.effect: DropShadow {
+                    horizontalOffset: 0
+                    verticalOffset: 2
+                    radius: 4.0
+                    samples: 9
+                    color: Qt.rgba(0, 0, 0, 0.3)
+                }
             }
 
             Text {
@@ -143,6 +166,17 @@ Item {
                 opacity: 0.8
                 Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
                 visible: weatherData.feelsLike !== ""
+                
+                layer.enabled: true
+                layer.smooth: true
+                
+                layer.effect: DropShadow {
+                    horizontalOffset: 0
+                    verticalOffset: 2
+                    radius: 4.0
+                    samples: 9
+                    color: Qt.rgba(0, 0, 0, 0.3)
+                }
             }
         }
     }

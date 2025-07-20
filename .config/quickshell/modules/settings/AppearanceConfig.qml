@@ -33,11 +33,11 @@ ColumnLayout {
 
             Repeater {
                 model: [
-                    { "id": "appearance", "title": "Appearance", "icon": "palette", "subtitle": "Colors, themes & visual effects" },
-                    { "id": "logo", "title": "Logo", "icon": "image", "subtitle": "System logo selection" },
-                    { "id": "wallpaper", "title": "Wallpaper", "icon": "wallpaper", "subtitle": "Desktop background settings" },
                     { "id": "bar", "title": "Bar", "icon": "view_agenda", "subtitle": "Top bar settings" },
-                    { "id": "dock", "title": "Dock", "icon": "dock", "subtitle": "Application dock settings" }
+                    { "id": "dock", "title": "Dock", "icon": "dock", "subtitle": "Application dock settings" },
+                    { "id": "logo", "title": "Logo", "icon": "image", "subtitle": "System logo selection" },
+                    { "id": "blur", "title": "Blur", "icon": "blur_on", "subtitle": "Blur effects & transparency" },
+                    { "id": "wallpaper", "title": "Wallpaper", "icon": "wallpaper", "subtitle": "Desktop background settings" }
                 ]
 
                 delegate: Rectangle {
@@ -113,6 +113,7 @@ ColumnLayout {
                 case "appearance": return appearanceComponent;
                 case "logo": return logoComponent;
                 case "wallpaper": return wallpaperComponent;
+                case "blur": return blurComponent;
                 case "bar": return barComponent;
                 case "dock": return dockComponent;
                 default: return appearanceComponent;
@@ -124,6 +125,7 @@ ColumnLayout {
     Component { id: appearanceComponent; StyleConfig {} }
     Component { id: logoComponent; LogoConfig {} }
     Component { id: wallpaperComponent; WallpaperConfig {} }
+    Component { id: blurComponent; Loader { source: "root:/modules/settings/categories/BlurCategory.qml" } }
     Component { id: barComponent; BarConfig {} }
     Component { id: dockComponent; DockConfig {} }
 

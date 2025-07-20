@@ -606,8 +606,8 @@ ColumnLayout {
                             text: "Center titles"
                             font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor)
                             color: Appearance.colors.colOnLayer1
-            }
-        }
+                        }
+                    }
                 }
 
                 StyledText {

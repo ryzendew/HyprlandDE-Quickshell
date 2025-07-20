@@ -148,6 +148,10 @@ Item {
                     values: {
                         // console.log(JSON.stringify(ToplevelManager.toplevels.values.map(t => t), null, 2))
                         return ToplevelManager.toplevels.values.filter((toplevel) => {
+                            // Safety check for undefined HyprlandToplevel
+                            if (!toplevel || !toplevel.HyprlandToplevel) {
+                                return false
+                            }
                             const address = `0x${toplevel.HyprlandToplevel.address}`
                             // console.log(`Checking window with address: ${address}`)
                             var win = windowByAddress[address]
@@ -158,7 +162,7 @@ Item {
                 delegate: OverviewWindow {
                     id: window
                     required property var modelData
-                    property var address: `0x${modelData.HyprlandToplevel.address}`
+                    property var address: modelData?.HyprlandToplevel?.address ? `0x${modelData.HyprlandToplevel.address}` : ""
                     windowData: windowByAddress[address]
                     toplevel: modelData
                     monitorData: root.monitorData

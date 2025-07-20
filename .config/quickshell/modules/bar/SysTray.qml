@@ -6,6 +6,7 @@ import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import Quickshell.Wayland
 import Quickshell.Widgets
+import Qt5Compat.GraphicalEffects
 
 // TODO: More fancy animation
 Item {
@@ -43,6 +44,17 @@ Item {
             text: "•"
             visible: {
                 SystemTray.items.values.length > 0
+            }
+            
+            layer.enabled: true
+            layer.smooth: true
+            
+            layer.effect: DropShadow {
+                horizontalOffset: 0
+                verticalOffset: 2
+                radius: 4.0
+                samples: 9
+                color: Qt.rgba(0, 0, 0, 0.3)
             }
         }
 

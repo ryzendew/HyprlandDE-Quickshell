@@ -3,6 +3,7 @@ import "root:/modules/common/widgets"
 import "root:/services"
 import QtQuick
 import QtQuick.Layouts
+import Qt5Compat.GraphicalEffects
 
 Rectangle {
     property bool borderless: ConfigOptions.bar?.borderless ?? false
@@ -29,6 +30,17 @@ Rectangle {
             text: DateTime.time
             horizontalAlignment: Text.AlignHCenter
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            
+            layer.enabled: true
+            layer.smooth: true
+            
+            layer.effect: DropShadow {
+                horizontalOffset: 0
+                verticalOffset: 2
+                radius: 4.0
+                samples: 9
+                color: Qt.rgba(0, 0, 0, 0.3)
+            }
         }
 
         StyledText {
@@ -40,6 +52,17 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             visible: showDate && DateTime.date.length > 0
+            
+            layer.enabled: true
+            layer.smooth: true
+            
+            layer.effect: DropShadow {
+                horizontalOffset: 0
+                verticalOffset: 2
+                radius: 4.0
+                samples: 9
+                color: Qt.rgba(0, 0, 0, 0.3)
+            }
         }
     }
 }
