@@ -31,9 +31,12 @@ Singleton {
 			target: modelData;
 
 			Component.onCompleted: {
-				if (root.trackedPlayer == null || modelData.isPlaying) {
-					root.trackedPlayer = modelData;
-				}
+				// Add a small delay to prevent blocking during MPRIS initialization
+				Qt.callLater(() => {
+					if (root.trackedPlayer == null || (modelData && modelData.isPlaying)) {
+						root.trackedPlayer = modelData;
+					}
+				});
 			}
 
 			Component.onDestruction: {
@@ -82,12 +85,25 @@ Singleton {
 
 	function updateTrack() {
 		//console.log(`update: ${this.activePlayer?.trackTitle ?? ""} : ${this.activePlayer?.trackArtists}`)
+		// Use defensive property access to prevent freezing
+		const player = this.activePlayer;
+		if (!player) {
+			this.activeTrack = {
+				uniqueId: 0,
+				artUrl: "",
+				title: qsTr("Unknown Title"),
+				artist: qsTr("Unknown Artist"),
+				album: qsTr("Unknown Album"),
+			};
+			return;
+		}
+		
 		this.activeTrack = {
-			uniqueId: this.activePlayer?.uniqueId ?? 0,
-			artUrl: this.activePlayer?.trackArtUrl ?? "",
-			title: this.activePlayer?.trackTitle || qsTr("Unknown Title"),
-			artist: this.activePlayer?.trackArtist || qsTr("Unknown Artist"),
-			album: this.activePlayer?.trackAlbum || qsTr("Unknown Album"),
+			uniqueId: player.uniqueId ?? 0,
+			artUrl: player.trackArtUrl ?? "",
+			title: player.trackTitle || qsTr("Unknown Title"),
+			artist: player.trackArtist || qsTr("Unknown Artist"),
+			album: player.trackAlbum || qsTr("Unknown Album"),
 		};
 
 		this.trackChanged(__reverse);

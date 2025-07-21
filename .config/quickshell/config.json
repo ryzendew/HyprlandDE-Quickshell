@@ -1,20 +1,48 @@
 {
-  "logging": {
-    "enabled": false,
-    "debug": false,
-    "info": false,
-    "warning": false,
-    "error": false,
-    "suppressIconWarnings": true,
-    "suppressQmlWarnings": true,
-    "suppressHyprlandWarnings": true,
-    "suppressShaderWarnings": true
+  "policies": {
+    "weeb": 0
+  },
+  "windows": {
+    "showTitlebar": true,
+    "centerTitle": false
+  },
+  "appearance": {
+    "fakeScreenRounding": 0,
+    "transparency": false,
+    "logo": "distro-cachyos-symbolic.svg",
+    "logoColor": "#ffffff",
+    "palette": {
+      "type": "auto"
+    }
+  },
+  "audio": {
+    "protection": {
+      "enable": false,
+      "maxAllowedIncrease": 10,
+      "maxAllowed": 100
+    }
+  },
+  "apps": {
+    "bluetooth": "kcmshell6 kcm_bluetooth",
+    "imageViewer": "loupe",
+    "network": "plasmawindowed org.kde.plasma.networkmanagement",
+    "networkEthernet": "kcmshell6 kcm_networkmanagement",
+    "settings": "systemsettings",
+    "taskManager": "flatpak run io.missioncenter.MissionCenter",
+    "terminal": "kitty -1"
+  },
+  "battery": {
+    "low": 20,
+    "critical": 5,
+    "suspend": 2,
+    "automaticSuspend": false
   },
   "bar": {
     "showBackground": true,
-    "borderless": false,
+    "blurEnabled": true,
+    "xray": false,
     "transparency": 0.55,
-    "brightness": 1.0,
+    "brightness": 1,
     "blurAmount": 8,
     "blurPasses": 4,
     "height": 40,
@@ -23,32 +51,60 @@
     "indicatorIconSize": 24,
     "systrayIconSize": 24,
     "logoIconSize": 32,
+    "borderColor": "#ffffff",
+    "borderOpacity": 0.12,
+    "borderTop": false,
+    "borderBottom": true,
+    "borderLeft": false,
+    "borderRight": false,
     "workspaces": {
       "shown": 10
     },
     "weather": {
       "enable": true
+    },
+    "media": {
+      "showVisualizer": true,
+      "visualizerType": "circular",
+      "visualizerBars": 44
     }
   },
   "dock": {
-    "height": 60,
-    "hoverRegionHeight": 20,
-    "margin": 20,
+    "height": 58,
+    "hoverRegionHeight": 1,
+    "margin": 3,
     "pinnedOnStartup": false,
     "hoverToReveal": false,
     "enable": true,
-    "pinnedApps": [
-   
-    ],
-    "radius": 12,
-    "iconSize": 48,
-    "spacing": 8,
-    "autoHide": true,
+    "radius": 30,
+    "iconSize": 40,
+    "spacing": 0,
+    "autoHide": false,
     "hideDelay": 200,
     "showDelay": 50,
     "showPreviews": true,
     "showLabels": false,
-    "transparency": 0.9
+    "transparency": 0.9,
+    "borderColor": "#ffffff",
+    "borderOpacity": 0.15,
+    "innerBorderColor": "#ffffff",
+    "innerBorderOpacity": 0.05,
+    "pinnedApps": {},
+    "shadow": {
+      "enabled": true,
+      "color": "#000000",
+      "opacity": 0.3,
+      "horizontalOffset": 0,
+      "verticalOffset": 4,
+      "blurRadius": 12
+    }
+  },
+  "language": {
+    "translator": {
+      "engine": "auto",
+      "targetLanguage": "auto",
+      "sourceLanguage": "auto"
+    }
   },
   "networking": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -59,7 +115,7 @@
       "showSecurityType": true,
       "autoConnect": true,
       "rememberNetworks": true,
-      "preferredNetworks": [],
+      "preferredNetworks": {},
       "showHiddenNetworks": false,
       "connection": {
         "timeout": 30000,
@@ -68,7 +124,88 @@
       }
     }
   },
+  "osd": {
+    "timeout": 1000
+  },
+  "osk": {
+    "layout": "qwerty_full",
+    "pinnedOnStartup": false
+  },
+  "overview": {
+    "scale": 0.18,
+    "numOfRows": 2,
+    "numOfCols": 5,
+    "rows": 2,
+    "columns": 5,
+    "showXwaylandIndicator": true
+  },
+  "resources": {
+    "updateInterval": 3000
+  },
+  "search": {
+    "nonAppResultDelay": 30,
+    "engineBaseUrl": "https://www.google.com/search?q=",
+    "excludedSites": {
+      "0": "quora.com"
+    },
+    "sloppy": false,
+    "prefix": {
+      "action": "/",
+      "clipboard": ";",
+      "emojis": ":"
+    }
+  },
+  "sidebar": {
+    "translator": {
+      "delay": 300
+    },
+    "booru": {
+      "allowNsfw": false,
+      "defaultProvider": "yandere",
+      "limit": 20,
+      "zerochan": {
+        "username": "[unset]"
+      }
+    }
+  },
+  "time": {
+    "format": "hh:mm",
+    "dateFormat": "dddd, dd/MM",
+    "timeZone": "system",
+    "use24Hour": false,
+    "showSeconds": false,
+    "showDate": true,
+    "showDayOfWeek": true,
+    "showYear": false,
+    "customTimeFormat": "",
+    "customDateFormat": "",
+    "display": {
+      "showInBar": true,
+      "showInDock": false,
+      "showInSidebar": false,
+      "fontSize": 0,
+      "bold": false,
+      "italic": false
+    },
+    "localization": {
+      "locale": "system",
+      "useLocalizedNames": true,
+      "firstDayOfWeek": "monday"
+    }
+  },
   "hacks": {
     "arbitraryRaceConditionDelay": 20
+  },
+  "logging": {
+    "enabled": false,
+    "debug": false,
+    "info": false,
+    "warning": false,
+    "error": false,
+    "suppressIconWarnings": true,
+    "suppressQmlWarnings": true,
+    "suppressHyprlandWarnings": true,
+    "suppressMediaDebug": true,
+    "suppressShaderWarnings": true
   }
 }

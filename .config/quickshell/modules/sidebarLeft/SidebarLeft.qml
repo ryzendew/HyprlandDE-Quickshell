@@ -54,19 +54,19 @@ Scope {
     }
     
     property int sidebarPadding: {
-        if (Screen.width >= 3840) return Math.max(20, Screen.height * 0.02) // 4K
-        else if (Screen.width >= 2560) return Math.max(18, Screen.height * 0.019) // 2K
-        else if (Screen.width >= 1920) return Math.max(12, Screen.height * 0.015) // 1080p - reduced padding
-        else if (Screen.width >= 1366) return Math.max(14, Screen.height * 0.018) // 720p
-        else return Math.max(10, Screen.height * 0.02) // Small screens
+        if (Screen.width >= 3840) return Math.max(8, Screen.height * 0.008) // 4K
+        else if (Screen.width >= 2560) return Math.max(7, Screen.height * 0.007) // 2K
+        else if (Screen.width >= 1920) return Math.max(5, Screen.height * 0.006) // 1080p - reduced padding
+        else if (Screen.width >= 1366) return Math.max(4, Screen.height * 0.008) // 720p
+        else return Math.max(2, Screen.height * 0.01) // Small screens
     }
     
     property int sidebarSpacing: {
-        if (Screen.width >= 3840) return Math.max(12, Screen.height * 0.012) // 4K
-        else if (Screen.width >= 2560) return Math.max(10, Screen.height * 0.011) // 2K
-        else if (Screen.width >= 1920) return Math.max(6, Screen.height * 0.008) // 1080p - reduced spacing
-        else if (Screen.width >= 1366) return Math.max(8, Screen.height * 0.012) // 720p
-        else return Math.max(6, Screen.height * 0.01) // Small screens
+        if (Screen.width >= 3840) return Math.max(6, Screen.height * 0.004) // 4K
+        else if (Screen.width >= 2560) return Math.max(5, Screen.height * 0.003) // 2K
+        else if (Screen.width >= 1920) return Math.max(3, Screen.height * 0.002) // 1080p - reduced spacing
+        else if (Screen.width >= 1366) return Math.max(2, Screen.height * 0.004) // 720p
+        else return Math.max(1, Screen.height * 0.005) // Small screens
     }
     
     property int sidebarHeaderHeight: {
@@ -358,7 +358,6 @@ Scope {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: sidebarPadding
-                    anchors.bottomMargin: sidebarBottomMargin
                     spacing: sidebarSpacing
 
                     // Header with logo and uptime
@@ -435,7 +434,7 @@ Scope {
                     CenterWidgetGroup {
                         id: centerWidgetGroup
                         Layout.fillWidth: true
-                        Layout.preferredHeight: sidebarContentHeight - sidebarHeaderHeight - sidebarPadding - sidebarBottomMargin
+                        Layout.fillHeight: true
                     }
                 }
             }

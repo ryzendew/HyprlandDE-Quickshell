@@ -248,7 +248,12 @@ Item {
         sourceSize.width: iconSize * 2
         sourceSize.height: iconSize * 2
         onStatusChanged: {
-            // Image status changed
+            if (status === Image.Error) {
+                // If the icon fails to load, try the fallback
+                var fallbackPath = IconTheme.getIconPath(fallbackIcon, homeDirectory);
+                var formattedFallback = formatPathForImageSource(fallbackPath);
+                source = formattedFallback;
+            }
         }
     }
     

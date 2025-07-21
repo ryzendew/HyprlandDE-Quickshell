@@ -195,6 +195,20 @@ function getIconPath(iconName, homeDir) {
     
     // Apply icon substitutions from icons.js
     var substitutedIconName = applyIconSubstitutions(iconName, homeDir);
+    
+    // Additional icon mappings for missing applications
+    var additionalMappings = {
+        "org.gnome.Decibels": "multimedia-volume-control",
+        "org.cachyos.hello": "applications-other",
+        "micro": "text-editor",
+        "steam_icon_2246340": "steam",
+        "java24-openjdk": "java",
+        "org.cachyos.scx-manager": "applications-system"
+    };
+    
+    if (additionalMappings[iconName]) {
+        substitutedIconName = additionalMappings[iconName];
+    }
     if (substitutedIconName && substitutedIconName !== iconName) {
         debugLog('Applied substitution for', iconName, '->', substitutedIconName);
         // If substitution returned an absolute path, return it directly
@@ -403,8 +417,19 @@ function resolveFromIconTheme(iconVariations, homeDir) {
                         try {
                             var content = Qt.createQmlObject('import Qt 6.0; FileHelper.readFile("' + fullPath + '")', null);
                             if (content && content.length > 0) {
+                                // For SVG files, check if they have valid XML structure
+                                if (ext === '.svg') {
+                                    if (content.includes('<?xml') && content.includes('<svg')) {
+                                        debugLog('Found valid SVG icon in theme:', fullPath);
+                                        return fullPath;
+                                    } else {
+                                        debugLog('SVG file has invalid XML structure:', fullPath);
+                                        continue; // Try next file
+                                    }
+                                } else {
                                 debugLog('Found icon in theme:', fullPath);
                                 return fullPath;
+                                }
                             } else {
                                 debugLog('File exists but is empty:', fullPath);
                             }
@@ -432,8 +457,19 @@ function resolveFromIconTheme(iconVariations, homeDir) {
                     try {
                         var content = Qt.createQmlObject('import Qt 6.0; FileHelper.readFile("' + fullPath + '")', null);
                         if (content && content.length > 0) {
+                            // For SVG files, check if they have valid XML structure
+                            if (ext === '.svg') {
+                                if (content.includes('<?xml') && content.includes('<svg')) {
+                                    debugLog('Found valid SVG icon in hicolor fallback:', fullPath);
+                                    return fullPath;
+                                } else {
+                                    debugLog('SVG file has invalid XML structure in hicolor:', fullPath);
+                                    continue; // Try next file
+                                }
+                            } else {
                             debugLog('Found icon in hicolor fallback:', fullPath);
                             return fullPath;
+                            }
                         } else {
                             debugLog('File exists but is empty in hicolor:', fullPath);
                         }

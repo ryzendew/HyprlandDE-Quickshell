@@ -718,17 +718,13 @@ Singleton {
             onRead: data => {
                 const lines = data.trim().split('\n')
                 for (const line of lines) {
-                    if (line.includes('Subsystem ID:')) {
-                        const match = line.match(/Subsystem ID:\s*(.+)/)
+                    if (line.includes('Card Series:')) {
+                        const match = line.match(/Card Series:\s*(.+)/)
                         if (match) {
-                            const subsystemInfo = match[1].trim()
-                            // Extract the specific model from the subsystem info
-                            const modelMatch = subsystemInfo.match(/Radeon RX (\d+[A-Z]*\s*[A-Z]*)/)
-                            if (modelMatch) {
-                                const gpuName = "Radeon RX " + modelMatch[1].trim()
-                                if (gpuName && !amdGpuModel.includes("AMD")) {
-                                    amdGpuModel = gpuName
-                                }
+                            const cardSeries = match[1].trim()
+                            if (cardSeries && cardSeries.includes('Radeon RX')) {
+                                amdGpuModel = cardSeries
+                                amdGpuAvailable = true
                             }
                         }
                     }
@@ -737,6 +733,9 @@ Singleton {
         }
         
         onExited: (exitCode) => {
+            if (exitCode === 0 && amdGpuAvailable) {
+                updateAmdGpuData()
+            }
         }
     }
     
@@ -958,6 +957,7 @@ Singleton {
     // GPU detection and monitoring
     function detectGpu() {
         gpuDetectionProcess.running = true
+        detectAmdGpu()
     }
     
     function detectNvidiaGpu() {
@@ -997,6 +997,21 @@ Singleton {
         amdGpuAvailable = false
         amdGpuModel = "AMD GPU"
         detectAmdGpu()
+        // Force start monitoring after a short delay
+        forceAmdGpuTimer.start()
+    }
+    
+    // Timer for forcing AMD GPU monitoring
+    Timer {
+        id: forceAmdGpuTimer
+        interval: 1000
+        running: false
+        repeat: false
+        onTriggered: {
+            if (amdGpuAvailable) {
+                updateAmdGpuData()
+            }
+        }
     }
     
     // File watchers for system files

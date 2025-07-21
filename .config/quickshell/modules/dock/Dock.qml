@@ -160,10 +160,10 @@ Scope {
             // Dock margin will update automatically due to property bindings
         }
         
-        // Shadow property change handlers
-        function onShadowChanged() {
-            console.log("[DOCK SHADOW DEBUG] Shadow config changed")
-        }
+            // Shadow property change handlers
+    function onShadowChanged() {
+        // Shadow config changed - no debug needed
+    }
     }
     
     // Watch for changes in icon theme - removed non-existent signal
@@ -1320,10 +1320,9 @@ Scope {
                             Appearance.colors.colLayer0.b,
                             1 - ConfigOptions.dock.transparency
                         )
-
-
-
-                        // No shadow on the main dock container - shadows should be on individual items
+                        
+                        // Dock shadow - disabled to only show icon shadows
+                        layer.enabled: false
 
                         Behavior on color {
                             ColorAnimation {
@@ -2078,80 +2077,6 @@ Scope {
         }
     }
 
-    // Background blur system - static blur approach inspired by Blur My Shell
-    /*
-    PanelWindow {
-        id: dockBackgroundBlur
-        visible: dockRoot.visible
-        screen: dockRoot.screen
-        
-        // Position behind the dock
-        anchors.left: dockRoot.anchors.left
-        anchors.right: dockRoot.anchors.right
-        anchors.bottom: dockRoot.anchors.bottom
-        
-        // Set layer to be behind the dock
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "quickshell:dock:background"
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-        
-        // Match dock dimensions
-        implicitWidth: dockRoot.implicitWidth
-        implicitHeight: dockRoot.implicitHeight
-        color: "transparent"
-        
-        // Static blur background using wallpaper capture
-        Rectangle {
-            id: staticBlurBackground
-            anchors.centerIn: parent
-            width: dockContent.width
-            height: dockContent.height
-            radius: ConfigOptions.dock.radius
-            color: "transparent"
-            
-            // Wallpaper background for static blur
-            Image {
-                id: wallpaperForBlur
-                anchors.fill: parent
-                source: Data.WallpaperManager.currentWallpaper ? "file://" + Data.WallpaperManager.currentWallpaper : ""
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                cache: false
-                
-                // Apply MultiEffect blur to the wallpaper
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    source: wallpaperForBlur
-                    blurEnabled: true
-                    blurMultiplier: 0.7
-                    blurMax: 64
-                    saturation: 0.8  // Reduce saturation for better blur effect
-                }
-            }
-            
-            // Semi-transparent overlay to enhance blur effect
-            Rectangle {
-                anchors.fill: parent
-                color: Qt.rgba(0, 0, 0, 0.3) // Dark overlay to enhance blur
-                radius: parent.radius
-            }
-            
-            // Smooth border to cover blur edge artifacts
-            Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                border.width: 1
-                border.color: Qt.rgba(1, 1, 1, 0.15)
-                radius: parent.radius
-                antialiasing: true
-                z: 2
-            }
-        }
-        
-
-    }
-    */
-
     // No longer needed - using DesktopEntries.execute() like HyprMenu
 
     // Manual function to force refresh all icons (useful for testing)
@@ -2548,4 +2473,5 @@ Scope {
     // --- DOCK APP LIST AND PREVIEW (End4 1:1 port) ---
     DockApps { id: dockApps }
     // --- END DOCK APP LIST AND PREVIEW ---
+
 }

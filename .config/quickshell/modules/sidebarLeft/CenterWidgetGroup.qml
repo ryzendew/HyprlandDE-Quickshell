@@ -92,8 +92,6 @@ Rectangle {
             }
             Layout.fillWidth: true
             Layout.fillHeight: true
-            // Scale content with sidebar width
-            Layout.preferredWidth: parent.width * 0.95 // Use 95% of available width
             sourceComponent: {
                 switch(root.selectedTab) {
                     case 0: return wifiComponent;

@@ -97,6 +97,7 @@ Item {
         spacing: 0
         anchors.fill: parent
         implicitHeight: 40
+        implicitWidth: Math.max(workspaceButtonWidth * (ConfigOptions.bar?.workspaces?.shown || 1), 1)
 
         Repeater {
             model: ConfigOptions.bar?.workspaces?.shown || 1
@@ -186,6 +187,7 @@ Item {
         spacing: 0
         anchors.fill: parent
         implicitHeight: 40
+        implicitWidth: Math.max(workspaceButtonWidth * (ConfigOptions.bar?.workspaces?.shown || 1), 1)
 
         Repeater {
             model: ConfigOptions.bar?.workspaces?.shown || 1

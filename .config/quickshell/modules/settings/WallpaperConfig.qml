@@ -191,8 +191,8 @@ ColumnLayout {
     Component.onCompleted: {
         console.log("Initializing wallpaper config...")
         
-        // Load wallpapers (will check for existing config first)
-        loadWallpapers(false)
+        // Force reload wallpapers to ensure fresh data
+        loadWallpapers(true)
         
         // Load current wallpaper
         getCurrentWallpaper()
@@ -786,7 +786,9 @@ ColumnLayout {
                         onReleased: parent.color = parent.hovered ? "#4a4a4a" : "#5a5a5a"
                         onClicked: {
                             console.log("Manual refresh requested")
-                            // Force reload the FileView without triggering scanning
+                            // Regenerate the wallpaper configuration file
+                            Hyprland.dispatch(`exec python3 ${SystemPaths.quickshellConfigDir}/scripts/generate_wallpapers_conf.py`)
+                            // Force reload the FileView
                             wallpapersFileView.reload()
                             // Update cache
                             cacheValid = false
@@ -796,36 +798,113 @@ ColumnLayout {
                 }
             }
             
-            // Wallpaper grid
+                        // Custom scrollbar header
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 40
+                radius: 8
+                color: Appearance.colors.colLayer2
+                border.width: 1
+                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.1)
+                
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 12
+                    
+                    StyledText {
+                        text: "Scroll to navigate:"
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: Appearance.colors.colSubtext
+                    }
+                    
+                    // Custom horizontal scrollbar
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 20
+                        radius: 10
+                        color: Appearance.colors.colLayer1
+                        border.width: 1
+                        border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.2)
+                        
+                        Rectangle {
+                            id: scrollThumb
+                            width: Math.max(20, parent.width * (parent.width / Math.max(parent.width, wallpaperFiles.length * 120)))
+                            height: parent.height - 4
+                            radius: 8
+                            color: scrollMouseArea.containsMouse ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colPrimary, 0.7)
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: 2
+                            
+                            Behavior on x {
+                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                        }
+                        
+                        MouseArea {
+                            id: scrollMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            property bool dragging: false
+                            property real startX: 0
+                            property real startThumbX: 0
+                            
+                            onPressed: {
+                                dragging = true
+                                startX = mouseX
+                                startThumbX = scrollThumb.x
+                            }
+                            
+                            onReleased: {
+                                dragging = false
+                            }
+                            
+                            onPositionChanged: {
+                                if (dragging) {
+                                    var newX = Math.max(2, Math.min(parent.width - scrollThumb.width - 2, startThumbX + (mouseX - startX)))
+                                    scrollThumb.x = newX
+                                    
+                                    // Calculate scroll position and update wallpaper view
+                                    var scrollRatio = (newX - 2) / (parent.width - scrollThumb.width - 4)
+                                    horizontalScrollBar.position = scrollRatio
+                                }
+                            }
+                        }
+                    }
+                    
+                    StyledText {
+                        text: wallpaperFiles.length + " wallpapers"
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: Appearance.colors.colSubtext
+                    }
+                }
+            }
+            
+            // Wallpaper grid with custom scrolling
             ScrollView {
-                id: gridView
+                id: wallpaperScrollView
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
                 
-                ScrollBar.vertical: ScrollBar {
-                    active: true
+                ScrollBar.horizontal: ScrollBar {
+                    id: horizontalScrollBar
                     policy: ScrollBar.AsNeeded
-                    anchors.left: parent.left
+                    visible: false  // Hide the default scrollbar since we have custom one
                 }
                 
-                GridLayout {
-                    width: gridView.width
-                    columns: Math.floor(gridView.width / 120)
-                    rowSpacing: 12
-                    columnSpacing: 12
-                    
-                    Repeater {
-                        model: wallpaperFiles
+                RowLayout {
+                    width: Math.max(parent.width, wallpaperFiles.length * 120)
+                    spacing: 12
                         
                         // Empty state when no wallpapers
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 100
-                            radius: 8
-                            color: "#3a3a3a"
+                        radius: Appearance.rounding.normal
+                        color: Appearance.colors.colLayer2
                             border.width: 1
-                            border.color: "#505050"
+                        border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.1)
                             visible: wallpaperFiles.length === 0
                             
                             ColumnLayout {
@@ -836,76 +915,82 @@ ColumnLayout {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "folder_open"
                                     iconSize: 24
-                                    color: "#666666"
+                                color: Appearance.colors.colSubtext
                                 }
                                 
-                                Text {
+                            StyledText {
                                     text: "No wallpapers found"
-                                    font.pixelSize: 14
+                                font.pixelSize: Appearance.font.pixelSize.normal
                                     font.weight: Font.Medium
-                                    color: "#ffffff"
+                                color: Appearance.colors.colOnLayer2
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                                 
-                                Text {
+                            StyledText {
                                     text: "Add images to ~/Pictures/Wallpapers/"
-                                    font.pixelSize: 11
-                                    color: "#cccccc"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Appearance.colors.colSubtext
                                     Layout.alignment: Qt.AlignHCenter
                                 }
                             }
                         }
+
+                    Repeater {
+                        model: wallpaperFiles
                         
                         delegate: Rectangle {
-                            Layout.fillWidth: false
-                            Layout.preferredWidth: 100
-                            Layout.preferredHeight: 100
-                            radius: 8
-                            color: modelData === currentWallpaper ? "#4a4a4a" : "#3a3a3a"
+                            Layout.preferredWidth: 120
+                            Layout.preferredHeight: 120
+                            radius: Appearance.rounding.normal
+                            color: modelData === currentWallpaper ? 
+                                   Appearance.colors.colPrimary : 
+                                   (wallpaperMouseArea.containsMouse ? 
+                                    Appearance.colors.colLayer2Hover : 
+                                    Appearance.colors.colLayer2)
                             border.width: modelData === currentWallpaper ? 2 : 1
-                            border.color: modelData === currentWallpaper ? "#4CAF50" : "#505050"
+                            border.color: modelData === currentWallpaper ? 
+                                        Appearance.colors.colPrimary : 
+                                        ColorUtils.transparentize(Appearance.colors.colOutline, 0.1)
                             clip: true
                             
                             MouseArea {
+                                id: wallpaperMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                
-                                onEntered: {
-                                    if (modelData !== currentWallpaper) {
-                                        parent.color = "#454545"
-                                    }
-                                }
-                                
-                                onExited: {
-                                    if (modelData !== currentWallpaper) {
-                                        parent.color = "#3a3a3a"
-                                    }
-                                }
-                                
                                 onClicked: {
                                     setWallpaper(modelData)
                                 }
                             }
                             
-                            // Wallpaper thumbnail (fills entire square)
-                            Image {
+                            ColumnLayout {
                                 anchors.fill: parent
-                                anchors.margins: 2
+                                anchors.margins: 8
+                                spacing: 4
+
+                                // Wallpaper thumbnail
+                                Image {
+                                    Layout.preferredWidth: 60
+                                    Layout.preferredHeight: 60
+                                    Layout.alignment: Qt.AlignHCenter
                                 source: modelData
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
                                 mipmap: true
-                                
-                                // Loading indicator
-                                BusyIndicator {
-                                    anchors.centerIn: parent
-                                    running: parent.status === Image.Loading
-                                    width: 20
-                                    height: 20
+                                }
+
+                                StyledText {
+                                    text: modelData.split("/").pop().replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ')
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    color: modelData === currentWallpaper ? 
+                                           (parseInt(Appearance.colors.colPrimary.replace('#', ''), 16) > 0x888888 ? "#000000" : "#ffffff") : 
+                                           Appearance.colors.colOnLayer2
+                                    horizontalAlignment: Text.AlignHCenter
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideMiddle
+                                }
                                 }
                                 
-                                // Current indicator overlay
+                            // Selection indicator
                                 Rectangle {
                                     anchors.top: parent.top
                                     anchors.right: parent.right
@@ -913,35 +998,19 @@ ColumnLayout {
                                     width: 16
                                     height: 16
                                     radius: 8
-                                    color: modelData === currentWallpaper ? "#4CAF50" : "transparent"
-                                    visible: modelData === currentWallpaper
-                                    
-                                    MaterialSymbol {
+                                color: modelData === currentWallpaper ? 
+                                       (parseInt(Appearance.colors.colPrimary.replace('#', ''), 16) > 0x888888 ? "#000000" : "#ffffff") : 
+                                       "transparent"
+                                border.width: modelData === currentWallpaper ? 0 : 1
+                                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.3)
+
+                                StyledText {
                                         anchors.centerIn: parent
-                                        text: "check"
-                                        iconSize: 12
-                                        color: "#ffffff"
-                                    }
-                                }
-                                
-                                // Filename overlay at bottom
-                                Rectangle {
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.bottom: parent.bottom
-                                    height: 20
-                                    color: Qt.rgba(0, 0, 0, 0.7)
-                                    visible: modelData === currentWallpaper
-                                    
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: modelData.split("/").pop().replace(/\.[^/.]+$/, "")
+                                    text: "✓"
                                         font.pixelSize: 10
-                                        color: "#ffffff"
-                                        horizontalAlignment: Text.AlignHCenter
-                                        elide: Text.ElideMiddle
-                                        font.weight: Font.Medium
-                                    }
+                                    color: modelData === currentWallpaper ? 
+                                           Appearance.colors.colPrimary : 
+                                           "transparent"
                                 }
                             }
                         }

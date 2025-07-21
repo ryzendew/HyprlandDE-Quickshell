@@ -1,4 +1,10 @@
 const substitutions = {
+    "org.gnome.Decibels": "multimedia-volume-control",
+    "org.cachyos.hello": "applications-other", 
+    "micro": "text-editor",
+    "steam_icon_2246340": "steam",
+    "java24-openjdk": "java",
+    "org.cachyos.scx-manager": "applications-system",
     "code-url-handler": "visual-studio-code",
     "Code": "visual-studio-code",
     "GitHub Desktop": "github-desktop",
