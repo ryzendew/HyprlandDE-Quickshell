@@ -30,17 +30,16 @@ Item {
     property var moonPhaseCache: ({}) // { 'YYYY-MM': { 'YYYY-MM-DD': {phase, icon} } }
 
     // --- Holiday support ---
-    property string userCountry: "US" // Default fallback
+    property string userCountry: "CA" // Default fallback to Canada
     property var holidays: ({}) // { 'YYYY-MM-DD': {localName, name, countryCode, type} }
     property var holidayCache: ({}) // { 'CC-YYYY': { 'YYYY-MM-DD': {localName, ...} } }
     
-    // Cultural holidays not in the API (fixed dates)
+    // Cultural holidays not in the API (fixed dates) - Canada-focused
     property var culturalHolidays: ({
         // January
         "01-01": { localName: "New Year's Day", name: "New Year's Day", emoji: "🎆" },
         
         // February
-        "02-02": { localName: "Groundhog Day", name: "Groundhog Day", emoji: "🦫" },
         "02-14": { localName: "Valentine's Day", name: "Valentine's Day", emoji: "💝" },
         
         // March
@@ -53,32 +52,31 @@ Item {
         
         // May
         "05-01": { localName: "May Day", name: "May Day", emoji: "🌺" },
-        "05-05": { localName: "Cinco de Mayo", name: "Cinco de Mayo", emoji: "🇲🇽" },
         
         // June
-        "06-14": { localName: "Flag Day", name: "Flag Day", emoji: "🇺🇸" },
         "06-21": { localName: "Summer Solstice", name: "Summer Solstice", emoji: "☀️" },
+        "06-24": { localName: "Saint-Jean-Baptiste Day", name: "Saint-Jean-Baptiste Day", emoji: "🇨🇦" },
         
         // July
-        "07-04": { localName: "Independence Day", name: "Independence Day", emoji: "🇺🇸" },
+        "07-01": { localName: "Canada Day", name: "Canada Day", emoji: "🇨🇦" },
         
         // August
         "08-15": { localName: "Assumption Day", name: "Assumption Day", emoji: "🙏" },
         
         // September
-        "09-11": { localName: "Patriot Day", name: "Patriot Day", emoji: "🕊️" },
         "09-22": { localName: "Autumn Equinox", name: "Autumn Equinox", emoji: "🍂" },
         
         // October
         "10-31": { localName: "Halloween", name: "Halloween", emoji: "🎃" },
         
         // November
-        "11-11": { localName: "Veterans Day", name: "Veterans Day", emoji: "🎖️" },
+        "11-11": { localName: "Remembrance Day", name: "Remembrance Day", emoji: "🕊️" },
         
         // December
         "12-21": { localName: "Winter Solstice", name: "Winter Solstice", emoji: "❄️" },
         "12-24": { localName: "Christmas Eve", name: "Christmas Eve", emoji: "🎄" },
         "12-25": { localName: "Christmas Day", name: "Christmas Day", emoji: "🎄" },
+        "12-26": { localName: "Boxing Day", name: "Boxing Day", emoji: "🎁" },
         "12-31": { localName: "New Year's Eve", name: "New Year's Eve", emoji: "🎆" }
     })
     
@@ -91,37 +89,21 @@ Item {
     function updateTodoTasks() {
         todoTasks = {};
         if (Todo && Todo.list) {
-// console.log('=== TODO DEBUG ===');
-// console.log('Updating todo tasks, total tasks:', Todo.list.length);
-// console.log('Current year/month:', currentYear, currentMonth);
-            
             Todo.list.forEach(function(task, index) {
-// console.log(`Task ${index}:`, task.content, 'dueDate:', task.dueDate, 'done:', task.done, 'priority:', task.priority);
                 if (task.dueDate && !task.done) {
                     // Check if the task is for the current month
                     let taskDate = new Date(task.dueDate);
                     let taskYear = taskDate.getFullYear();
                     let taskMonth = taskDate.getMonth();
                     
-// console.log(`Task date parsed: year=${taskYear}, month=${taskMonth}, day=${taskDate.getDate()}`);
-                    
                     if (taskYear === currentYear && taskMonth === currentMonth) {
                         if (!todoTasks[task.dueDate]) {
                             todoTasks[task.dueDate] = [];
                         }
                         todoTasks[task.dueDate].push(task);
-// console.log('✅ Added task for date:', task.dueDate, 'content:', task.content);
-                    } else {
-// console.log('❌ Task not in current month:', task.dueDate);
                     }
-                } else {
-// console.log('❌ Task skipped - no due date or done:', task.dueDate, task.done);
                 }
             });
-// console.log('Final todo tasks by date:', todoTasks);
-// console.log('=== END TODO DEBUG ===');
-        } else {
-// console.log('Todo service not available or no tasks');
         }
     }
     
@@ -233,8 +215,8 @@ Item {
         // Memorial Day (Last Monday in May)
         let memorialDay = new Date(year, 4, 31); // May 31st
         dayOfWeek = memorialDay.getDay();
-        let daysToSubtract = (dayOfWeek + 6) % 7; // Days to previous Monday
-        memorialDay.setDate(31 - daysToSubtract);
+        let memorialDaysToSubtract = (dayOfWeek + 6) % 7; // Days to previous Monday
+        memorialDay.setDate(31 - memorialDaysToSubtract);
         let memorialDayKey = `${year}-05-${memorialDay.getDate().toString().padStart(2, '0')}`;
         holidays[memorialDayKey] = { localName: "Memorial Day", name: "Memorial Day", emoji: "🕊️" };
         
@@ -246,13 +228,29 @@ Item {
         let laborDayKey = `${year}-09-${laborDay.getDate().toString().padStart(2, '0')}`;
         holidays[laborDayKey] = { localName: "Labor Day", name: "Labor Day", emoji: "👷" };
         
-        // Thanksgiving (4th Thursday in November)
-        let thanksgiving = new Date(year, 10, 1); // November 1st
+        // Canadian Thanksgiving (2nd Monday in October)
+        let thanksgiving = new Date(year, 9, 1); // October 1st
         dayOfWeek = thanksgiving.getDay();
-        daysToAdd = (4 - dayOfWeek + 7) % 7; // Days to next Thursday
-        thanksgiving.setDate(1 + daysToAdd + 21); // Add 21 more days for 4th Thursday
-        let thanksgivingKey = `${year}-11-${thanksgiving.getDate().toString().padStart(2, '0')}`;
+        daysToAdd = (7 - dayOfWeek + 1) % 7; // Days to next Monday
+        thanksgiving.setDate(1 + daysToAdd + 7); // Add 7 more days for 2nd Monday
+        let thanksgivingKey = `${year}-10-${thanksgiving.getDate().toString().padStart(2, '0')}`;
         holidays[thanksgivingKey] = { localName: "Thanksgiving Day", name: "Thanksgiving Day", emoji: "🦃" };
+        
+        // Victoria Day (Last Monday before May 25)
+        let victoriaDay = new Date(year, 4, 25); // May 25th
+        dayOfWeek = victoriaDay.getDay();
+        let victoriaDaysToSubtract = (dayOfWeek + 6) % 7; // Days to previous Monday
+        victoriaDay.setDate(25 - victoriaDaysToSubtract);
+        let victoriaDayKey = `${year}-05-${victoriaDay.getDate().toString().padStart(2, '0')}`;
+        holidays[victoriaDayKey] = { localName: "Victoria Day", name: "Victoria Day", emoji: "👑" };
+        
+        // Labour Day (1st Monday in September)
+        let labourDay = new Date(year, 8, 1); // September 1st
+        dayOfWeek = labourDay.getDay();
+        daysToAdd = (7 - dayOfWeek + 1) % 7; // Days to next Monday
+        labourDay.setDate(1 + daysToAdd);
+        let labourDayKey = `${year}-09-${labourDay.getDate().toString().padStart(2, '0')}`;
+        holidays[labourDayKey] = { localName: "Labour Day", name: "Labour Day", emoji: "👷" };
         
         return holidays;
     }
@@ -261,10 +259,14 @@ Item {
         let monthKey = `${year}-${(month+1).toString().padStart(2, '0')}`;
         if (moonPhaseCache[monthKey]) {
             moonPhases = Object.assign({}, moonPhaseCache[monthKey]);
-// console.log('Loaded moon phases from cache for', monthKey);
             return;
         }
+        
         moonPhases = {};
+        
+        // Use a more reliable moon phase calculation as fallback
+        let fallbackMoonPhases = calculateMoonPhasesFallback(year, month);
+        
         for (let day = 1; day <= daysInMonth; day++) {
             let dateStr = `${year}-${(month+1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
             let url = `https://api.farmsense.net/v1/moonphases/?d=${Math.floor(new Date(year, month, day).getTime()/1000)}`;
@@ -282,18 +284,87 @@ Item {
                                 // Save to cache
                                 if (!moonPhaseCache[monthKey]) moonPhaseCache[monthKey] = {};
                                 moonPhaseCache[monthKey][dateStr] = moonPhases[dateStr];
-// console.log('Moon phase for', dateStr, ':', data[0].Phase, 'illum:', illum, 'icon:', getMoonEmoji(data[0].Phase, illum));
+                            } else {
+                                // Use fallback if API doesn't return valid data
+                                if (fallbackMoonPhases[dateStr]) {
+                                    moonPhases[dateStr] = fallbackMoonPhases[dateStr];
+                                    moonPhases = Object.assign({}, moonPhases);
+                                    if (!moonPhaseCache[monthKey]) moonPhaseCache[monthKey] = {};
+                                    moonPhaseCache[monthKey][dateStr] = moonPhases[dateStr];
+                                }
                             }
                         } catch (e) {
-                            // console.log('Moon phase parse error', e);
+                            // Use fallback on parse error
+                            if (fallbackMoonPhases[dateStr]) {
+                                moonPhases[dateStr] = fallbackMoonPhases[dateStr];
+                                moonPhases = Object.assign({}, moonPhases);
+                                if (!moonPhaseCache[monthKey]) moonPhaseCache[monthKey] = {};
+                                moonPhaseCache[monthKey][dateStr] = moonPhases[dateStr];
+                            }
                         }
                     } else {
-// console.log('Moon phase API error', xhr.status, url);
+                        // Use fallback on API error
+                        if (fallbackMoonPhases[dateStr]) {
+                            moonPhases[dateStr] = fallbackMoonPhases[dateStr];
+                            moonPhases = Object.assign({}, moonPhases);
+                            if (!moonPhaseCache[monthKey]) moonPhaseCache[monthKey] = {};
+                            moonPhaseCache[monthKey][dateStr] = moonPhases[dateStr];
+                        }
                     }
                 }
             }
             xhr.send();
         }
+    }
+
+    function calculateMoonPhasesFallback(year, month) {
+        // Simple moon phase calculation as fallback
+        let phases = {};
+        let daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // Approximate moon phases (this is a simplified calculation)
+        // Full moon cycle is approximately 29.5 days
+        let lunarCycle = 29.53058867;
+        let knownNewMoon = new Date(2000, 0, 6); // Known new moon date
+        let daysSinceKnown = (new Date(year, month, 1) - knownNewMoon) / (1000 * 60 * 60 * 24);
+        let phaseAtStart = (daysSinceKnown % lunarCycle) / lunarCycle;
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            let dateStr = `${year}-${(month+1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            let daysFromStart = day - 1;
+            let phase = (phaseAtStart + daysFromStart / lunarCycle) % 1;
+            
+            let phaseName, emoji;
+            if (phase < 0.0625 || phase >= 0.9375) {
+                phaseName = "New Moon";
+                emoji = "🌑";
+            } else if (phase < 0.1875) {
+                phaseName = "Waxing Crescent";
+                emoji = "🌒";
+            } else if (phase < 0.3125) {
+                phaseName = "First Quarter";
+                emoji = "🌓";
+            } else if (phase < 0.4375) {
+                phaseName = "Waxing Gibbous";
+                emoji = "🌔";
+            } else if (phase < 0.5625) {
+                phaseName = "Full Moon";
+                emoji = "🌕";
+            } else if (phase < 0.6875) {
+                phaseName = "Waning Gibbous";
+                emoji = "🌖";
+            } else if (phase < 0.8125) {
+                phaseName = "Last Quarter";
+                emoji = "🌗";
+            } else {
+                phaseName = "Waning Crescent";
+                emoji = "🌘";
+            }
+            
+            phases[dateStr] = { phase: phaseName, emoji: emoji };
+        }
+        
+        return phases;
     }
 
     function getMoonEmoji(phase, illum) {
@@ -417,16 +488,24 @@ Item {
         let xhr = new XMLHttpRequest();
         xhr.open('GET', 'https://ipapi.co/json/');
         xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
                 try {
                     let data = JSON.parse(xhr.responseText);
                     if (data && data.country) {
                         userCountry = data.country;
-// console.log('Detected country:', userCountry);
+                            fetchHolidays(currentYear, userCountry);
+                        } else {
+                            userCountry = "CA"; // Fallback to Canada
                         fetchHolidays(currentYear, userCountry);
                     }
                 } catch (e) {
-                    // console.log('Country parse error', e);
+                        userCountry = "CA"; // Fallback to Canada
+                        fetchHolidays(currentYear, userCountry);
+                    }
+                } else {
+                    userCountry = "CA"; // Fallback to Canada
+                    fetchHolidays(currentYear, userCountry);
                 }
             }
         }
@@ -435,18 +514,20 @@ Item {
 
     function fetchHolidays(year, country) {
         let cacheKey = `${country}-${year}`;
+        
         if (holidayCache[cacheKey]) {
             holidays = Object.assign({}, holidayCache[cacheKey]);
-// console.log('Loaded holidays from cache for', cacheKey);
             return;
         }
+        
         holidays = {};
         
         // Start with API holidays
         let xhr = new XMLHttpRequest();
         xhr.open('GET', `https://date.nager.at/api/v3/PublicHolidays/${year}/${country}`);
         xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
                 try {
                     let data = JSON.parse(xhr.responseText);
                     if (Array.isArray(data)) {
@@ -454,8 +535,15 @@ Item {
                             let d = data[i];
                             holidays[d.date] = d;
                         }
+                        }
+                    } catch (e) {
+                        // Holiday parse error - continue with fallback
+                    }
+                } else {
+                    // Holiday API failed - continue with fallback
+                }
                         
-                        // Add cultural holidays (fixed dates)
+                // Always add cultural holidays (fixed dates) as fallback
                         for (let monthDay in culturalHolidays) {
                             let holiday = culturalHolidays[monthDay];
                             let dateKey = `${year}-${monthDay}`;
@@ -472,7 +560,7 @@ Item {
                             }
                         }
                         
-                        // Add variable date holidays
+                // Always add variable date holidays
                         let variableHolidays = calculateVariableHolidays(year);
                         for (let dateKey in variableHolidays) {
                             let holiday = variableHolidays[dateKey];
@@ -491,25 +579,27 @@ Item {
                         
                         holidayCache[cacheKey] = Object.assign({}, holidays);
                         holidays = Object.assign({}, holidays);
-// console.log('Fetched holidays for', country, year, holidays);
-                    }
-                } catch (e) {
-                    // console.log('Holiday parse error', e);
-                }
             }
         }
         xhr.send();
     }
 
     // Refetch when month/year changes
-    onCurrentMonthChanged: fetchMoonPhases(currentYear, currentMonth)
-    onCurrentYearChanged: fetchMoonPhases(currentYear, currentMonth)
-    onUserCountryChanged: fetchHolidays(currentYear, userCountry)
-    
-    Component.onCompleted: {
-        fetchUserCountry();
+    onCurrentMonthChanged: {
         fetchMoonPhases(currentYear, currentMonth);
         fetchHolidays(currentYear, userCountry);
+    }
+    onCurrentYearChanged: {
+        fetchMoonPhases(currentYear, currentMonth);
+        fetchHolidays(currentYear, userCountry);
+    }
+    onUserCountryChanged: fetchHolidays(currentYear, userCountry)
+    
+
+    
+    Component.onCompleted: {
+        fetchUserCountry(); // This will trigger fetchHolidays when country is detected
+        fetchMoonPhases(currentYear, currentMonth);
         updateTodoTasks();
     }
     
@@ -520,7 +610,6 @@ Item {
         repeat: true
         onTriggered: {
             updateTodoTasks();
-// console.log('Timer triggered, todo tasks updated');
         }
     }
 
@@ -779,6 +868,8 @@ Item {
                                 
                                 property var holidayData: holidays[`${currentYear}-${(currentMonth+1).toString().padStart(2, '0')}-${(index+1).toString().padStart(2, '0')}`]
                                 
+
+                                
                                 MouseArea {
                                     anchors.fill: parent
                                     hoverEnabled: true
@@ -856,12 +947,7 @@ Item {
                                 
                                 property var dayTasks: todoTasks[`${currentYear}-${(currentMonth+1).toString().padStart(2, '0')}-${(index+1).toString().padStart(2, '0')}`]
                                 
-                                Component.onCompleted: {
-                                    let dateKey = `${currentYear}-${(currentMonth+1).toString().padStart(2, '0')}-${(index+1).toString().padStart(2, '0')}`;
-                                    if (todoTasks[dateKey]) {
-// console.log(`Day ${index+1} has ${todoTasks[dateKey].length} tasks:`, todoTasks[dateKey].map(t => t.content));
-                                    }
-                                }
+
                                 
                                 // Colored dot based on priority
                                 Rectangle {

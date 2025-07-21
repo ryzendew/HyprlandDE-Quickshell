@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtCore
+import Quickshell
+import Quickshell.Hyprland
 
 // Enhanced Weather service (WeatherAPI.com + Open-Meteo backup)
 Item {
@@ -59,6 +61,9 @@ Item {
     property var _xhr: null
     property var _geoXhr: null
     property var _airQualityXhr: null
+    property int _retryCount: 0
+    property int _maxRetries: 3
+    property int _baseDelay: 1000 // 1 second base delay for exponential backoff
     
     // Settings for caching
     Settings {
@@ -73,6 +78,10 @@ Item {
         property string lastLocation: ""
         property int lastWeatherTimestamp: 0
         property bool useWeatherApi: true // Toggle between WeatherAPI.com and Open-Meteo
+        property string cachedLatitude: ""
+        property string cachedLongitude: ""
+        property string cachedLocationDisplay: ""
+        property int lastLocationDetection: 0 // Timestamp of last location detection
     }
     
     // Set organization properties immediately to prevent QSettings warnings
@@ -100,7 +109,7 @@ Item {
             Qt.application.applicationName = "Quickshell"
         }
         
-        console.log("Enhanced Weather service initialized with location:", location)
+
         loadWeather()
         updateTimer.start()
     }
@@ -114,9 +123,10 @@ Item {
         onTriggered: loadWeather()
     }
     
+
+    
     // Methods
     function loadWeather() {
-        console.log("Loading enhanced weather for location:", location)
         var now = Date.now();
         var locationKey = location ? location.trim().toLowerCase() : "auto";
         
@@ -126,7 +136,6 @@ Item {
             (now - weatherSettings.lastWeatherTimestamp) < cacheDurationMs) {
             try {
                 parseEnhancedWeather(JSON.parse(weatherSettings.lastWeatherJson));
-                console.log("Using cached enhanced weather data")
                 return;
             } catch (e) {
                 console.error("Failed to parse cached enhanced weather data:", e)
@@ -137,14 +146,23 @@ Item {
         
         // Auto-detect location using IP or use specified location
         if (location === "auto") {
+            // Check if we have a cached location from this session (within last 24 hours)
+            if (weatherSettings.cachedLatitude && weatherSettings.cachedLongitude && 
+                (now - weatherSettings.lastLocationDetection) < (24 * 60 * 60 * 1000)) {
+                // Use cached location
+                fetchEnhancedWeatherData(parseFloat(weatherSettings.cachedLatitude), 
+                                       parseFloat(weatherSettings.cachedLongitude), 
+                                       weatherSettings.cachedLocationDisplay);
+            } else {
+                // Detect location only if not cached or cache is old
             detectLocationFromIP();
+            }
         } else {
             geocodeLocation(location);
         }
     }
     
     function detectLocationFromIP() {
-        console.log("Auto-detecting location from IP address...")
         if (_geoXhr) {
             _geoXhr.abort();
         }
@@ -158,7 +176,7 @@ Item {
                 if (_geoXhr.status === 200) {
                     try {
                         var ipData = JSON.parse(_geoXhr.responseText);
-                        console.log("IP geolocation response:", JSON.stringify(ipData, null, 2));
+
                         
                         if (ipData.latitude && ipData.longitude) {
                             var lat = parseFloat(ipData.latitude);
@@ -174,10 +192,15 @@ Item {
                                 display: locationDisplay
                             };
                             
-                            console.log("Auto-detected location:", locationDisplay, "at", lat, lon);
+                            // Cache the location for future use
+                            weatherSettings.cachedLatitude = lat.toString();
+                            weatherSettings.cachedLongitude = lon.toString();
+                            weatherSettings.cachedLocationDisplay = locationDisplay;
+                            weatherSettings.lastLocationDetection = Date.now();
+
+                            _retryCount = 0; // Reset retry count on success
                             fetchEnhancedWeatherData(lat, lon, locationDisplay);
                         } else {
-                            console.log("IP geolocation failed, no location data available");
                             loading = false;
                             createDefaultWeatherData();
                         }
@@ -186,10 +209,73 @@ Item {
                         loading = false;
                         createDefaultWeatherData();
                     }
+                } else if (_geoXhr.status === 429) {
+                    // Rate limited - immediately try fallback service
+                    detectLocationFromIPFallback();
                 } else {
-                    console.error("IP geolocation request failed with status:", _geoXhr.status);
+                    // Any other error - immediately try fallback service
+                    detectLocationFromIPFallback();
+                }
+            }
+        };
+        
+        _geoXhr.open("GET", ipUrl);
+        _geoXhr.send();
+    }
+
+    function detectLocationFromIPFallback() {
+        if (_geoXhr) {
+            _geoXhr.abort();
+        }
+        
+        _geoXhr = new XMLHttpRequest();
+        // Using ip-api.com as fallback (free, no API key required)
+        var ipUrl = "http://ip-api.com/json/";
+        
+        _geoXhr.onreadystatechange = function() {
+            if (_geoXhr.readyState === XMLHttpRequest.DONE) {
+                if (_geoXhr.status === 200) {
+                    try {
+                        var ipData = JSON.parse(_geoXhr.responseText);
+
+                        
+                        if (ipData.lat && ipData.lon) {
+                            var lat = parseFloat(ipData.lat);
+                            var lon = parseFloat(ipData.lon);
+                            var locationDisplay = [ipData.city, ipData.regionName, ipData.country].filter(x => x).join(", ");
+                            
+                            detectedLocation = {
+                                latitude: lat,
+                                longitude: lon,
+                                city: ipData.city || "",
+                                region: ipData.regionName || "",
+                                country: ipData.country || "",
+                                display: locationDisplay
+                            };
+                            
+                            // Cache the location for future use
+                            weatherSettings.cachedLatitude = lat.toString();
+                            weatherSettings.cachedLongitude = lon.toString();
+                            weatherSettings.cachedLocationDisplay = locationDisplay;
+                            weatherSettings.lastLocationDetection = Date.now();
+
+                            fetchEnhancedWeatherData(lat, lon, locationDisplay);
+                        } else {
+                            loading = false;
+                            createDefaultWeatherData();
+                            Hyprland.dispatch(`exec notify-send "Weather Location Error" "Unable to detect your location automatically. Please set a manual location in settings." -u normal -a "Shell"`);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing fallback IP geolocation response:", e);
+                        loading = false;
+                        createDefaultWeatherData();
+                        Hyprland.dispatch(`exec notify-send "Weather Location Error" "Unable to detect your location automatically. Please set a manual location in settings." -u normal -a "Shell"`);
+                    }
+                } else {
+                    console.error("Fallback IP geolocation request failed with status:", _geoXhr.status);
                     loading = false;
                     createDefaultWeatherData();
+                    Hyprland.dispatch(`exec notify-send "Weather Location Error" "Unable to detect your location automatically. Please set a manual location in settings." -u normal -a "Shell"`);
                 }
             }
         };
@@ -209,14 +295,14 @@ Item {
                     encodeURIComponent(locationName) + 
                     "&count=1&language=en&format=json";
                     
-        console.log("Fetching geocoding data from:", geoUrl)
+
                     
         _geoXhr.onreadystatechange = function() {
             if (_geoXhr.readyState === XMLHttpRequest.DONE) {
                 if (_geoXhr.status === 200) {
                     try {
                         var geoData = JSON.parse(_geoXhr.responseText);
-                        console.log("Geocoding API response:", JSON.stringify(geoData, null, 2));
+
                         
                         if (geoData.results && geoData.results.length > 0) {
                             var lat = geoData.results[0].latitude;
@@ -229,12 +315,11 @@ Item {
                             if (geoData.results[0].country) locationParts.push(geoData.results[0].country);
                             
                             var locationDisplay = locationParts.join(", ");
-                            console.log("Location resolved to:", locationDisplay, "at", lat, lon)
+
                             
                             // Get weather data for these coordinates
                             fetchEnhancedWeatherData(lat, lon, locationDisplay);
                         } else {
-                            console.log("No geocoding results found for location:", locationName);
                             loading = false;
                             createDefaultWeatherData();
                         }
@@ -324,7 +409,7 @@ Item {
     }
     
     function fetchWeatherApiData(lat, lon, locationDisplay) {
-        console.log("Fetching data from WeatherAPI.com...")
+
         
         _xhr = new XMLHttpRequest();
         var weatherUrl = `https://api.weatherapi.com/v1/forecast.json?` +
@@ -366,7 +451,7 @@ Item {
     }
     
     function fetchOpenMeteoData(lat, lon, locationDisplay) {
-        console.log("Fetching data from Open-Meteo...")
+
         
         _xhr = new XMLHttpRequest();
         var weatherUrl = "https://api.open-meteo.com/v1/forecast?" +
@@ -529,7 +614,6 @@ Item {
         };
         
         loading = false;
-        console.log("Enhanced weather data parsed successfully");
     }
     
     function parseOpenMeteoData(data, locationDisplay) {
@@ -623,7 +707,6 @@ Item {
         };
         
         loading = false;
-        console.log("Open-Meteo weather data parsed successfully");
     }
     
     function parseEnhancedWeather(data, locationDisplay) {
@@ -704,13 +787,11 @@ Item {
     function setWeatherApiKey(key) {
         weatherSettings.weatherApiKey = key;
         weatherSettings.useWeatherApi = true;
-        console.log("WeatherAPI.com key set, will use enhanced weather data");
     }
     
     // Function to toggle between APIs
     function toggleApi(useWeatherApi) {
         weatherSettings.useWeatherApi = useWeatherApi;
-        console.log("Switched to", useWeatherApi ? "WeatherAPI.com" : "Open-Meteo");
         clearCache();
         loadWeather();
     }

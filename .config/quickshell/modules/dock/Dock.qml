@@ -159,6 +159,11 @@ Scope {
         function onMarginChanged() {
             // Dock margin will update automatically due to property bindings
         }
+        
+        // Shadow property change handlers
+        function onShadowChanged() {
+            console.log("[DOCK SHADOW DEBUG] Shadow config changed")
+        }
     }
     
     // Watch for changes in icon theme - removed non-existent signal
@@ -316,6 +321,7 @@ Scope {
             
             // Microsoft Edge variations
             "microsoft-edge-dev": "microsoft-edge-dev",
+            "Microsoft-edge-dev": "microsoft-edge-dev",
             "microsoft-edge": "microsoft-edge-dev",
             "microsoft-edge.desktop": "microsoft-edge-dev",
             "msedge": "microsoft-edge-dev",
@@ -357,11 +363,11 @@ Scope {
             "cursor-cursor.desktop": "cursor-cursor",
             
             // DaVinci Resolve variations
-            "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "net.lutris.davinci-resolve-studio-20-1.desktop": "net.lutris.davinci-resolve-studio-20-1.desktop"
+            "davinci-resolve-studio-20": "com.blackmagicdesign.resolve.desktop",
+            "DaVinci Resolve Studio 20": "com.blackmagicdesign.resolve.desktop",
+            "resolve": "com.blackmagicdesign.resolve.desktop",
+            "com.blackmagicdesign.resolve": "com.blackmagicdesign.resolve.desktop",
+            "net.lutris.davinci-resolve-studio-20-1.desktop": "com.blackmagicdesign.resolve.desktop"
         };
         
         // Normalize the input (case-insensitive lookup)
@@ -477,6 +483,7 @@ Scope {
             
             // Microsoft Edge variations
             "microsoft-edge-dev": "microsoft-edge-dev",
+            "Microsoft-edge-dev": "microsoft-edge-dev",
             "microsoft-edge": "microsoft-edge-dev",
             "microsoft-edge.desktop": "microsoft-edge-dev",
             "msedge": "microsoft-edge-dev",
@@ -518,11 +525,11 @@ Scope {
             "cursor-cursor.desktop": "cursor-cursor",
             
             // DaVinci Resolve variations
-            "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "net.lutris.davinci-resolve-studio-20-1.desktop": "net.lutris.davinci-resolve-studio-20-1.desktop"
+            "davinci-resolve-studio-20": "com.blackmagicdesign.resolve.desktop",
+            "DaVinci Resolve Studio 20": "com.blackmagicdesign.resolve.desktop",
+            "resolve": "com.blackmagicdesign.resolve.desktop",
+            "com.blackmagicdesign.resolve": "com.blackmagicdesign.resolve.desktop",
+            "net.lutris.davinci-resolve-studio-20-1.desktop": "com.blackmagicdesign.resolve.desktop"
         };
         
         // Normalize the input (case-insensitive lookup)
@@ -647,6 +654,7 @@ Scope {
             
             // Microsoft Edge variations
             "microsoft-edge-dev": "microsoft-edge-dev",
+            "Microsoft-edge-dev": "microsoft-edge-dev",
             "microsoft-edge": "microsoft-edge-dev",
             "microsoft-edge.desktop": "microsoft-edge-dev",
             "msedge": "microsoft-edge-dev",
@@ -688,11 +696,11 @@ Scope {
             "cursor-cursor.desktop": "cursor-cursor",
             
             // DaVinci Resolve variations
-            "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "net.lutris.davinci-resolve-studio-20-1.desktop": "net.lutris.davinci-resolve-studio-20-1.desktop"
+            "davinci-resolve-studio-20": "com.blackmagicdesign.resolve.desktop",
+            "DaVinci Resolve Studio 20": "com.blackmagicdesign.resolve.desktop",
+            "resolve": "com.blackmagicdesign.resolve.desktop",
+            "com.blackmagicdesign.resolve": "com.blackmagicdesign.resolve.desktop",
+            "net.lutris.davinci-resolve-studio-20-1.desktop": "com.blackmagicdesign.resolve.desktop"
         };
         
         // Normalize the input (case-insensitive lookup)
@@ -803,6 +811,7 @@ Scope {
             
             // Microsoft Edge variations
             "microsoft-edge-dev": "microsoft-edge-dev",
+            "Microsoft-edge-dev": "microsoft-edge-dev",
             "microsoft-edge": "microsoft-edge-dev",
             "microsoft-edge.desktop": "microsoft-edge-dev",
             "msedge": "microsoft-edge-dev",
@@ -844,11 +853,11 @@ Scope {
             "cursor-cursor.desktop": "cursor-cursor",
             
             // DaVinci Resolve variations
-            "davinci-resolve-studio-20": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "DaVinci Resolve Studio 20": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "com.blackmagicdesign.resolve": "net.lutris.davinci-resolve-studio-20-1.desktop",
-            "net.lutris.davinci-resolve-studio-20-1.desktop": "net.lutris.davinci-resolve-studio-20-1.desktop"
+            "davinci-resolve-studio-20": "com.blackmagicdesign.resolve.desktop",
+            "DaVinci Resolve Studio 20": "com.blackmagicdesign.resolve.desktop",
+            "resolve": "com.blackmagicdesign.resolve.desktop",
+            "com.blackmagicdesign.resolve": "com.blackmagicdesign.resolve.desktop",
+            "net.lutris.davinci-resolve-studio-20-1.desktop": "com.blackmagicdesign.resolve.desktop"
         };
         
         // Normalize the input (case-insensitive lookup)
@@ -1024,7 +1033,8 @@ Scope {
         var mapping = {
             'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
             'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
-            'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
+            'microsoft-edge-dev': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
+            'microsoft-edge-dev.desktop': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
             'vesktop': ['vesktop', 'discord'],
             'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
             'org.gnome.Nautilus': ['nautilus', 'org.gnome.Nautilus'],
@@ -1036,7 +1046,7 @@ Scope {
             'com.obsproject.Studio.desktop': ['obs', 'com.obsproject.studio'],
             'cursor-cursor': ['cursor', 'Cursor'],
             'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
-            'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve'],
+            'com.blackmagicdesign.resolve.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve'],
             'Cider.desktop': ['cider', 'Cider', 'Cider.exe']
         };
         
@@ -1183,8 +1193,8 @@ Scope {
                 })
                 
                 if (JSON.stringify(windows) !== JSON.stringify(dock.activeWindows)) {
-                    // log("debug", `Updating active windows: ${windows.length} windows found`)
-                    // log("debug", `Window list: ${JSON.stringify(windows.map(w => w.class))}`)
+                    // console.log(`[UPDATE ACTIVE WINDOWS] Updating active windows: ${windows.length} windows found`)
+                    // console.log(`[UPDATE ACTIVE WINDOWS] Window list: ${JSON.stringify(windows.map(w => w.class))}`)
                     dock.activeWindows = windows
                 }
             }
@@ -1207,7 +1217,8 @@ Scope {
                 var mapping = {
                     'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
                     'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
-                        'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
+                        'microsoft-edge-dev': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
+                        'microsoft-edge-dev.desktop': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
                         'vesktop': ['vesktop', 'discord'],
                         'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
                         'org.gnome.Nautilus': ['nautilus', 'org.gnome.Nautilus'],
@@ -1219,7 +1230,7 @@ Scope {
                         'com.obsproject.Studio.desktop': ['obs', 'com.obsproject.studio'],
                         'cursor-cursor': ['cursor', 'Cursor'],
                         'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
-                        'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve'],
+                        'com.blackmagicdesign.resolve.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve'],
                         'Cider.desktop': ['cider', 'Cider', 'Cider.exe']
                     };
                 var targetClass = normalizedWindowClass.toLowerCase();
@@ -1234,10 +1245,10 @@ Scope {
                         possibleClasses.push(key.toLowerCase());
                     }
                 }
-                // log("debug", `[ISWINDOWACTIVE] Checking ${normalizedWindowClass}, possible classes: ${JSON.stringify(possibleClasses)}`);
-                // log("debug", `[ISWINDOWACTIVE] Active windows: ${JSON.stringify(dock.activeWindows.map(w => w.class))}`);
+                // console.log(`[ISWINDOWACTIVE] Checking ${normalizedWindowClass}, possible classes: ${JSON.stringify(possibleClasses)}`);
+                // console.log(`[ISWINDOWACTIVE] Active windows: ${JSON.stringify(dock.activeWindows.map(w => w.class))}`);
                 var result = dock.activeWindows.some(w => possibleClasses.includes(w.class.toLowerCase()));
-                // log("debug", `[ISWINDOWACTIVE] Result for ${normalizedWindowClass}: ${result}`);
+                // console.log(`[ISWINDOWACTIVE] Result for ${normalizedWindowClass}: ${result}`);
                 return result;
             }
             
@@ -1312,19 +1323,7 @@ Scope {
 
 
 
-                        // Enable layer for effects
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            source: dockContent
-                            shadowEnabled: true
-                            shadowColor: Qt.rgba(0, 0, 0, 0.3)
-                            shadowVerticalOffset: 4
-                            shadowHorizontalOffset: 0
-                            shadowBlur: 12
-                            blurEnabled: true
-                            blurMultiplier: 0.7
-                            blurMax: 64
-                        }
+                        // No shadow on the main dock container - shadows should be on individual items
 
                         Behavior on color {
                             ColorAnimation {
@@ -1516,7 +1515,7 @@ Scope {
                                             var mapping = {
                                                 'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
                                                 'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
-                                                'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge', 'Microsoft-edge-dev'],
+                                                'microsoft-edge-dev': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
                                                 'vesktop': ['vesktop', 'discord', 'Vesktop', 'Discord'],
                                                 'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
                                                 'org.gnome.Nautilus': ['nautilus', 'org.gnome.Nautilus', 'org.gnome.Nautilus', 'Nautilus'],
@@ -1528,7 +1527,7 @@ Scope {
                                                 'com.obsproject.Studio.desktop': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],
                                                 'cursor-cursor': ['cursor', 'Cursor', 'cursor-cursor'],
                                                 'ptyxis': ['ptyxis', 'org.gnome.ptyxis', 'Ptyxis', 'Org.gnome.ptyxis'],
-                                                'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
+                                                'com.blackmagicdesign.resolve.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                                             };
                                             var pinnedClassLower = pinnedId.toLowerCase();
                                             var possibleClasses = [pinnedClassLower];
@@ -1573,10 +1572,11 @@ Scope {
                                         if (targetWindow) {
                                             // Focus existing window
                                             if (targetWindow.address) {
-                                                Hyprland.dispatch(`focuswindow address:${targetWindow.address}`);
+                                                // Switch to workspace first, then focus window
                                                 if (targetWindow.workspace && targetWindow.workspace.id) {
                                                     Hyprland.dispatch(`workspace ${targetWindow.workspace.id}`);
                                                 }
+                                                Hyprland.dispatch(`focuswindow address:${targetWindow.address}`);
                                             } else {
                                                 Hyprland.dispatch(`focuswindow class:${targetWindow.class}`);
                                             }
@@ -1613,7 +1613,7 @@ Scope {
                                     var mapping = {
                                         'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
                                         'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
-                                        'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge'],
+                                        'microsoft-edge-dev': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
                                         'vesktop': ['vesktop', 'discord'],
                                         'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
                                         'org.gnome.Nautilus': ['nautilus', 'org.gnome.Nautilus'],
@@ -1623,7 +1623,7 @@ Scope {
                                         'com.obsproject.Studio.desktop': ['obs', 'com.obsproject.studio'],
                                         'cursor-cursor': ['cursor', 'Cursor'],
                                         'ptyxis': ['ptyxis', 'org.gnome.ptyxis'],
-                                        'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
+                                        'com.blackmagicdesign.resolve.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                                     };
                                     var reverseMapping = {
                                         'photo.exe': 'AffinityPhoto.desktop',
@@ -1631,6 +1631,7 @@ Scope {
                                         'designer.exe': 'AffinityDesigner.desktop',
                                         'Designer.exe': 'AffinityDesigner.desktop',
                                         'microsoft-edge-dev': 'microsoft-edge-dev',
+                                        'Microsoft-edge-dev': 'microsoft-edge-dev',
                                         'msedge': 'microsoft-edge-dev',
                                         'edge': 'microsoft-edge-dev',
                                         'vesktop': 'vesktop',
@@ -1652,10 +1653,10 @@ Scope {
                                         'Cursor': 'cursor-cursor',
                                         'ptyxis': 'ptyxis',
                                         'org.gnome.ptyxis': 'ptyxis',
-                                        'davinci-resolve-studio-20': 'net.lutris.davinci-resolve-studio-20-1.desktop',
-                                        'DaVinci Resolve Studio 20': 'net.lutris.davinci-resolve-studio-20-1.desktop',
-                                        'resolve': 'net.lutris.davinci-resolve-studio-20-1.desktop',
-                                        'com.blackmagicdesign.resolve': 'net.lutris.davinci-resolve-studio-20-1.desktop'
+                                        'davinci-resolve-studio-20': 'com.blackmagicdesign.resolve.desktop',
+                                        'DaVinci Resolve Studio 20': 'com.blackmagicdesign.resolve.desktop',
+                                        'resolve': 'com.blackmagicdesign.resolve.desktop',
+                                        'com.blackmagicdesign.resolve': 'com.blackmagicdesign.resolve.desktop'
                                     };
                                     var pinnedSet = new Set(dock.pinnedApps.map(a => a.toLowerCase()));
                                     // Normalize pinned set for special cases like Lutris
@@ -1697,6 +1698,22 @@ Scope {
                                         normalizedPinnedSet.add("org.gnome.Nautilus");
                                         normalizedPinnedSet.add("nautilus");
                                     }
+                                    // Add normalization for Microsoft Edge
+                                    if (pinnedSet.has("microsoft-edge-dev") || pinnedSet.has("microsoft-edge-dev.desktop") || pinnedSet.has("Microsoft-edge-dev") || pinnedSet.has("microsoft-edge") || pinnedSet.has("msedge") || pinnedSet.has("edge")) {
+                                        normalizedPinnedSet.add("microsoft-edge-dev");
+                                        normalizedPinnedSet.add("microsoft-edge-dev.desktop");
+                                        normalizedPinnedSet.add("Microsoft-edge-dev");
+                                        normalizedPinnedSet.add("microsoft-edge");
+                                        normalizedPinnedSet.add("msedge");
+                                        normalizedPinnedSet.add("edge");
+                                    }
+                                    // Add normalization for DaVinci Resolve
+                                    if (pinnedSet.has("com.blackmagicdesign.resolve.desktop") || pinnedSet.has("com.blackmagicdesign.resolve") || pinnedSet.has("resolve") || pinnedSet.has("davinci-resolve-studio-20")) {
+                                        normalizedPinnedSet.add("com.blackmagicdesign.resolve.desktop");
+                                        normalizedPinnedSet.add("com.blackmagicdesign.resolve");
+                                        normalizedPinnedSet.add("resolve");
+                                        normalizedPinnedSet.add("davinci-resolve-studio-20");
+                                    }
                                     
                                     // Group windows by effective app identity
                                     var groups = {};
@@ -1728,6 +1745,14 @@ Scope {
                                         // Normalize Nautilus variants
                                         if (key === "org.gnome.nautilus" || key === "org.gnome.nautilus.desktop" || key === "nautilus") {
                                             key = "org.gnome.nautilus.desktop";
+                                        }
+                                        // Normalize Microsoft Edge variants
+                                        if (key === "microsoft-edge-dev" || key === "microsoft-edge-dev.desktop" || key === "Microsoft-edge-dev" || key === "microsoft-edge" || key === "msedge" || key === "edge") {
+                                            key = "microsoft-edge-dev";
+                                        }
+                                        // Normalize DaVinci Resolve variants
+                                        if (key === "resolve" || key === "com.blackmagicdesign.resolve" || key === "com.blackmagicdesign.resolve.desktop" || key === "davinci-resolve-studio-20" || key === "davinci-resolve-studio-20-1.desktop") {
+                                            key = "com.blackmagicdesign.resolve.desktop";
                                         }
                                         // Debug log for window class and grouping key
 // console.log('[DOCK DEBUG] Window class:', w.class, '| Grouping key:', key, '| Title:', w.title, '| Address:', w.address);
@@ -1807,10 +1832,10 @@ Scope {
                                             'Cursor': 'cursor-cursor',
                                             'ptyxis': 'ptyxis',
                                             'org.gnome.ptyxis': 'ptyxis',
-                                            'davinci-resolve-studio-20': 'net.lutris.davinci-resolve-studio-20-1.desktop',
-                                            'DaVinci Resolve Studio 20': 'net.lutris.davinci-resolve-studio-20-1.desktop',
-                                            'resolve': 'net.lutris.davinci-resolve-studio-20-1.desktop',
-                                            'com.blackmagicdesign.resolve': 'net.lutris.davinci-resolve-studio-20-1.desktop'
+                                            'davinci-resolve-studio-20': 'com.blackmagicdesign.resolve.desktop',
+                                            'DaVinci Resolve Studio 20': 'com.blackmagicdesign.resolve.desktop',
+                                            'resolve': 'com.blackmagicdesign.resolve.desktop',
+                                            'com.blackmagicdesign.resolve': 'com.blackmagicdesign.resolve.desktop'
                                         };
                                         
                                         // Try to get desktop file name from reverse mapping
@@ -2365,7 +2390,7 @@ Scope {
                     var mapping = {
                         'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
                         'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
-                        'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge', 'Microsoft-edge-dev'],
+                        'microsoft-edge-dev': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
                         'vesktop': ['vesktop', 'discord', 'Vesktop', 'Discord'],
                         'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
                         'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
@@ -2377,7 +2402,7 @@ Scope {
                         'com.obsproject.Studio.desktop': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],
                         'cursor-cursor': ['cursor', 'Cursor', 'cursor-cursor'],
                         'ptyxis': ['ptyxis', 'org.gnome.ptyxis', 'Ptyxis', 'Org.gnome.ptyxis'],
-                        'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
+                        'com.blackmagicdesign.resolve.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
                     };
                     
                     // Get possible window classes for this app
@@ -2478,7 +2503,7 @@ Scope {
             var mapping = {
                 'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
                 'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
-                'microsoft-edge-dev': ['microsoft-edge-dev', 'msedge', 'edge', 'Microsoft-edge-dev'],
+                'microsoft-edge-dev': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
                 'vesktop': ['vesktop', 'discord', 'Vesktop', 'Discord'],
                 'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
                 'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
@@ -2490,7 +2515,7 @@ Scope {
                 'com.obsproject.Studio.desktop': ['obs', 'OBS', 'com.obsproject.studio', 'com.obsproject.Studio'],
                 'cursor-cursor': ['cursor', 'Cursor', 'cursor-cursor'],
                 'ptyxis': ['ptyxis', 'org.gnome.ptyxis', 'Ptyxis', 'Org.gnome.ptyxis'],
-                'net.lutris.davinci-resolve-studio-20-1.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
+                'com.blackmagicdesign.resolve.desktop': ['davinci-resolve-studio-20', 'DaVinci Resolve Studio 20', 'resolve', 'com.blackmagicdesign.resolve']
             };
             var pinnedClassLower = finalAppInfo.class.toLowerCase();
             var possibleClasses = [pinnedClassLower];

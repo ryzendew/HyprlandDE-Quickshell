@@ -37,17 +37,7 @@ Item {
         property int lastWeatherTimestamp: 0
     }
     
-    // Set organization properties immediately to prevent QSettings warnings
-    Timer {
-        running: true
-        repeat: false
-        interval: 0
-        onTriggered: {
-            Qt.application.organizationName = "Quickshell"
-            Qt.application.organizationDomain = "quickshell.org"
-            Qt.application.applicationName = "Quickshell"
-        }
-    }
+
     
     Timer {
         interval: 600000  // Update every 10 minutes
@@ -266,22 +256,32 @@ Item {
         }
     }
     
+    property var _geoXhr: null
+    property int _retryCount: 0
+    property int _maxRetries: 3
+    property int _baseDelay: 1000 // 1 second base delay for exponential backoff
+
     function detectLocationFromIP() {
         // console.log("[BAR WEATHER] Auto-detecting location from IP address...")
-        var geoXhr = new XMLHttpRequest();
+        if (_geoXhr) {
+            _geoXhr.abort();
+        }
+        
+        _geoXhr = new XMLHttpRequest();
         var ipUrl = "https://ipapi.co/json/";
         
-        geoXhr.onreadystatechange = function() {
-            if (geoXhr.readyState === XMLHttpRequest.DONE) {
-                if (geoXhr.status === 200) {
+        _geoXhr.onreadystatechange = function() {
+            if (_geoXhr.readyState === XMLHttpRequest.DONE) {
+                if (_geoXhr.status === 200) {
                     try {
-                        var ipData = JSON.parse(geoXhr.responseText);
+                        var ipData = JSON.parse(_geoXhr.responseText);
                         // console.log("[BAR WEATHER] IP geolocation response:", JSON.stringify(ipData, null, 2));
                         
                         if (ipData.latitude && ipData.longitude) {
                             var lat = parseFloat(ipData.latitude);
                             var lon = parseFloat(ipData.longitude);
                             // console.log("[BAR WEATHER] Auto-detected location at", lat, lon);
+                            _retryCount = 0; // Reset retry count on success
                             fetchWeatherData(lat, lon);
                         } else {
                             // console.log("[BAR WEATHER] IP geolocation failed, no location data available");
@@ -291,15 +291,89 @@ Item {
                         // console.error("[BAR WEATHER] Error parsing IP geolocation response:", e);
                         fallbackWeatherData("Location error");
                     }
+                } else if (_geoXhr.status === 429) {
+                    // Rate limited - implement exponential backoff
+                    console.warn("[BAR WEATHER] IP geolocation rate limited (429). Retry attempt:", _retryCount + 1);
+                    if (_retryCount === 0) {
+                        // Only show notification on first rate limit detection
+                        Hyprland.dispatch(`exec notify-send "Weather Service" "Location service is temporarily busy. Retrying automatically..." -u normal -a "Shell"`);
+                    }
+                    if (_retryCount < _maxRetries) {
+                        _retryCount++;
+                        var delay = _baseDelay * Math.pow(2, _retryCount - 1); // Exponential backoff
+                        console.log("[BAR WEATHER] Retrying in", delay, "ms...");
+                        setTimeout(function() {
+                            detectLocationFromIP();
+                        }, delay);
+                    } else {
+                        console.error("[BAR WEATHER] Max retries reached for IP geolocation, trying fallback service");
+                        _retryCount = 0;
+                        detectLocationFromIPFallback();
+                    }
                 } else {
-                    // console.error("[BAR WEATHER] IP geolocation request failed with status:", geoXhr.status);
-                    fallbackWeatherData("Location error");
+                    // console.error("[BAR WEATHER] IP geolocation request failed with status:", _geoXhr.status);
+                    if (_retryCount < _maxRetries) {
+                        _retryCount++;
+                        var delay = _baseDelay * Math.pow(2, _retryCount - 1);
+                        console.log("[BAR WEATHER] Retrying in", delay, "ms...");
+                        setTimeout(function() {
+                            detectLocationFromIP();
+                        }, delay);
+                    } else {
+                        console.error("[BAR WEATHER] Max retries reached, trying fallback service");
+                        _retryCount = 0;
+                        detectLocationFromIPFallback();
+                    }
                 }
             }
         };
         
-        geoXhr.open("GET", ipUrl);
-        geoXhr.send();
+        _geoXhr.open("GET", ipUrl);
+        _geoXhr.send();
+    }
+
+    function detectLocationFromIPFallback() {
+        console.log("[BAR WEATHER] Using fallback IP geolocation service...")
+        if (_geoXhr) {
+            _geoXhr.abort();
+        }
+        
+        _geoXhr = new XMLHttpRequest();
+        // Using ip-api.com as fallback (free, no API key required)
+        var ipUrl = "http://ip-api.com/json/";
+        
+        _geoXhr.onreadystatechange = function() {
+            if (_geoXhr.readyState === XMLHttpRequest.DONE) {
+                if (_geoXhr.status === 200) {
+                    try {
+                        var ipData = JSON.parse(_geoXhr.responseText);
+                        console.log("[BAR WEATHER] Fallback IP geolocation response:", JSON.stringify(ipData, null, 2));
+                        
+                        if (ipData.lat && ipData.lon) {
+                            var lat = parseFloat(ipData.lat);
+                            var lon = parseFloat(ipData.lon);
+                            console.log("[BAR WEATHER] Fallback auto-detected location at", lat, lon);
+                            fetchWeatherData(lat, lon);
+                        } else {
+                            console.log("[BAR WEATHER] Fallback IP geolocation failed, no location data available");
+                            fallbackWeatherData("Location unavailable");
+                            Hyprland.dispatch(`exec notify-send "Weather Location Error" "Unable to detect your location automatically. Please set a manual location in settings." -u normal -a "Shell"`);
+                        }
+                    } catch (e) {
+                        console.error("[BAR WEATHER] Error parsing fallback IP geolocation response:", e);
+                        fallbackWeatherData("Location error");
+                        Hyprland.dispatch(`exec notify-send "Weather Location Error" "Unable to detect your location automatically. Please set a manual location in settings." -u normal -a "Shell"`);
+                    }
+                } else {
+                    console.error("[BAR WEATHER] Fallback IP geolocation request failed with status:", _geoXhr.status);
+                    fallbackWeatherData("Location error");
+                    Hyprland.dispatch(`exec notify-send "Weather Location Error" "Unable to detect your location automatically. Please set a manual location in settings." -u normal -a "Shell"`);
+                }
+            }
+        };
+        
+        _geoXhr.open("GET", ipUrl);
+        _geoXhr.send();
     }
     
     function geocodeLocation(locationName) {

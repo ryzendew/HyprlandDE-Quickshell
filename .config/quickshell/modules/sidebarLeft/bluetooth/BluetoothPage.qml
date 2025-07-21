@@ -18,6 +18,7 @@ Rectangle {
     property var connectedDeviceHistory: []
     property var deviceList: []
     property bool loadingDevices: false
+    property string pairingDevice: ""
 
     function updateConnectedDeviceHistory() {
         // Add new connected devices to history
@@ -78,11 +79,6 @@ Rectangle {
     }
 
     Component.onCompleted: {
-//         console.log('[BT SIMPLE TEST] Using custom Bluetooth service')
-//         console.log('[BT SIMPLE TEST] Bluetooth.bluetoothEnabled:', Bluetooth.bluetoothEnabled)
-//         console.log('[BT SIMPLE TEST] Connected devices:', Bluetooth.connectedDevices.length)
-//         console.log('[BT SIMPLE TEST] Available devices:', Bluetooth.availableDevices.length)
-//         console.log('[BT SIMPLE TEST] Paired devices:', Bluetooth.pairedDevices.length)
         // Do not auto-start scan
         refreshDevices();
     }
@@ -217,8 +213,9 @@ Rectangle {
                 // Connected Devices Section (shows all paired devices, highlights connected)
                 Column {
                     spacing: 8
+                    visible: deviceList.filter(function(d) { return d.connected; }).length > 0
                     StyledText {
-                        text: "Connected Devices"
+                        text: qsTr("Connected Devices")
                         font.bold: true
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.colors.colOnLayer0
@@ -234,6 +231,8 @@ Rectangle {
                             QuickToggleButton {
                                 buttonIcon: "bluetooth_connected"
                                 toggled: true
+                                implicitWidth: 28
+                                implicitHeight: 28
                                 onClicked: {
                                     Bluetooth.disconnectDevice(modelData.address)
                                 }
@@ -243,6 +242,8 @@ Rectangle {
                             }
                             QuickToggleButton {
                                 buttonIcon: "delete"
+                                implicitWidth: 28
+                                implicitHeight: 28
                                 onClicked: {
                                     Bluetooth.removeDevice(modelData.address)
                                 }
@@ -252,14 +253,6 @@ Rectangle {
                             }
                         }
                     }
-                    // Placeholder if none
-                    StyledText {
-                        visible: deviceList.filter(function(d) { return d.connected; }).length === 0
-                        text: "No connected devices yet"
-                        color: "#888"
-                        font.pixelSize: Appearance.font.pixelSize.small
-                        horizontalAlignment: Text.AlignHCenter
-                    }
                 }
 
                 // Device list header
@@ -267,7 +260,7 @@ Rectangle {
                     Layout.fillWidth: true
                     spacing: 8
                     StyledText {
-                        text: qsTr("Devices")
+                        text: qsTr("All Devices")
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.Medium
                         color: Appearance.colors.colOnLayer0
@@ -316,18 +309,44 @@ Rectangle {
                     Layout.fillHeight: true
                     spacing: 4
                     boundsBehavior: Flickable.StopAtBounds
-                    // Remove duplicates by address
+                    // Remove duplicates by address and set proper properties
                     model: (function() {
                         let seen = {};
                         let out = [];
-                        let all = Bluetooth.connectedDevices.concat(Bluetooth.pairedDevices).concat(Bluetooth.availableDevices);
-                        for (let i = 0; i < all.length; ++i) {
-                            let d = all[i];
+                        
+                        // Process connected devices first (they are also paired)
+                        for (let i = 0; i < Bluetooth.connectedDevices.length; ++i) {
+                            let d = Bluetooth.connectedDevices[i];
                             if (!seen[d.address]) {
                                 seen[d.address] = true;
+                                d.paired = true;
+                                d.connected = true;
                                 out.push(d);
                             }
                         }
+                        
+                        // Process paired devices (but not connected)
+                        for (let i = 0; i < Bluetooth.pairedDevices.length; ++i) {
+                            let d = Bluetooth.pairedDevices[i];
+                            if (!seen[d.address]) {
+                                seen[d.address] = true;
+                                d.paired = true;
+                                d.connected = false;
+                                out.push(d);
+                            }
+                        }
+                        
+                        // Process available devices (not paired)
+                        for (let i = 0; i < Bluetooth.availableDevices.length; ++i) {
+                            let d = Bluetooth.availableDevices[i];
+                            if (!seen[d.address]) {
+                                seen[d.address] = true;
+                                d.paired = false;
+                                d.connected = false;
+                                out.push(d);
+                            }
+                        }
+                        
                         return out;
                     })()
                     
@@ -362,17 +381,17 @@ Rectangle {
 
                     delegate: Rectangle {
                         width: parent.width
-                        height: 50
+                        height: 60
                         color: "transparent"
                         radius: Appearance.rounding.small
                         
                         Rectangle {
                             anchors.fill: parent
                             radius: Appearance.rounding.small
-                            color: modelData.connected ? 
+                            color: modelData && modelData.connected ? 
                                 Qt.rgba(33, 150, 243, 0.15) : 
                                 (deviceMouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent")
-                            border.color: modelData.connected ? 
+                            border.color: modelData && modelData.connected ? 
                                 Qt.rgba(33, 150, 243, 0.3) : 
                                 Qt.rgba(1, 1, 1, 0.05)
                         border.width: 1
@@ -385,9 +404,9 @@ Rectangle {
                                 spacing: 12
 
                                 MaterialSymbol {
-                                text: modelData.connected ? "bluetooth_connected" : "bluetooth"
+                                text: modelData && modelData.connected ? "bluetooth_connected" : "bluetooth"
                                 iconSize: 20
-                                color: modelData.connected ? "#2196F3" : Appearance.colors.colOnLayer1
+                                color: modelData && modelData.connected ? "#2196F3" : Appearance.colors.colOnLayer1
                                 verticalAlignment: Text.AlignVCenter
                                 }
 
@@ -396,65 +415,99 @@ Rectangle {
                                     spacing: 2
 
                                     StyledText {
-                                    text: modelData.name || qsTr("Unknown Device")
-                                    color: modelData.connected ? "#2196F3" : Appearance.colors.colOnLayer0
+                                    text: modelData ? (modelData.name || qsTr("Unknown Device")) : qsTr("Unknown Device")
+                                    color: modelData && modelData.connected ? "#2196F3" : Appearance.colors.colOnLayer0
                                     font.pixelSize: Appearance.font.pixelSize.small
-                                    font.weight: modelData.connected ? Font.Medium : Font.Normal
+                                    font.weight: modelData && modelData.connected ? Font.Medium : Font.Normal
                                     elide: Text.ElideRight
                                     }
 
                                     StyledText {
-                                    text: modelData.address + (modelData.type ? " • " + modelData.type : "")
-                                    color: modelData.connected ? "#2196F3" : Appearance.colors.colOnLayer1
+                                    text: (modelData ? modelData.address : "") + (modelData && modelData.type ? " • " + modelData.type : "") + 
+                                          (modelData && modelData.connected ? " • Connected" : modelData && modelData.paired ? " • Paired" : " • Available")
+                                    color: modelData && modelData.connected ? "#2196F3" : Appearance.colors.colOnLayer1
                                         font.pixelSize: Appearance.font.pixelSize.tiny
                                     elide: Text.ElideRight
                                 }
                             }
 
-                            // Connect/Disconnect button
-                            QuickToggleButton {
-                                buttonIcon: modelData.connected ? "bluetooth_connected" : "add"
-                                toggled: modelData.connected
-                                onClicked: {
-                                    if (modelData.connected) {
-                                        Bluetooth.disconnectDevice(modelData.address)
-                                    } else {
-                                        if (modelData.paired) {
+                            // Action buttons container
+                            RowLayout {
+                                spacing: 4
+                                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+
+                                // Connect/Disconnect button
+                                QuickToggleButton {
+                                    buttonIcon: modelData && pairingDevice === modelData.address ? "sync" : 
+                                               (modelData && modelData.connected ? "bluetooth_connected" : "bluetooth")
+                                    toggled: modelData && modelData.connected
+                                    implicitWidth: 32
+                                    implicitHeight: 32
+                                    onClicked: {
+                                        if (!modelData || !modelData.address) return;
+                                        
+                                        if (modelData.connected) {
+                                            // Device is connected - disconnect it
+                                            Bluetooth.disconnectDevice(modelData.address)
+                                        } else if (modelData.paired) {
+                                            // Device is paired but not connected - connect it
                                             Bluetooth.connectDevice(modelData.address)
                                         } else {
+                                            // Device is not paired - pair it
                                             if (typeof BluetoothManager !== 'undefined' && BluetoothManager && typeof BluetoothManager.pair === 'function' && modelData.address) {
+                                                pairingDevice = modelData.address;
                                                 BluetoothManager.pair(modelData.address, function() {
+                                                    pairingDevice = "";
+                                                    refreshDevices();
+                                                });
+                                            } else {
+                                                // Fallback: try direct command
+                                                pairingDevice = modelData.address;
+                                                Io.shellCommand('echo "pair ' + modelData.address + '" | bluetoothctl', function(exitCode, stdout, stderr) {
+                                                    pairingDevice = "";
                                                     refreshDevices();
                                                 });
                                             }
                                         }
                                     }
+                                    StyledToolTip {
+                                        content: modelData && modelData.connected ? qsTr("Disconnect") : 
+                                                 (modelData && modelData.paired ? qsTr("Connect") : qsTr("Pair & Connect"))
+                                    }
                                 }
-                                StyledToolTip {
-                                    content: modelData.connected ? qsTr("Disconnect") : 
-                                             (modelData.paired ? qsTr("Connect") : qsTr("Pair device"))
+
+                                // Forget button (only show for paired or connected devices)
+                                QuickToggleButton {
+                                    visible: true // Temporarily show all for debugging
+                                    buttonIcon: "delete"
+                                    implicitWidth: 32
+                                    implicitHeight: 32
+                                    onClicked: {
+                                        if (!modelData || !modelData.address) return;
+                                        
+                                        if (typeof BluetoothManager !== 'undefined' && BluetoothManager && typeof BluetoothManager.remove === 'function') {
+                                            BluetoothManager.remove(modelData.address, function() {
+                                                refreshDevices();
+                                            });
+                                        } else {
+                                            Bluetooth.removeDevice(modelData.address);
+                                        }
+                                    }
+                                    StyledToolTip {
+                                        content: qsTr("Forget device")
+                                    }
                                 }
                             }
                         }
                         
                         MouseArea {
                             id: deviceMouseArea
-                anchors.fill: parent
+                            anchors.fill: parent
+                            anchors.rightMargin: 80 // Leave space for buttons
                             hoverEnabled: true
-                                    onClicked: {
-                                if (modelData.connected) {
-                                    Bluetooth.disconnectDevice(modelData.address)
-                                } else {
-                                    if (modelData.paired) {
-                                        Bluetooth.connectDevice(modelData.address)
-                                    } else {
-                                        if (typeof BluetoothManager !== 'undefined' && BluetoothManager && typeof BluetoothManager.pair === 'function' && modelData.address) {
-                                            BluetoothManager.pair(modelData.address, function() {
-                                                refreshDevices();
-                                            });
-                                        }
-                                    }
-                                }
+                            onClicked: {
+                                // Only handle clicks on the device info area, not buttons
+                                // Buttons have their own click handlers
                             }
                         }
                     }

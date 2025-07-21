@@ -796,169 +796,151 @@ ColumnLayout {
                 }
             }
             
-            // Wallpaper grid with right-side scrollbar
-            RowLayout {
+            // Wallpaper grid
+            ScrollView {
+                id: gridView
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 8
+                clip: true
                 
-                // Wallpaper grid
-                ScrollView {
-                    id: gridView
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
+                ScrollBar.vertical: ScrollBar {
+                    active: true
+                    policy: ScrollBar.AsNeeded
+                    anchors.left: parent.left
+                }
+                
+                GridLayout {
+                    width: gridView.width
+                    columns: Math.floor(gridView.width / 120)
+                    rowSpacing: 12
+                    columnSpacing: 12
                     
-                    ScrollBar.horizontal: ScrollBar {
-                        active: true
-                        policy: ScrollBar.AsNeeded
-                        visible: true
-                        width: 12
+                    Repeater {
+                        model: wallpaperFiles
                         
-                        background: Rectangle {
-                            color: "#2a2a2a"
-                            radius: 6
-                        }
-                        
-                        contentItem: Rectangle {
-                            implicitWidth: 12
-                            radius: 6
-                            color: parent.pressed ? "#666666" : parent.hovered ? "#555555" : "#444444"
-                        }
-                    }
-                    
-                    Grid {
-                        width: gridView.width
-                        columns: Math.floor(gridView.width / 120)
-                        rowSpacing: 12
-                        columnSpacing: 12
-                        
-                        Repeater {
-                            model: wallpaperFiles
+                        // Empty state when no wallpapers
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 100
+                            radius: 8
+                            color: "#3a3a3a"
+                            border.width: 1
+                            border.color: "#505050"
+                            visible: wallpaperFiles.length === 0
                             
-                            // Empty state when no wallpapers
-                            Rectangle {
-                                width: gridView.width
-                                height: 100
-                                radius: 8
-                                color: "#3a3a3a"
-                                border.width: 1
-                                border.color: "#505050"
-                                visible: wallpaperFiles.length === 0
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                spacing: 6
                                 
-                                ColumnLayout {
-                                    anchors.centerIn: parent
-                                    spacing: 6
-                                    
-                                    MaterialSymbol {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        text: "folder_open"
-                                        iconSize: 24
-                                        color: "#666666"
+                                MaterialSymbol {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "folder_open"
+                                    iconSize: 24
+                                    color: "#666666"
+                                }
+                                
+                                Text {
+                                    text: "No wallpapers found"
+                                    font.pixelSize: 14
+                                    font.weight: Font.Medium
+                                    color: "#ffffff"
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                                
+                                Text {
+                                    text: "Add images to ~/Pictures/Wallpapers/"
+                                    font.pixelSize: 11
+                                    color: "#cccccc"
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                            }
+                        }
+                        
+                        delegate: Rectangle {
+                            Layout.fillWidth: false
+                            Layout.preferredWidth: 100
+                            Layout.preferredHeight: 100
+                            radius: 8
+                            color: modelData === currentWallpaper ? "#4a4a4a" : "#3a3a3a"
+                            border.width: modelData === currentWallpaper ? 2 : 1
+                            border.color: modelData === currentWallpaper ? "#4CAF50" : "#505050"
+                            clip: true
+                            
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                
+                                onEntered: {
+                                    if (modelData !== currentWallpaper) {
+                                        parent.color = "#454545"
                                     }
-                                    
-                                    Text {
-                                        text: "No wallpapers found"
-                                        font.pixelSize: 14
-                                        font.weight: Font.Medium
-                                        color: "#ffffff"
-                                        Layout.alignment: Qt.AlignHCenter
+                                }
+                                
+                                onExited: {
+                                    if (modelData !== currentWallpaper) {
+                                        parent.color = "#3a3a3a"
                                     }
-                                    
-                                    Text {
-                                        text: "Add images to ~/Pictures/Wallpapers/"
-                                        font.pixelSize: 11
-                                        color: "#cccccc"
-                                        Layout.alignment: Qt.AlignHCenter
-                                    }
+                                }
+                                
+                                onClicked: {
+                                    setWallpaper(modelData)
                                 }
                             }
                             
-                            delegate: Rectangle {
-                                width: 100
-                                height: 100
-                                radius: 8
-                                color: modelData === currentWallpaper ? "#4a4a4a" : "#3a3a3a"
-                                border.width: modelData === currentWallpaper ? 2 : 1
-                                border.color: modelData === currentWallpaper ? "#4CAF50" : "#505050"
-                                clip: true
+                            // Wallpaper thumbnail (fills entire square)
+                            Image {
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                source: modelData
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                mipmap: true
                                 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
+                                // Loading indicator
+                                BusyIndicator {
+                                    anchors.centerIn: parent
+                                    running: parent.status === Image.Loading
+                                    width: 20
+                                    height: 20
+                                }
+                                
+                                // Current indicator overlay
+                                Rectangle {
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    anchors.margins: 4
+                                    width: 16
+                                    height: 16
+                                    radius: 8
+                                    color: modelData === currentWallpaper ? "#4CAF50" : "transparent"
+                                    visible: modelData === currentWallpaper
                                     
-                                    onEntered: {
-                                        if (modelData !== currentWallpaper) {
-                                            parent.color = "#454545"
-                                        }
-                                    }
-                                    
-                                    onExited: {
-                                        if (modelData !== currentWallpaper) {
-                                            parent.color = "#3a3a3a"
-                                        }
-                                    }
-                                    
-                                    onClicked: {
-                                        setWallpaper(modelData)
+                                    MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        text: "check"
+                                        iconSize: 12
+                                        color: "#ffffff"
                                     }
                                 }
                                 
-                                // Wallpaper thumbnail (fills entire square)
-                                Image {
-                                    anchors.fill: parent
-                                    anchors.margins: 2
-                                    source: modelData
-                                    fillMode: Image.PreserveAspectCrop
-                                    smooth: true
-                                    mipmap: true
+                                // Filename overlay at bottom
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: 20
+                                    color: Qt.rgba(0, 0, 0, 0.7)
+                                    visible: modelData === currentWallpaper
                                     
-                                    // Loading indicator
-                                    BusyIndicator {
+                                    Text {
                                         anchors.centerIn: parent
-                                        running: parent.status === Image.Loading
-                                        width: 20
-                                        height: 20
-                                    }
-                                    
-                                    // Current indicator overlay
-                                    Rectangle {
-                                        anchors.top: parent.top
-                                        anchors.right: parent.right
-                                        anchors.margins: 4
-                                        width: 16
-                                        height: 16
-                                        radius: 8
-                                        color: modelData === currentWallpaper ? "#4CAF50" : "transparent"
-                                        visible: modelData === currentWallpaper
-                                        
-                                        MaterialSymbol {
-                                            anchors.centerIn: parent
-                                            text: "check"
-                                            iconSize: 12
-                                            color: "#ffffff"
-                                        }
-                                    }
-                                    
-                                    // Filename overlay at bottom
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        anchors.right: parent.right
-                                        anchors.bottom: parent.bottom
-                                        height: 20
-                                        color: Qt.rgba(0, 0, 0, 0.7)
-                                        visible: modelData === currentWallpaper
-                                        
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: modelData.split("/").pop().replace(/\.[^/.]+$/, "")
-                                            font.pixelSize: 10
-                                            color: "#ffffff"
-                                            horizontalAlignment: Text.AlignHCenter
-                                            elide: Text.ElideMiddle
-                                            font.weight: Font.Medium
-                                        }
+                                        text: modelData.split("/").pop().replace(/\.[^/.]+$/, "")
+                                        font.pixelSize: 10
+                                        color: "#ffffff"
+                                        horizontalAlignment: Text.AlignHCenter
+                                        elide: Text.ElideMiddle
+                                        font.weight: Font.Medium
                                     }
                                 }
                             }

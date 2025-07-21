@@ -19,6 +19,7 @@ Singleton {
     property string ssid: ""
     property string networkName: ""
     property int networkStrength: 0
+    property string connectedSecurity: ""
     onNetworkStrengthChanged: {
         // Ensure networkStrength is always a valid integer between 0-100
         if (isNaN(networkStrength) || networkStrength < 0) {
@@ -50,6 +51,7 @@ Singleton {
         updateNetworkName.running = true;
         updateNetworkStrength.running = true;
         updateWifiState.running = true;
+        updateConnectedSecurity.running = true;
     }
 
     function scanNetworks() {
@@ -156,6 +158,18 @@ Singleton {
         stdout: SplitParser {
             onRead: data => {
                 root.wifiEnabled = data.trim() === "enabled";
+            }
+        }
+    }
+
+    // Update connected network security type
+    Process {
+        id: updateConnectedSecurity
+        command: ["sh", "-c", "nmcli -t -f SSID,SECURITY,IN-USE device wifi | awk -F: '/\\*$/{print $2}'"]
+        running: true
+        stdout: SplitParser {
+            onRead: data => {
+                root.connectedSecurity = data.trim() || "Open";
             }
         }
     }

@@ -69,37 +69,44 @@ Rectangle {
                 anchors.margins: 8
                 spacing: 8
 
-                // WiFi toggle button
+                // Network toggle button
                 QuickToggleButton {
-                    toggled: Network.wifiEnabled
-                    buttonIcon: Network.wifiEnabled ? (
-                        (Network.networkStrength ?? 0) > 80 ? "signal_wifi_4_bar" :
-                        (Network.networkStrength ?? 0) > 60 ? "network_wifi_3_bar" :
-                        (Network.networkStrength ?? 0) > 40 ? "network_wifi_2_bar" :
-                        (Network.networkStrength ?? 0) > 20 ? "network_wifi_1_bar" :
-                        "signal_wifi_0_bar"
-                    ) : "signal_wifi_off"
+                    toggled: Network.connected
+                    buttonIcon: Network.ethernet ? "lan" : (
+                        Network.wifiEnabled ? (
+                            (Network.networkStrength ?? 0) > 80 ? "signal_wifi_4_bar" :
+                            (Network.networkStrength ?? 0) > 60 ? "network_wifi_3_bar" :
+                            (Network.networkStrength ?? 0) > 40 ? "network_wifi_2_bar" :
+                            (Network.networkStrength ?? 0) > 20 ? "network_wifi_1_bar" :
+                            "signal_wifi_0_bar"
+                        ) : "signal_wifi_off"
+                    )
                     implicitWidth: 36
                     implicitHeight: 36
                     Layout.alignment: Qt.AlignVCenter
                     onClicked: {
-                        Network.toggleWifi();
+                        if (!Network.ethernet) {
+                            Network.toggleWifi();
+                        }
                     }
                     StyledToolTip {
-                        content: Network.wifiEnabled ? 
-                            (Network.connected ? qsTr("Connected to %1").arg(Network.ssid) : qsTr("WiFi enabled")) :
-                            qsTr("WiFi disabled")
+                        content: Network.ethernet ? 
+                            qsTr("Connected via Ethernet") :
+                            (Network.wifiEnabled ? 
+                                (Network.connected ? qsTr("Connected to %1").arg(Network.ssid) : qsTr("WiFi enabled")) :
+                                qsTr("WiFi disabled"))
                     }
                 }
 
-                // Status info (wired connection and signal)
+                // Status info (network connection)
                 ColumnLayout {
                     spacing: 8
                     Layout.alignment: Qt.AlignVCenter
                     StyledText {
-                        text: Network.wifiEnabled ? qsTr("WiFi is enabled") : qsTr("WiFi is disabled")
+                        text: Network.ethernet ? qsTr("Ethernet connected") : 
+                              (Network.wifiEnabled ? qsTr("WiFi is enabled") : qsTr("WiFi is disabled"))
                         font.pixelSize: Appearance.font?.pixelSize?.small ?? 12
-                        color: Network.wifiEnabled ? "#2196F3" : "#F44336"
+                        color: Network.connected ? "#4CAF50" : (Network.wifiEnabled ? "#2196F3" : "#F44336")
                         font.weight: Font.Medium
                     }
                 }
@@ -112,7 +119,7 @@ Rectangle {
                     implicitWidth: 32
                     implicitHeight: 32
                     Layout.alignment: Qt.AlignVCenter
-                    enabled: Network.wifiEnabled && !Network.isScanning
+                    enabled: (Network.wifiEnabled || Network.ethernet) && !Network.isScanning
                     onClicked: {
                         Network.scanNetworks();
                     }
@@ -142,7 +149,7 @@ Rectangle {
         ColumnLayout {
             Layout.topMargin: -18
             spacing: 0
-            visible: Network.wifiEnabled && Network.connected
+            visible: Network.connected
             Text {
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.Medium
@@ -153,9 +160,9 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.max(72, 72 * (Network.connected ? 1 : 0))
                 model: Network.connected ? [{
-                    ssid: Network.ssid || Network.networkName || "",
-                    security: "Unknown",
-                    signal: Network.networkStrength ?? 0,
+                    ssid: Network.ethernet ? qsTr("Ethernet") : (Network.ssid || Network.networkName || ""),
+                    security: Network.ethernet ? "" : (Network.connectedSecurity || "Open"),
+                    signal: Network.ethernet ? 100 : (Network.networkStrength ?? 0),
                     connected: true
                 }] : []
                 spacing: 4
@@ -188,16 +195,15 @@ Rectangle {
                             spacing: 12
                             Layout.alignment: Qt.AlignVCenter
 
-                            // Signal strength icon
+                            // Network connection icon
                             MaterialSymbol {
-                                        text: {
-                                            const signal = safeSignal(modelData.signal);
-                                            return signal > 80 ? "signal_wifi_4_bar" :
-                                                   signal > 60 ? "network_wifi_3_bar" :
-                                                   signal > 40 ? "network_wifi_2_bar" :
-                                                   signal > 20 ? "network_wifi_1_bar" :
-                                                   "signal_wifi_0_bar";
-                                        }
+                                text: Network.ethernet ? "lan" : (
+                                    safeSignal(modelData.signal) > 80 ? "signal_wifi_4_bar" :
+                                    safeSignal(modelData.signal) > 60 ? "network_wifi_3_bar" :
+                                    safeSignal(modelData.signal) > 40 ? "network_wifi_2_bar" :
+                                    safeSignal(modelData.signal) > 20 ? "network_wifi_1_bar" :
+                                    "signal_wifi_0_bar"
+                                )
                                 iconSize: 24
                                 color: modelData && modelData.connected ? "#4CAF50" : Appearance.colors.colOnLayer1
                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -248,7 +254,7 @@ Rectangle {
                                         font.weight: Font.Medium
                                     }
                                     StyledText {
-                                        visible: ConfigOptions.networking?.wifi?.showSecurityType ?? false
+                                        visible: !Network.ethernet && (ConfigOptions.networking?.wifi?.showSecurityType ?? false)
                                         text: modelData ? (modelData.security || "") : ""
                                         font.pixelSize: Appearance.font.pixelSize?.tiny || 10
                                         color: Appearance.colors.colSubtext
@@ -256,7 +262,7 @@ Rectangle {
                                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                     }
                                     StyledText {
-                                        visible: ConfigOptions.networking?.wifi?.showSignalStrength ?? false
+                                        visible: !Network.ethernet && (ConfigOptions.networking?.wifi?.showSignalStrength ?? false)
                                         text: safeSignal(modelData ? modelData.signal : 0) + "%"
                                         font.pixelSize: Appearance.font.pixelSize?.tiny || 10
                                         color: Appearance.colors.colSubtext

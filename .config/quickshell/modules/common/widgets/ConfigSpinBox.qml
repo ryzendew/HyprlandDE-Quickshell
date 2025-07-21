@@ -7,10 +7,11 @@ import QtQuick.Controls
 RowLayout {
     id: root
     property string text: ""
-    property alias value: spinBoxWidget.value
+    property real value: spinBoxWidget.value
     property alias stepSize: spinBoxWidget.stepSize
     property alias from: spinBoxWidget.from
     property alias to: spinBoxWidget.to
+    signal spinBoxValueChanged(real newValue)
     spacing: 10
     Layout.leftMargin: 8
     Layout.rightMargin: 8
@@ -27,5 +28,9 @@ RowLayout {
         id: spinBoxWidget
         Layout.fillWidth: false
         value: root.value
+        onValueChanged: {
+            root.value = value
+            root.spinBoxValueChanged(value)
+        }
     }
 } 

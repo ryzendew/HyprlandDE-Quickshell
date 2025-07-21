@@ -20,15 +20,13 @@ Flickable {
     ColumnLayout {
         id: dockConfigColumn
         width: dockConfigFlickable.width
-        spacing: 24
-                anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 40
+        spacing: 0
+        anchors.fill: parent
 
                 // Section header
                 RowLayout {
                     spacing: 16
-                    Layout.topMargin: 24
+                    Layout.topMargin: 0
             Layout.fillWidth: true
 
                     Rectangle {
@@ -62,18 +60,17 @@ Flickable {
         // Two-column layout for settings
         RowLayout {
             Layout.fillWidth: true
-            spacing: 24
+            spacing: 0
 
             // Left Column - Basic Settings
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredWidth: (parent.width - parent.spacing) / 2
-                Layout.topMargin: 16
-                Layout.bottomMargin: 16
-                radius: Appearance.rounding.large
+                Layout.preferredWidth: parent.width / 2
+                Layout.topMargin: 0
+                Layout.bottomMargin: 0
+                radius: 0
                 color: Appearance.colors.colLayer1
-                border.width: 2
-                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.4)
+                border.width: 0
 
                 ColumnLayout {
                     anchors.left: parent.left
@@ -89,7 +86,7 @@ Flickable {
                         font.pixelSize: Appearance.font.pixelSize.normal
                         font.weight: Font.Medium
                         color: "#fff"
-                        Layout.topMargin: 8
+                        Layout.topMargin: 12
                     }
 
                     // Dock enable/disable
@@ -123,8 +120,8 @@ Flickable {
 
                     // Dock appearance settings
                     ColumnLayout {
-                        spacing: 16
-                        Layout.topMargin: 24
+                        spacing: 12
+                        Layout.topMargin: 16
 
                         StyledText {
                             text: "Appearance"
@@ -135,8 +132,8 @@ Flickable {
 
                         GridLayout {
                             columns: 2
-                            columnSpacing: 24
-                            rowSpacing: 16
+                            columnSpacing: 16
+                            rowSpacing: 12
 
                             ConfigSpinBox {
                                 text: "Height"
@@ -218,8 +215,8 @@ Flickable {
 
                     // Dock behavior settings
                     ColumnLayout {
-                        spacing: 16
-                        Layout.topMargin: 24
+                        spacing: 12
+                        Layout.topMargin: 16
 
                         StyledText {
                             text: "Behavior"
@@ -304,8 +301,8 @@ Flickable {
 
                         // Auto-hide timing settings
                         ColumnLayout {
-                            spacing: 12
-                            Layout.topMargin: 16
+                            spacing: 8
+                            Layout.topMargin: 12
 
                             StyledText {
                                 text: "Auto-hide Timing"
@@ -316,8 +313,8 @@ Flickable {
 
                             GridLayout {
                                 columns: 2
-                                columnSpacing: 24
-                                rowSpacing: 16
+                                columnSpacing: 16
+                                rowSpacing: 12
 
                                 ConfigSpinBox {
                                     text: "Hide Delay (ms)"
@@ -340,28 +337,24 @@ Flickable {
                         }
                     }
 
-                    Layout.bottomMargin: 24
+                    Layout.bottomMargin: 16
                 }
             }
 
             // Right Column - Advanced Settings
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredWidth: (parent.width - parent.spacing) / 2
-                Layout.topMargin: 16
-                Layout.bottomMargin: 16
-                radius: Appearance.rounding.large
+                Layout.preferredWidth: parent.width / 2
+                Layout.topMargin: 0
+                Layout.bottomMargin: 0
+                radius: 0
                 color: Appearance.colors.colLayer1
-                border.width: 2
-                border.color: ColorUtils.transparentize(Appearance.colors.colOutline, 0.4)
+                border.width: 0
 
                 ColumnLayout {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 40
-                    anchors.right: undefined
-                    anchors.top: parent.top
+                    anchors.fill: parent
                     anchors.margins: 16
-                    spacing: 24
+                    spacing: 16
 
                     // Right Column Header
                     StyledText {
@@ -369,12 +362,12 @@ Flickable {
                         font.pixelSize: Appearance.font.pixelSize.normal
                         font.weight: Font.Medium
                         color: "#fff"
-                        Layout.topMargin: 8
+                        Layout.topMargin: 12
                     }
 
                     // Dock border color settings
                     ColumnLayout {
-                        spacing: 12
+                        spacing: 8
 
                         StyledText {
                             text: "Border Color"
@@ -394,7 +387,7 @@ Flickable {
                         // Border color preview and controls
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 80
+                            Layout.preferredHeight: 60
                             radius: 8
                             color: "#232323"
                             border.width: 1
@@ -402,17 +395,17 @@ Flickable {
                             
                             ColumnLayout {
                                 anchors.fill: parent
-                                anchors.margins: 12
-                                spacing: 8
+                                anchors.margins: 8
+                                spacing: 6
                                 
                                 RowLayout {
                                     Layout.fillWidth: true
-                                    spacing: 12
+                                    spacing: 8
                                     
                                     // Border color preview
                                     Rectangle {
-                                        Layout.preferredWidth: 40
-                                        Layout.preferredHeight: 40
+                                        Layout.preferredWidth: 32
+                                        Layout.preferredHeight: 32
                                         radius: 8
                                         color: Qt.rgba(
                                             Qt.color(currentDockBorderColor).r,
@@ -454,8 +447,8 @@ Flickable {
                                             dockBorderOpacitySlider.value = 0.15
                                             dockInnerBorderOpacitySlider.value = 0.05
                                         }
-                                        Layout.preferredWidth: 60
-                                        Layout.preferredHeight: 32
+                                        Layout.preferredWidth: 50
+                                        Layout.preferredHeight: 28
                                     }
                                 }
                             }
@@ -464,7 +457,7 @@ Flickable {
                         // RGB Sliders for main border
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 12
+                            spacing: 8
                             
                             StyledText {
                                 text: "Main Border Color"
@@ -476,7 +469,7 @@ Flickable {
                             // Red slider
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 6
+                                spacing: 4
                                 
                                 RowLayout {
                                     Layout.fillWidth: true
@@ -514,7 +507,7 @@ Flickable {
                             // Green slider
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 6
+                                spacing: 4
                                 
                                 RowLayout {
                                     Layout.fillWidth: true
@@ -552,7 +545,7 @@ Flickable {
                             // Blue slider
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 6
+                                spacing: 4
                                 
                                 RowLayout {
                                     Layout.fillWidth: true
@@ -590,7 +583,7 @@ Flickable {
                             // Border opacity slider
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 6
+                                spacing: 4
                                 
                                 RowLayout {
                                     Layout.fillWidth: true
@@ -630,7 +623,7 @@ Flickable {
                         // Inner border opacity slider
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 6
+                            spacing: 4
                             
                             StyledText {
                                 text: "Inner Border Opacity"
@@ -672,9 +665,348 @@ Flickable {
                                 }
                             }
                         }
+
+                        // Dock shadow settings
+                        ColumnLayout {
+                            spacing: 8
+                            Layout.topMargin: 16
+
+                            StyledText {
+                                text: "Shadow Settings"
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                font.weight: Font.Medium
+                                color: "#fff"
+                            }
+
+                            StyledText {
+                                text: "Customize the dock shadow appearance"
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: "#fff"
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            // Shadow enable/disable
+                            RowLayout {
+                                spacing: 12
+                                ConfigSwitch {
+                                    checked: ConfigOptions.dock.shadow.enabled
+                                    onCheckedChanged: {
+                                        ConfigLoader.setConfigValueAndSave("dock.shadow.enabled", checked);
+                                    }
+                                }
+                                StyledText {
+                                    text: "Enable shadow"
+                                    font.pixelSize: Appearance.font.pixelSize.normal
+                                    color: "#fff"
+                                }
+                            }
+
+                            // Shadow color preview and controls
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 60
+                                radius: 8
+                                color: "#232323"
+                                border.width: 1
+                                border.color: "#505050"
+                                
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    spacing: 6
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+                                        
+                                        // Shadow color preview
+                                        Rectangle {
+                                            Layout.preferredWidth: 32
+                                            Layout.preferredHeight: 32
+                                            radius: 8
+                                            color: Qt.rgba(
+                                                Qt.color(currentDockShadowColor).r,
+                                                Qt.color(currentDockShadowColor).g,
+                                                Qt.color(currentDockShadowColor).b,
+                                                dockShadowOpacitySlider.value
+                                            )
+                                            border.width: 2
+                                            border.color: "#505050"
+                                        }
+                                        
+                                        ColumnLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 4
+                                            
+                                            StyledText {
+                                                text: "Shadow Color"
+                                                font.pixelSize: 14
+                                                font.weight: Font.Medium
+                                                color: "#ffffff"
+                                            }
+                                            
+                                            StyledText {
+                                                text: `Opacity: ${Math.round((dockShadowOpacitySlider.value) * 100)}%`
+                                                font.pixelSize: 12
+                                                color: "#cccccc"
+                                            }
+                                        }
+                                        
+                                        // Reset button
+                                        RippleButton {
+                                            text: "Reset"
+                                            onClicked: {
+                                                ConfigLoader.setConfigValueAndSave("dock.shadow.color", "#000000")
+                                                ConfigLoader.setConfigValueAndSave("dock.shadow.opacity", 0.3)
+                                                ConfigLoader.setConfigValueAndSave("dock.shadow.horizontalOffset", 0)
+                                                ConfigLoader.setConfigValueAndSave("dock.shadow.verticalOffset", 4)
+                                                ConfigLoader.setConfigValueAndSave("dock.shadow.blurRadius", 12)
+                                                initializeDockShadowSlidersFromColor("#000000")
+                                                dockShadowOpacitySlider.value = 0.3
+                                                // Update local properties
+                                                horizontalOffsetValue = 0
+                                                verticalOffsetValue = 4
+                                                blurRadiusValue = 12
+                                            }
+                                            Layout.preferredWidth: 50
+                                            Layout.preferredHeight: 28
+                                        }
+                                    }
+                                }
+                            }
+
+                            // RGB Sliders for shadow color
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                
+                                StyledText {
+                                    text: "Shadow Color"
+                                    font.pixelSize: 14
+                                    font.weight: Font.Medium
+                                    color: "#ffffff"
+                                }
+                                
+                                // Red slider
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 4
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        
+                                        StyledText {
+                                            text: "Red"
+                                            font.pixelSize: 12
+                                            color: "#ffffff"
+                                            Layout.preferredWidth: 40
+                                        }
+                                        
+                                        StyledSlider {
+                                            id: dockShadowRedSlider
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 255
+                                            value: 0
+                                            onValueChanged: {
+                                                updateDockShadowColor()
+                                            }
+                                            highlightColor: "#ff0000"
+                                            trackColor: Qt.rgba(1, 0, 0, 0.3)
+                                        }
+                                        
+                                        StyledText {
+                                            text: Math.round(dockShadowRedSlider.value)
+                                            font.pixelSize: 12
+                                            color: "#cccccc"
+                                            Layout.preferredWidth: 30
+                                            horizontalAlignment: Text.AlignRight
+                                        }
+                                    }
+                                }
+                                
+                                // Green slider
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 4
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        
+                                        StyledText {
+                                            text: "Green"
+                                            font.pixelSize: 12
+                                            color: "#ffffff"
+                                            Layout.preferredWidth: 40
+                                        }
+                                        
+                                        StyledSlider {
+                                            id: dockShadowGreenSlider
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 255
+                                            value: 0
+                                            onValueChanged: {
+                                                updateDockShadowColor()
+                                            }
+                                            highlightColor: "#00ff00"
+                                            trackColor: Qt.rgba(0, 1, 0, 0.3)
+                                        }
+                                        
+                                        StyledText {
+                                            text: Math.round(dockShadowGreenSlider.value)
+                                            font.pixelSize: 12
+                                            color: "#cccccc"
+                                            Layout.preferredWidth: 30
+                                            horizontalAlignment: Text.AlignRight
+                                        }
+                                    }
+                                }
+                                
+                                // Blue slider
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 4
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        
+                                        StyledText {
+                                            text: "Blue"
+                                            font.pixelSize: 12
+                                            color: "#ffffff"
+                                            Layout.preferredWidth: 40
+                                        }
+                                        
+                                        StyledSlider {
+                                            id: dockShadowBlueSlider
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 255
+                                            value: 0
+                                            onValueChanged: {
+                                                updateDockShadowColor()
+                                            }
+                                            highlightColor: "#0000ff"
+                                            trackColor: Qt.rgba(0, 0, 1, 0.3)
+                                        }
+                                        
+                                        StyledText {
+                                            text: Math.round(dockShadowBlueSlider.value)
+                                            font.pixelSize: 12
+                                            color: "#cccccc"
+                                            Layout.preferredWidth: 30
+                                            horizontalAlignment: Text.AlignRight
+                                        }
+                                    }
+                                }
+                                
+                                // Shadow opacity slider
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 4
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        
+                                        StyledText {
+                                            text: "Opacity"
+                                            font.pixelSize: 12
+                                            color: "#ffffff"
+                                            Layout.preferredWidth: 40
+                                        }
+                                        
+                                        StyledSlider {
+                                            id: dockShadowOpacitySlider
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 1
+                                            value: ConfigOptions.dock.shadow.opacity || 0.3
+                                            stepSize: 0.01
+                                            onValueChanged: {
+                                                ConfigLoader.setConfigValueAndSave("dock.shadow.opacity", value)
+                                            }
+                                            highlightColor: Appearance.colors.colPrimary
+                                            trackColor: Appearance.colors.colPrimaryContainer
+                                        }
+                                        
+                                        StyledText {
+                                            text: `${Math.round((dockShadowOpacitySlider.value) * 100)}%`
+                                            font.pixelSize: 12
+                                            color: "#cccccc"
+                                            Layout.preferredWidth: 30
+                                            horizontalAlignment: Text.AlignRight
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Shadow offset and blur settings
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                
+                                StyledText {
+                                    text: "Shadow Position & Blur"
+                                    font.pixelSize: 14
+                                    font.weight: Font.Medium
+                                    color: "#ffffff"
+                                }
+                                
+                                GridLayout {
+                                    columns: 2
+                                    columnSpacing: 16
+                                    rowSpacing: 12
+
+                                    ConfigSpinBox {
+                                        text: "Horizontal Offset"
+                                        value: horizontalOffsetValue
+                                        from: -20
+                                        to: 20
+                                        stepSize: 1
+                                        onValueChanged: { 
+                                            console.log("[DOCK SHADOW DEBUG] Horizontal offset changed to:", value)
+                                            horizontalOffsetValue = value
+                                            ConfigLoader.setConfigValue("dock.shadow.horizontalOffset", value)
+                                            dockShadowOffsetTimer.restart()
+                                        }
+                                    }
+
+                                    ConfigSpinBox {
+                                        text: "Vertical Offset"
+                                        value: verticalOffsetValue
+                                        from: -20
+                                        to: 20
+                                        stepSize: 1
+                                        onValueChanged: { 
+                                            console.log("[DOCK SHADOW DEBUG] Vertical offset changed to:", value)
+                                            verticalOffsetValue = value
+                                            ConfigLoader.setConfigValue("dock.shadow.verticalOffset", value)
+                                            console.log("[DOCK SHADOW DEBUG] Restarting dockShadowOffsetTimer")
+                                            dockShadowOffsetTimer.restart()
+                                        }
+                                    }
+
+                                    ConfigSpinBox {
+                                        text: "Blur Radius"
+                                        value: blurRadiusValue
+                                        from: 0
+                                        to: 50
+                                        stepSize: 1
+                                        onValueChanged: { 
+                                            console.log("[DOCK SHADOW DEBUG] Blur radius changed to:", value)
+                                            blurRadiusValue = value
+                                            ConfigLoader.setConfigValue("dock.shadow.blurRadius", value)
+                                            dockShadowOffsetTimer.restart()
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
 
-                    Layout.bottomMargin: 24
+                    Layout.bottomMargin: 16
                 }
             }
         }
@@ -691,8 +1023,39 @@ Flickable {
         }
     }
     
+    // Timer to debounce shadow slider changes
+    Timer {
+        id: dockShadowChangeTimer
+        interval: 100 // 100ms delay
+        repeat: false
+        onTriggered: {
+            ConfigLoader.setConfigValueAndSave("dock.shadow.color", currentDockShadowColor)
+            MaterialThemeLoader.reapplyTheme()
+        }
+    }
+    
+    // Timer to debounce shadow offset and blur changes
+    Timer {
+        id: dockShadowOffsetTimer
+        interval: 100 // 100ms delay
+        repeat: false
+        onTriggered: {
+            console.log("[DOCK SHADOW DEBUG] Saving shadow offset and blur settings")
+            console.log("[DOCK SHADOW DEBUG] Using local values - horizontalOffsetValue:", horizontalOffsetValue, "verticalOffsetValue:", verticalOffsetValue, "blurRadiusValue:", blurRadiusValue)
+            ConfigLoader.setConfigValueAndSave("dock.shadow.horizontalOffset", horizontalOffsetValue)
+            ConfigLoader.setConfigValueAndSave("dock.shadow.verticalOffset", verticalOffsetValue)
+            ConfigLoader.setConfigValueAndSave("dock.shadow.blurRadius", blurRadiusValue)
+        }
+    }
+    
     // Property to track current slider color
     property string currentDockBorderColor: "#ffffff"
+    property string currentDockShadowColor: "#000000"
+    
+    // Local properties to track shadow values
+    property real verticalOffsetValue: ConfigOptions.dock.shadow.verticalOffset || 4
+    property real horizontalOffsetValue: ConfigOptions.dock.shadow.horizontalOffset || 0
+    property real blurRadiusValue: 12
     
     // Function to update dock border color
     function updateDockBorderColor() {
@@ -703,6 +1066,17 @@ Flickable {
             1.0
         ).toString()
         dockBorderChangeTimer.restart()
+    }
+    
+    // Function to update dock shadow color
+    function updateDockShadowColor() {
+        currentDockShadowColor = Qt.rgba(
+            dockShadowRedSlider.value / 255,
+            dockShadowGreenSlider.value / 255,
+            dockShadowBlueSlider.value / 255,
+            1.0
+        ).toString()
+        dockShadowChangeTimer.restart()
     }
     
     // Function to initialize sliders from color
@@ -723,8 +1097,41 @@ Flickable {
         }
     }
     
+    // Function to initialize shadow sliders from color
+    function initializeDockShadowSlidersFromColor(color) {
+        if (color) {
+            // Convert string color to QML color object if needed
+            let colorObj = color
+            if (typeof color === 'string') {
+                colorObj = Qt.color(color)
+            }
+            
+            if (colorObj && colorObj.r !== undefined) {
+                dockShadowRedSlider.value = Math.round(colorObj.r * 255)
+                dockShadowGreenSlider.value = Math.round(colorObj.g * 255)
+                dockShadowBlueSlider.value = Math.round(colorObj.b * 255)
+                currentDockShadowColor = color
+            }
+        }
+    }
+    
     // Initialize sliders with current dock border color
     Component.onCompleted: {
         initializeDockBorderSlidersFromColor(ConfigOptions.dock.borderColor || "#ffffff")
+        initializeDockShadowSlidersFromColor(ConfigOptions.dock.shadow.color || "#000000")
+        
+        // Initialize local shadow properties with actual config values
+        console.log("[DOCK SHADOW DEBUG] Initializing local properties:")
+        console.log("  ConfigOptions.dock.shadow.horizontalOffset:", ConfigOptions.dock.shadow.horizontalOffset)
+        console.log("  ConfigOptions.dock.shadow.verticalOffset:", ConfigOptions.dock.shadow.verticalOffset)
+        console.log("  ConfigOptions.dock.shadow.blurRadius:", ConfigOptions.dock.shadow.blurRadius)
+        
+        horizontalOffsetValue = ConfigOptions.dock.shadow.horizontalOffset || 0
+        verticalOffsetValue = ConfigOptions.dock.shadow.verticalOffset || 4
+        blurRadiusValue = ConfigOptions.dock.shadow.blurRadius !== undefined ? ConfigOptions.dock.shadow.blurRadius : 12
+        
+        console.log("  Set horizontalOffsetValue to:", horizontalOffsetValue)
+        console.log("  Set verticalOffsetValue to:", verticalOffsetValue)
+        console.log("  Set blurRadiusValue to:", blurRadiusValue)
     }
 } 

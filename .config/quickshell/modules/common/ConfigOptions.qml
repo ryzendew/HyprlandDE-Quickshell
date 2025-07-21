@@ -102,6 +102,14 @@ Singleton {
         property string innerBorderColor: "#ffffff" // Dock inner border color (white with opacity)
         property real innerBorderOpacity: 0.05 // Dock inner border opacity (0.0-1.0)
         property list<string> pinnedApps: [] // IDs of pinned entries
+        property QtObject shadow: QtObject {
+            property bool enabled: true // Enable/disable dock shadow
+            property string color: "#000000" // Shadow color
+            property real opacity: 0.3 // Shadow opacity (0.0-1.0)
+            property int horizontalOffset: 0 // Horizontal shadow offset in pixels
+            property int verticalOffset: 4 // Vertical shadow offset in pixels
+            property int blurRadius: 12 // Shadow blur radius in pixels
+        }
     }
 
     // Remove the dockEnabled property and handlers

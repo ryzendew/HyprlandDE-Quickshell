@@ -106,12 +106,9 @@ Singleton {
     }
 
     function setConfigValueAndSave(nestedKey, value, preventNextNotification = true) {
-        // console.log("[ConfigLoader] setConfigValueAndSave called with:", nestedKey, "=", value)
         setLiveConfigValue(nestedKey, value);
         root.preventNextNotification = preventNextNotification;
-        // console.log("SETTING: preventNextNotification:", root.preventNextNotification);
         saveConfig();
-        // console.log("[ConfigLoader] setConfigValueAndSave completed")
     }
 
     // New functions for manual save system

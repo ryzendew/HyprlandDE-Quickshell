@@ -2,6 +2,9 @@
 //@ pragma Env QS_NO_RELOAD_POPUP=1
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Basic
 //@ pragma Env QT_LOGGING_RULES=qt.qpa.*=false;qt.qml.*=false;qt.quick.*=false;qt.qml.qt5compat.*=false;qt.quick.layouts.*=false;qt.quick.controls.*=false
+//@ pragma Env QT_ORGANIZATION_NAME=Quickshell
+//@ pragma Env QT_ORGANIZATION_DOMAIN=quickshell.org
+//@ pragma Env QT_APPLICATION_NAME=Quickshell
 
 import "./modules/common/"
 import "./modules/bar/"
@@ -29,7 +32,7 @@ import "./services/"
 ShellRoot {
     id: root
     
-    // Set organization properties immediately when the component is created
+    // Set organization properties immediately to prevent "Unknown Organization" folder
     Component.onCompleted: {
         // Set organization properties for QSettings first, before any other initialization
         Qt.application.organizationName = "Quickshell"

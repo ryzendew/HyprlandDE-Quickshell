@@ -150,11 +150,16 @@ Rectangle {
             layer.smooth: true
             
             layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: 2
-                radius: 4.0
-                samples: 9
-                color: Qt.rgba(0, 0, 0, 0.3)
+                horizontalOffset: ConfigOptions.dock.shadow.horizontalOffset || 0
+                verticalOffset: ConfigOptions.dock.shadow.verticalOffset || 2
+                radius: ConfigOptions.dock.shadow.blurRadius || 4.0
+                samples: 17
+                color: {
+                    // Parse the hex color and combine with opacity
+                    let color = Qt.color(ConfigOptions.dock.shadow.color || "#000000")
+                    return Qt.rgba(color.r, color.g, color.b, ConfigOptions.dock.shadow.opacity || 0.3)
+                }
+                visible: ConfigOptions.dock.shadow.enabled
             }
         }
 
