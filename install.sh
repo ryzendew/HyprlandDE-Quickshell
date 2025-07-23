@@ -121,6 +121,7 @@ check_distribution() {
     fi
 }
 
+
 # Function to check if a package is installed
 is_package_installed() {
     local package=$1
@@ -314,6 +315,51 @@ fi
 
 # Check distribution compatibility
 check_distribution
+
+# Ensure env.conf is included in hyprland.conf
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$USER_HOME/.config}"
+HYPR_MAIN="$XDG_CONFIG_HOME/hypr/hyprland.conf"
+ENV_INCLUDE="include = $XDG_CONFIG_HOME/hypr/hyprland/env.conf"
+
+if ! grep -Fxq "$ENV_INCLUDE" "$HYPR_MAIN" 2>/dev/null; then
+  print_status "Binding env.conf into hyprland.conf..."
+  sed -i "1i$ENV_INCLUDE" "$HYPR_MAIN"
+else
+  print_status "env.conf already included."
+fi
+
+# Read and export the virtualenv path from env.conf
+ENV_CONF="$XDG_CONFIG_HOME/hypr/hyprland/env.conf"
+if [[ ! -f "$ENV_CONF" ]]; then
+  print_error "env.conf not found! Run end‑4's install.sh first."
+  exit 1
+fi
+
+VENV_PATH=$(grep 'ILLOGICAL_IMPULSE_VIRTUAL_ENV' "$ENV_CONF" \
+            | cut -d',' -f2 | xargs)
+XDG_STATE_HOME="${XDG_STATE_HOME:-$USER_HOME/.local/state}"
+VENV_PATH="${VENV_PATH//\$XDG_STATE_HOME/$XDG_STATE_HOME}"
+
+export ILLOGICAL_IMPULSE_VIRTUAL_ENV="$VENV_PATH"
+if [[ ! -d "$ILLOGICAL_IMPULSE_VIRTUAL_ENV" ]]; then
+  print_error "Virtualenv not found at $ILLOGICAL_IMPULSE_VIRTUAL_ENV"
+  exit 1
+fi
+
+# Activate venv and install Python dependencies
+print_status "Activating Quickshell virtualenv and installing Python deps..."
+# shellcheck disable=SC1090
+source "$ILLOGICAL_IMPULSE_VIRTUAL_ENV/bin/activate"
+
+REQ_FILE="scriptdata/requirements.txt"
+if [[ -f "$REQ_FILE" ]]; then
+  pip install --upgrade -r "$REQ_FILE"
+  print_success "Python dependencies installed."
+else
+  print_warning "No requirements.txt found; skipping pip install."
+fi
+
+
 
 # Clone repository to temporary Dotfiles folder
 print_status "Setting up dotfiles repository..."
