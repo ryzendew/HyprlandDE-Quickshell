@@ -131,9 +131,8 @@ done
 
 print_success "All required packages installed."
 
-# ... (Pakete, yay, dotfiles, etc)
-
 # ---- MicroTeX: Build and install from source ----
+:'
 print_status "Installing MicroTeX (LaTeX-Editor)..."
 
 MICROTEX_SRC="$HOME/MicroTeX"
@@ -159,7 +158,7 @@ sudo cp LICENSE /usr/share/licenses/microtex/
 
 print_success "MicroTeX installed to $MICROTEX_INSTALL_DIR"
 cd "$OLDPWD"
-
+'
 # ---- End of MicroTeX ----
 
 # Install icon themes (example: Tela Circle)
@@ -187,6 +186,26 @@ rm /tmp/Bibata-Modern-Classic.tar.xz
 # Copy config files to ~/.config
 print_status "Copying dotfiles to ~/.config ..."
 cp -r .config/* ~/.config/
+
+# === Anpassung env.conf ===
+print_status "Patching ~/.config/hypr/hyprland/env.conf ..."
+
+ENV_CONF="$HOME/.config/hypr/hyprland/env.conf"
+USERID=$(id -u)
+USERHOME="$HOME"
+
+if [ -f "$ENV_CONF" ]; then
+    # XDG_RUNTIME_DIR: replace with UserID, remains commented out
+    sed -i "s|^# env = XDG_RUNTIME_DIR,/run/user/|# env = XDG_RUNTIME_DIR,/run/user/$USERID|g" "$ENV_CONF"
+
+    # QML2_IMPORT_PATH: replace, uncomment, dynamic HOME path
+    sed -i "s|^# env = QML2_IMPORT_PATH,.*|env = QML2_IMPORT_PATH,$USERHOME/.config/hypr/quickshell|g" "$ENV_CONF"
+    sed -i "s|^env = QML2_IMPORT_PATH,.*|env = QML2_IMPORT_PATH,$USERHOME/.config/hypr/quickshell|g" "$ENV_CONF"
+
+    print_success "env.conf erfolgreich angepasst."
+else
+    print_warning "env.conf nicht gefunden, überspringe Anpassung."
+fi
 
 # Enable services
 print_status "Enabling essential services (NetworkManager, sddm, bluetooth)..."
