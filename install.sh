@@ -328,53 +328,6 @@ else
   print_status "env.conf already included."
 fi
 
-# Read and export the virtualenv path from env.conf
-ENV_CONF="$XDG_CONFIG_HOME/hypr/hyprland/env.conf"
-if [[ ! -f "$ENV_CONF" ]]; then
-  print_error "env.conf not found! Run end‑4's install.sh first."
-  exit 1
-fi
-
-VENV_PATH=$(grep 'ILLOGICAL_IMPULSE_VIRTUAL_ENV' "$ENV_CONF" \
-            | cut -d',' -f2 \
-            | tr -d '\r' \
-            | xargs)
-# expand leading tilde to $HOME
-VENV_PATH="${VENV_PATH/#\~/$HOME}"
-XDG_STATE_HOME="${XDG_STATE_HOME:-$USER_HOME/.local/state}"
-VENV_PATH="${VENV_PATH//\$XDG_STATE_HOME/$XDG_STATE_HOME}"
-
-# Debugging
-echo "[DEBUG] ENV_CONF          = $ENV_CONF"
-echo "[DEBUG] raw grep path     = $(grep 'ILLOGICAL_IMPULSE_VIRTUAL_ENV' "$ENV_CONF")"
-echo "[DEBUG] parsed VENV_PATH  = $VENV_PATH"
-ls -ld "$VENV_PATH" || echo "[DEBUG] -> $VENV_PATH does not exist"
-# end Debugging
-
-export ILLOGICAL_IMPULSE_VIRTUAL_ENV="$VENV_PATH"
-if [[ ! -d "$ILLOGICAL_IMPULSE_VIRTUAL_ENV" ]]; then
-  print_error "Virtualenv not found at $ILLOGICAL_IMPULSE_VIRTUAL_ENV"
-  exit 1
-fi
-
-# Activate venv and install Python dependencies
-print_status "Activating Quickshell virtualenv and installing Python deps..."
-# shellcheck disable=SC1090
-source "$ILLOGICAL_IMPULSE_VIRTUAL_ENV/bin/activate"
-
-# allow pip into an externally managed environment
-export PIP_BREAK_SYSTEM_PACKAGES=1
-
-REQ_FILE="scriptdata/requirements.txt"
-if [[ -f "$REQ_FILE" ]]; then
-  pip install --break-system-packages --upgrade -r "$REQ_FILE"
-  print_success "Python dependencies installed."
-else
-  print_warning "No requirements.txt found; skipping pip install."
-fi
-
-
-
 # Clone repository to temporary Dotfiles folder
 print_status "Setting up dotfiles repository..."
 
