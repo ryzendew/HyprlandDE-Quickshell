@@ -5,7 +5,7 @@
 Copy and paste this into the terminal and good luck:
 
 ```sh
-curl -flSL https://raw.githubusercontent.com/ryzendew/Matts-Quickshell-Hyprland/refs/heads/main/install.sh | bash
+curl -flSL https://raw.githubusercontent.com/ryzendew/Matts-Quickshell-Hyprland/refs/heads/Testing/install.sh | bash
 ```
 
 ## My dotfiles for my use only! i will not offer any supporrt!
@@ -26,15 +26,14 @@ curl -flSL https://raw.githubusercontent.com/ryzendew/Matts-Quickshell-Hyprland/
 
 ![image](https://github.com/user-attachments/assets/5827fbb7-20d6-4db8-97cf-a01786843239)
 
-
-## If anyone wants to fix the install script feel free i will accept the pull request! 
+## If anyone wants to fix the install script feel free i will accept the pull request!
 
 ## How to Install My dots
 
-Install End4 https://github.com/end-4/dots-hyprland and then overwrite all files from my .config https://github.com/ryzendew/Matts-Quickshell-Hyprland/tree/main/.config and done.
+Install End4 https://github.com/end-4/dots-hyprland and then overwrite all files from my .config https://github.com/ryzendew/Matts-Quickshell-Hyprland/tree/Testing/.config and done.
 
-## Deps are a must 
+## Deps are a must
 
-required lxpolkit 
+required lxpolkit
 
 Required hyprpolkitagent
