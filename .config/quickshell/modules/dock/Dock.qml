@@ -14,6 +14,7 @@ import "root:/services"
 import Qt.labs.platform
 import "root:/modules/bar"
 import "root:/modules/dock"
+import "root:/modules/dock"
 
 
 Scope {
@@ -1396,8 +1397,8 @@ Scope {
                                     // Arch Linux logo
                                     Item {
                                         anchors.centerIn: parent
-                                        width: parent.width * 0.75
-                                        height: parent.height * 0.75
+                                        width: parent.width
+                                        height: parent.height
                                         
                                         Image {
                                             id: dockLogo
@@ -1406,8 +1407,8 @@ Scope {
                                         fillMode: Image.PreserveAspectFit
                                         smooth: true
                                         antialiasing: true
-                                        sourceSize.width: parent.width * 0.75
-                                        sourceSize.height: parent.height * 0.75
+                                        sourceSize.width: parent.width 
+                                        sourceSize.height: parent.height
                                         layer.enabled: true
                                         layer.smooth: true
                                         
@@ -2118,6 +2119,8 @@ Scope {
     // Preview helper functions
     // (Removed showWindowPreviews, hideWindowPreviews, hideWindowPreviewsImmediately, and all windowPreview references)
 
+    // OLD MENU - REPLACED BY CustomDockMenu
+    /*
     Menu {
         id: dockContextMenu
         property var contextAppInfo: null
@@ -2391,6 +2394,7 @@ Scope {
             }
         }
     }
+    */
 
     function openDockContextMenu(appInfo, isPinned, dockItem, mouse) {
         var finalAppInfo = appInfo
@@ -2429,6 +2433,7 @@ Scope {
                 'AffinityPhoto.desktop': ['photo.exe', 'Photo.exe', 'affinityphoto', 'AffinityPhoto'],
                 'AffinityDesigner.desktop': ['designer.exe', 'Designer.exe', 'affinitydesigner', 'AffinityDesigner'],
                 'microsoft-edge-dev': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
+                'microsoft-edge-dev.desktop': ['microsoft-edge-dev', 'Microsoft-edge-dev', 'msedge', 'edge'],
                 'vesktop': ['vesktop', 'discord', 'Vesktop', 'Discord'],
                 'steam-native': ['steam', 'steam.exe', 'Steam', 'Steam.exe'],
                 'org.gnome.Nautilus': ['nautilus', 'org.gnome.nautilus', 'org.gnome.Nautilus', 'Nautilus'],
@@ -2454,24 +2459,43 @@ Scope {
                 possibleClasses.push(pinnedClassLower + '.desktop');
             }
             possibleClasses = Array.from(new Set(possibleClasses));
+            // Debug: Log all available windows and their classes
+            console.log("[Dock] All available windows:", JSON.stringify(HyprlandData.windowList.map(w => ({ class: w.class, initialClass: w.initialClass, address: w.address }))))
+            console.log("[Dock] Looking for classes:", possibleClasses)
+            
             // Collect all windows for this app
             var allWindows = HyprlandData.windowList.filter(w => 
                 possibleClasses.includes((w.class || '').toLowerCase()) ||
                 possibleClasses.includes((w.initialClass || '').toLowerCase())
             );
+            console.log("[Dock] Found windows for", finalAppInfo.class, ":", allWindows.length)
+            
             finalAppInfo.toplevels = allWindows;
+            
+            // Set address from the first window if any exist
+            if (allWindows.length > 0) {
+                finalAppInfo.address = allWindows[0].address;
+                finalAppInfo.pid = allWindows[0].pid;
+                console.log("[Dock] Set address to:", finalAppInfo.address)
+            }
         } else if (appInfo && appInfo.toplevels) {
             finalAppInfo.toplevels = appInfo.toplevels;
             }
 
-        dockContextMenu.contextAppInfo = finalAppInfo
-        dockContextMenu.contextIsPinned = isPinned
-        dockContextMenu.contextDockItem = dockItem
-        dockContextMenu.open()
+        customDockMenu.contextAppInfo = finalAppInfo
+        customDockMenu.contextIsPinned = isPinned
+        customDockMenu.contextDockItem = dockItem
+        customDockMenu.showAt(dockItem, mouse.x, mouse.y)
     }
 
     // --- DOCK APP LIST AND PREVIEW (End4 1:1 port) ---
     DockApps { id: dockApps }
     // --- END DOCK APP LIST AND PREVIEW ---
+
+    // Custom Dock Menu
+    CustomDockMenu {
+        id: customDockMenu
+        dock: dock
+    }
 
 }

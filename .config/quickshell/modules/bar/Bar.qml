@@ -13,6 +13,8 @@ import Quickshell.Hyprland
 import Quickshell.Services.UPower
 import Quickshell.Io
 import Quickshell.Services.Mpris
+import Quickshell.Services.SystemTray
+import Quickshell.Widgets
 import "." as BarComponents
 
 
@@ -825,12 +827,16 @@ Scope {
 
                             Item { width: 12 }
 
-                            SysTray {
+                            BarComponents.SystemTray {
                                 bar: barRoot
+                                shell: bar
+                                trayMenu: customTrayMenu
                                 visible: barRoot.useShortenedForm === 0
                                 Layout.fillWidth: false
                                 Layout.fillHeight: true
                                 Layout.alignment: Qt.AlignCenter | Qt.AlignVCenter
+                                // Pass the icon size as a property to ensure updates
+                                iconSize: ConfigOptions.getSystrayIconSize()
                             }
                         }
                     }
@@ -841,6 +847,9 @@ Scope {
 
     // Audio Control Popup - standalone component
 
-
+    // Custom Tray Menu
+    BarComponents.CustomTrayMenu {
+        id: customTrayMenu
+    }
 
 }

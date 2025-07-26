@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Services.SystemTray
+import Quickshell.Widgets
 import "root:/modules/common"
 import "../"
 
@@ -16,9 +18,15 @@ Item {
     
     property var bar: null // Will be set by parent
     
-    SysTray {
+    SystemTray {
         id: sysTray
         bar: parent.bar
+        shell: parent.bar
+        trayMenu: customTrayMenu
         anchors.fill: parent
+    }
+    
+    CustomTrayMenu {
+        id: customTrayMenu
     }
 } 

@@ -49,7 +49,7 @@
     "iconSize": 24,
     "workspaceIconSize": 24,
     "indicatorIconSize": 24,
-    "systrayIconSize": 24,
+    "systrayIconSize": 22,
     "logoIconSize": 32,
     "borderColor": "#ffffff",
     "borderOpacity": 0.12,

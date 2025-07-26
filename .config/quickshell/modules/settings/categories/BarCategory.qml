@@ -153,11 +153,11 @@ ColumnLayout {
 
                     StyledText { text: "Systray icon size"; font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor); color: "#fff" }
                     ConfigSpinBox {
-                        value: Config.options.bar.systrayIconSize ?? 24
+                        value: ConfigOptions.bar.systrayIconSize ?? 24
                         from: 12
                         to: 64
                         stepSize: 2
-                        onValueChanged: { ConfigLoader.setConfigValue("bar.systrayIconSize", value); }
+                        onValueChanged: { ConfigLoader.setConfigValueAndSave("bar.systrayIconSize", value); }
                     }
 
                     StyledText { text: "Logo icon size"; font.pixelSize: (Appearance.font.pixelSize.normal * scaleFactor); color: "#fff" }
